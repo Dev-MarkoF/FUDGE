@@ -1,10 +1,8 @@
 ///<reference types="../../Core/Build/FudgeCore.js"/>
-///<reference types="./Libraries/cannon.min.js"/>
+///<reference types="./Libraries/oimo.min.js"/>
 
 namespace FudgePhysics_Communication {
   import f = FudgeCore;
-  import c = CANNON;
-
 
   window.addEventListener("load", init);
   const app: HTMLCanvasElement = document.querySelector("canvas");
@@ -15,9 +13,17 @@ namespace FudgePhysics_Communication {
   let cubes: f.Node[] = new Array();
   let fpsDisplay: HTMLElement = document.querySelector("h2#FPS");
   let bodies = new Array();
-  let bodiesNo: number = 0;
 
-  let world = new c.World();
+  let world = new OIMO.World({
+    timestep: 1 / 60,
+    iterations: 8,
+    broadphase: 2, // 1 brute force, 2 sweep and prune, 3 volume tree
+    worldscale: 1, // scale full world 
+    random: true,  // randomize sample
+    info: false,   // calculate statistic or not
+    gravity: [0, -9.8, 0]
+  });
+
 
   function init(_event: Event): void {
     f.Debug.log(app);
@@ -26,15 +32,10 @@ namespace FudgePhysics_Communication {
 
     let ground: f.Node = createCompleteMeshNode("Ground", new f.Material("Ground", f.ShaderFlat, new f.CoatColored(new f.Color(0.2, 0.2, 0.2, 1))), new f.MeshCube());
     let cmpGroundMesh: f.ComponentTransform = ground.getComponent(f.ComponentTransform);
-
     cmpGroundMesh.local.scale(new f.Vector3(50, 0.3, 50));
+
     hierarchy.appendChild(ground);
-
-    //CANNON Physics Ground/Settings
-    world.gravity = new CANNON.Vec3(0, -9.81, 0);
-    world.allowSleep = true;
-    initializePhysicsBody(ground.getComponent(f.ComponentTransform), 0, 0);
-
+    initializePhysicsBody(ground.getComponent(f.ComponentTransform), false, 0);
 
     //Wall Creation
     let cubeNo = 0;
@@ -46,12 +47,12 @@ namespace FudgePhysics_Communication {
         cmpCubeTransform.local.translate(new f.Vector3(-5 + b, a + 5, 0));
         hierarchy.appendChild(cubes[cubeNo]);
         //Physics
-        f.Debug.log(cmpCubeTransform.getContainer().name);
-        initializePhysicsBody(cmpCubeTransform, 1, 1 + cubeNo);
+        //  f.Debug.log(cmpCubeTransform.getContainer().name);
+        initializePhysicsBody(cmpCubeTransform, true, 1 + cubeNo);
         cubeNo++;
       }
     }
-    //EndWall Creation
+
 
     let cmpLight: f.ComponentLight = new f.ComponentLight(new f.LightDirectional(f.Color.CSS("WHITE")));
     cmpLight.pivot.lookAt(new f.Vector3(0.5, -1, -0.8));
@@ -62,22 +63,20 @@ namespace FudgePhysics_Communication {
     cmpCamera.pivot.translate(new f.Vector3(2, 5, 25));
     cmpCamera.pivot.lookAt(f.Vector3.ZERO());
 
-
     viewPort = new f.Viewport();
     viewPort.initialize("Viewport", hierarchy, cmpCamera, app);
 
     viewPort.showSceneGraph();
 
     f.Loop.addEventListener(f.EVENT.LOOP_FRAME, update);
-    f.Loop.start(f.LOOP_MODE.TIME_GAME, 60);
+    f.Loop.start();
   }
-
 
   function update(): void {
 
-    //Physics CANNON
-    world.step(f.Loop.timeFrameGame / 1000);
-    for (let i: number = 1; i < bodies.length; i++) {
+    //Physics OIMO
+    world.step();
+    for (let i: number = 1; i < bodies.length; i++) { //Alle außer dem Grund
       applyPhysicsBody(cubes[i - 1].getComponent(f.ComponentTransform), i);
     }
     //EndPhysics
@@ -111,43 +110,35 @@ namespace FudgePhysics_Communication {
     return node;
   }
 
-  function initializePhysicsBody(_cmpTransform: f.ComponentTransform, massVal: number, no: number) {
+  function initializePhysicsBody(_cmpTransform: f.ComponentTransform, dynamic: boolean, no: number) {
     let node: f.Node = _cmpTransform.getContainer();
-    let scale: CANNON.Vec3 = new CANNON.Vec3(_cmpTransform.local.scaling.x / 2, _cmpTransform.local.scaling.y / 2, _cmpTransform.local.scaling.z / 2);
-    let pos: CANNON.Vec3 = new CANNON.Vec3(_cmpTransform.local.translation.x, _cmpTransform.local.translation.y, _cmpTransform.local.translation.z);
-    let rotation: CANNON.Quaternion = new CANNON.Quaternion();
-    rotation.setFromEuler(node.mtxWorld.rotation.x, node.mtxWorld.rotation.y, node.mtxWorld.rotation.z);
 
-    let mat: CANNON.Material = new CANNON.Material();
-    mat.friction = 1;
-    mat.restitution = 0;
-
-    bodies[no] = new CANNON.Body({
-      mass: massVal, // kg
-      position: pos, // m
-      quaternion: rotation,
-      shape: new CANNON.Box(scale),
-      material: mat,
-      allowSleep: true,
-      sleepSpeedLimit: 0.25, // Body will feel sleepy if speed<1 (speed == norm of velocity)
-      sleepTimeLimit: 1 // Body falls asleep after 1s of sleepiness
+    bodies[no] = world.add({
+      type: "box", // type of shape : sphere, box, cylinder 
+      size: [_cmpTransform.local.scaling.x, _cmpTransform.local.scaling.y, _cmpTransform.local.scaling.z], // size of shape
+      pos: [_cmpTransform.local.translation.x, _cmpTransform.local.translation.y, _cmpTransform.local.translation.z], // start position in degree
+      rot: [node.mtxWorld.rotation.x, node.mtxWorld.rotation.y, node.mtxWorld.rotation.z], // start rotation in degree
+      move: dynamic, // dynamic or statique
+      density: 1,
+      friction: 1,
+      restitution: 0,
+      belongsTo: 1, // The bits of the collision groups to which the shape belongs.
+      collidesWith: 0xffffffff // The bits of the collision groups with which the shape collides.
     });
-    world.addBody(bodies[no]);
   }
-
 
   function applyPhysicsBody(_cmpTransform: f.ComponentTransform, no: number): void {
     let node: f.Node = _cmpTransform.getContainer();
-    let tmpPosition: f.Vector3 = new f.Vector3(bodies[no].position.x, bodies[no].position.y, bodies[no].position.z);
+    let tmpPosition: f.Vector3 = new f.Vector3(bodies[no].getPosition().x, bodies[no].getPosition().y, bodies[no].getPosition().z);
 
-    let mutator: f.Mutator = {};
-    let tmpRotation: f.Vector3 = makeRotationFromQuaternion(bodies[no].quaternion, node.mtxLocal.rotation);
-
-    mutator["rotation"] = tmpRotation;
-    node.mtxLocal.mutate(mutator);
-    mutator["translation"] = tmpPosition;
-    node.mtxLocal.mutate(mutator);
-
+    let rotMutator: f.Mutator = {};
+    let tmpRotation: f.Vector3 = makeRotationFromQuaternion(bodies[no].getQuaternion(), node.mtxWorld.rotation);
+    //f.Debug.log(tmpRotation);
+    rotMutator["rotation"] = tmpRotation;
+    //node.mtxLocal.rotateX(tmpRotation.x);
+    node.mtxLocal.mutate(rotMutator);
+    rotMutator["translation"] = tmpPosition;
+    node.mtxLocal.mutate(rotMutator);
   }
 
 
@@ -157,23 +148,22 @@ namespace FudgePhysics_Communication {
     // roll (x-axis rotation)
     let sinr_cosp: number = 2 * (q.w * q.x + q.y * q.z);
     let cosr_cosp: number = 1 - 2 * (q.x * q.x + q.y * q.y);
-    angles.x = Math.atan2(sinr_cosp, cosr_cosp) * 60; //f.Loop.getFpsRealAverage(); //*Framerate? //* 60;
+    angles.x = Math.atan2(sinr_cosp, cosr_cosp) * 60; //f.Loop.getFpsGameAverage();
 
     // pitch (y-axis rotation)
     let sinp: number = 2 * (q.w * q.y - q.z * q.x);
     if (Math.abs(sinp) >= 1)
-      angles.y = copysign(Math.PI / 2, sinp) * 60; //f.Loop.getFpsRealAverage(); // use 90 degrees if out of range
+      angles.y = copysign(Math.PI / 2, sinp) * 60; //f.Loop.getFpsGameAverage(); // use 90 degrees if out of range
     else
-      angles.y = Math.asin(sinp) * 60; //f.Loop.getFpsRealAverage();
+      angles.y = Math.asin(sinp) * 60; //f.Loop.getFpsGameAverage();
 
     // yaw (z-axis rotation)
     let siny_cosp: number = 2 * (q.w * q.z + q.x * q.y);
     let cosy_cosp: number = 1 - 2 * (q.y * q.y + q.z * q.z);
-    angles.z = Math.atan2(siny_cosp, cosy_cosp) * 60; //f.Loop.getFpsRealAverage();
-    //f.Debug.log(angles);
+    angles.z = Math.atan2(siny_cosp, cosy_cosp) * 60; //f.Loop.getFpsGameAverage();
+    f.Debug.log(angles);
     return angles;
   }
-
 
   function copysign(a: number, b: number): number {
     return b < 0 ? -Math.abs(a) : Math.abs(a);

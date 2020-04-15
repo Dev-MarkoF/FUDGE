@@ -18,6 +18,7 @@ namespace FudgePhysics_Communication {
 
   let world = new c.World();
 
+
   function init(_event: Event): void {
     f.Debug.log(app);
     f.RenderManager.initialize();
@@ -32,13 +33,10 @@ namespace FudgePhysics_Communication {
     cubes[0] = createCompleteMeshNode("Cube_1", new f.Material("Cube", f.ShaderFlat, new f.CoatColored(new f.Color(1, 0, 0, 1))), new f.MeshCube());
     let cmpCubeTransform: f.ComponentTransform = cubes[0].getComponent(f.ComponentTransform);
     cmpCubeTransform.local.translate(new f.Vector3(0, 2, 0));
-    cubes[0].mtxWorld.rotateX(45);
+    //  cubes[0].mtxWorld.rotateX(45);
     hierarchy.appendChild(cubes[0]);
 
-    cubes[1] = createCompleteMeshNode("Cube_2", new f.Material("Cube", f.ShaderFlat, new f.CoatColored(new f.Color(1, 0, 0, 1))), new f.MeshCube());
-    let cmpCubeTransform2: f.ComponentTransform = cubes[1].getComponent(f.ComponentTransform);
-    cmpCubeTransform2.local.translate(new f.Vector3(0, 3.5, 0.4));
-    hierarchy.appendChild(cubes[1]);
+
 
     let cmpLight: f.ComponentLight = new f.ComponentLight(new f.LightDirectional(f.Color.CSS("WHITE")));
     cmpLight.pivot.lookAt(new f.Vector3(0.5, -1, -0.8));
@@ -54,7 +52,6 @@ namespace FudgePhysics_Communication {
     world.allowSleep = true;
     initializePhysicsBody(ground.getComponent(f.ComponentTransform), 0, 0);
     initializePhysicsBody(cmpCubeTransform, 1, 1);
-    initializePhysicsBody(cmpCubeTransform2, 1, 2);
     //EndPhysics
 
     viewPort = new f.Viewport();
@@ -66,13 +63,26 @@ namespace FudgePhysics_Communication {
     f.Loop.start(f.LOOP_MODE.FRAME_REQUEST, 60, true);
   }
 
+  let from: CANNON.Vec3 = new CANNON.Vec3(-5, 0.3, 0);
+  let to: CANNON.Vec3 = new CANNON.Vec3(5, 0.3, 0);
+  let result = new CANNON.RaycastResult();
+  let raycastOptions = {};
+  let matHit: f.Material = new f.Material("Ground", f.ShaderFlat, new f.CoatColored(new f.Color(0, 1, 0, 1)));
+  let matNormal: f.Material = new f.Material("Ground", f.ShaderFlat, new f.CoatColored(new f.Color(1, 0, 0, 1)));
 
   function update(): void {
 
     //Physics CANNON
     world.step(f.Loop.timeFrameGame / 1000);
     applyPhysicsBody(cubes[0].getComponent(f.ComponentTransform), 1);
-    applyPhysicsBody(cubes[1].getComponent(f.ComponentTransform), 2);
+    result.reset();
+    world.raycastClosest(from, to, raycastOptions, result);
+    if (result.body != null && result.body.id == 1) {
+      cubes[0].getComponent(f.ComponentMaterial).material = matHit;
+    } else {
+      cubes[0].getComponent(f.ComponentMaterial).material = matNormal;
+    }
+
     //EndPhysics
 
     viewPort.draw();
@@ -102,7 +112,7 @@ namespace FudgePhysics_Communication {
 
     let mat: CANNON.Material = new CANNON.Material();
     mat.friction = 1;
-    mat.restitution = 0;
+    mat.restitution = 0.95;
 
     bodies[no] = new CANNON.Body({
       mass: massVal, // kg

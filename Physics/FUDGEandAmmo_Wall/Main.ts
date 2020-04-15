@@ -37,19 +37,27 @@ namespace FudgePhysics_Communication {
     let ground: f.Node = createCompleteMeshNode("Ground", new f.Material("Ground", f.ShaderFlat, new f.CoatColored(new f.Color(0.2, 0.2, 0.2, 1))), new f.MeshCube());
     let cmpGroundMesh: f.ComponentTransform = ground.getComponent(f.ComponentTransform);
 
-    cmpGroundMesh.local.scale(new f.Vector3(20, 0.3, 20));
+    cmpGroundMesh.local.scale(new f.Vector3(50, 0.3, 50));
     hierarchy.appendChild(ground);
+    initializePhysicsBody(ground.getComponent(f.ComponentTransform), 0, 0);
 
-    cubes[0] = createCompleteMeshNode("Cube_1", new f.Material("Cube", f.ShaderFlat, new f.CoatColored(new f.Color(1, 0, 0, 1))), new f.MeshCube());
-    let cmpCubeTransform: f.ComponentTransform = cubes[0].getComponent(f.ComponentTransform);
-    cmpCubeTransform.local.translate(new f.Vector3(0, 2, 0));
-    //cubes[0].mtxWorld.rotateX(45);
-    hierarchy.appendChild(cubes[0]);
+    //Wall Creation
+    let cubeNo = 0;
+    for (let a: number = 0; a < 10; a++) {
+      for (let b: number = 0; b < 10; b++) {
+        cubes[cubeNo] = createCompleteMeshNode("Cube_" + cubeNo.toString(), new f.Material("Cube", f.ShaderFlat, new f.CoatColored(new f.Color(1, 0, 0, 1))), new f.MeshCube());
+        //cubes[cubeNo].mtxWorld.rotateX(45);
+        let cmpCubeTransform: f.ComponentTransform = cubes[cubeNo].getComponent(f.ComponentTransform);
+        cmpCubeTransform.local.translate(new f.Vector3(-5 + b, a + 5, 0));
+        hierarchy.appendChild(cubes[cubeNo]);
+        //Physics
+        //  f.Debug.log(cmpCubeTransform.getContainer().name);
+        initializePhysicsBody(cmpCubeTransform, 1, 1 + cubeNo);
+        cubeNo++;
+      }
+    }
 
-    cubes[1] = createCompleteMeshNode("Cube_2", new f.Material("Cube", f.ShaderFlat, new f.CoatColored(new f.Color(1, 0, 0, 1))), new f.MeshCube());
-    let cmpCubeTransform2: f.ComponentTransform = cubes[1].getComponent(f.ComponentTransform);
-    cmpCubeTransform2.local.translate(new f.Vector3(0, 3.5, 0.4));
-    hierarchy.appendChild(cubes[1]);
+
 
     let cmpLight: f.ComponentLight = new f.ComponentLight(new f.LightDirectional(f.Color.CSS("WHITE")));
     cmpLight.pivot.lookAt(new f.Vector3(0.5, -1, -0.8));
@@ -57,14 +65,12 @@ namespace FudgePhysics_Communication {
 
     let cmpCamera: f.ComponentCamera = new f.ComponentCamera();
     cmpCamera.backgroundColor = f.Color.CSS("GREY");
-    cmpCamera.pivot.translate(new f.Vector3(2, 2, 10));
+    cmpCamera.pivot.translate(new f.Vector3(2, 5, 25));
     cmpCamera.pivot.lookAt(f.Vector3.ZERO());
 
     //Physics Ammo
     world.setGravity(new Ammo.btVector3(0, -10, 0));
-    initializePhysicsBody(ground.getComponent(f.ComponentTransform), 0, 0);
-    initializePhysicsBody(cmpCubeTransform, 1, 1);
-    initializePhysicsBody(cmpCubeTransform2, 1, 2);
+
     //EndPhysics
 
     viewPort = new f.Viewport();
@@ -81,8 +87,9 @@ namespace FudgePhysics_Communication {
 
     //Physics Ammo
     world.stepSimulation(f.Loop.timeFrameGame / 1000);
-    applyPhysicsBody(cubes[0].getComponent(f.ComponentTransform), 1);
-    applyPhysicsBody(cubes[1].getComponent(f.ComponentTransform), 2);
+    for (let i: number = 1; i < bodies.length; i++) { //Alle außer dem Grund
+      applyPhysicsBody(cubes[i - 1].getComponent(f.ComponentTransform), i);
+    }
     //EndPhysics
 
     viewPort.draw();
@@ -156,8 +163,6 @@ namespace FudgePhysics_Communication {
     let mutator: f.Mutator = {};
     let tmpRotation: f.Vector3 = makeRotationFromQuaternion(rotQuat, node.mtxLocal.rotation);
 
-    if (no == 1)
-      f.Debug.log(tmpRotation);
 
     mutator["rotation"] = tmpRotation;
     node.mtxLocal.mutate(mutator);
@@ -173,19 +178,19 @@ namespace FudgePhysics_Communication {
     // roll (x-axis rotation)
     let sinr_cosp: number = 2 * (q.w * q.x + q.y * q.z);
     let cosr_cosp: number = 1 - 2 * (q.x * q.x + q.y * q.y);
-    angles.x = Math.atan2(sinr_cosp, cosr_cosp) * f.Loop.getFpsRealAverage(); //*Framerate? //* 180;
+    angles.x = Math.atan2(sinr_cosp, cosr_cosp) * 60; //*Framerate? //* 180;
 
     // pitch (y-axis rotation)
     let sinp: number = 2 * (q.w * q.y - q.z * q.x);
     if (Math.abs(sinp) >= 1)
-      angles.y = copysign(Math.PI / 2, sinp) * f.Loop.getFpsRealAverage(); // use 90 degrees if out of range
+      angles.y = copysign(Math.PI / 2, sinp) * 60; // use 90 degrees if out of range
     else
-      angles.y = Math.asin(sinp) * f.Loop.getFpsRealAverage();
+      angles.y = Math.asin(sinp) * 60;
 
     // yaw (z-axis rotation)
     let siny_cosp: number = 2 * (q.w * q.z + q.x * q.y);
     let cosy_cosp: number = 1 - 2 * (q.y * q.y + q.z * q.z);
-    angles.z = Math.atan2(siny_cosp, cosy_cosp) * f.Loop.getFpsRealAverage();;
+    angles.z = Math.atan2(siny_cosp, cosy_cosp) * 60;
     //f.Debug.log(angles);
     return angles;
   }

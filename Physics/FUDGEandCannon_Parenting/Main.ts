@@ -31,13 +31,13 @@ namespace FudgePhysics_Communication {
 
     cubes[0] = createCompleteMeshNode("Cube_1", new f.Material("Cube", f.ShaderFlat, new f.CoatColored(new f.Color(1, 0, 0, 1))), new f.MeshCube());
     let cmpCubeTransform: f.ComponentTransform = cubes[0].getComponent(f.ComponentTransform);
-    cmpCubeTransform.local.translate(new f.Vector3(0, 2, 0));
+    cmpCubeTransform.local.translate(new f.Vector3(0, 3.5, 0));
     cubes[0].mtxWorld.rotateX(45);
     hierarchy.appendChild(cubes[0]);
 
     cubes[1] = createCompleteMeshNode("Cube_2", new f.Material("Cube", f.ShaderFlat, new f.CoatColored(new f.Color(1, 0, 0, 1))), new f.MeshCube());
     let cmpCubeTransform2: f.ComponentTransform = cubes[1].getComponent(f.ComponentTransform);
-    cmpCubeTransform2.local.translate(new f.Vector3(0, 3.5, 0.4));
+    cmpCubeTransform2.local.translate(new f.Vector3(0, 2.5, 0.4));
     hierarchy.appendChild(cubes[1]);
 
     let cmpLight: f.ComponentLight = new f.ComponentLight(new f.LightDirectional(f.Color.CSS("WHITE")));
@@ -52,9 +52,9 @@ namespace FudgePhysics_Communication {
     //Physics CANNON
     world.gravity = new CANNON.Vec3(0, -9.81, 0);
     world.allowSleep = true;
-    initializePhysicsBody(ground.getComponent(f.ComponentTransform), 0, 0);
-    initializePhysicsBody(cmpCubeTransform, 1, 1);
-    initializePhysicsBody(cmpCubeTransform2, 1, 2);
+    // initializePhysicsBody(ground.getComponent(f.ComponentTransform), 0, 0);
+    // initializePhysicsBody(cmpCubeTransform, 1, 1);
+    // initializePhysicsBody(cmpCubeTransform2, 1, 2);
     //EndPhysics
 
     viewPort = new f.Viewport();
@@ -70,13 +70,13 @@ namespace FudgePhysics_Communication {
   function update(): void {
 
     //Physics CANNON
-    world.step(f.Loop.timeFrameGame / 1000);
-    applyPhysicsBody(cubes[0].getComponent(f.ComponentTransform), 1);
-    applyPhysicsBody(cubes[1].getComponent(f.ComponentTransform), 2);
+    // world.step(f.Loop.timeFrameGame / 1000);
+    // applyPhysicsBody(cubes[0].getComponent(f.ComponentTransform), 1);
+    // applyPhysicsBody(cubes[1].getComponent(f.ComponentTransform), 2);
     //EndPhysics
 
     viewPort.draw();
-    fpsDisplay.textContent = "FPS: " + f.Loop.getFpsRealAverage().toFixed(2);
+    fpsDisplay.textContent = "FPS: " + f.Loop.getFpsGameAverage().toFixed(2);
   }
 
 
@@ -95,10 +95,11 @@ namespace FudgePhysics_Communication {
 
   function initializePhysicsBody(_cmpTransform: f.ComponentTransform, massVal: number, no: number) {
     let node: f.Node = _cmpTransform.getContainer();
-    let scale: CANNON.Vec3 = new CANNON.Vec3(_cmpTransform.local.scaling.x / 2, _cmpTransform.local.scaling.y / 2, _cmpTransform.local.scaling.z / 2);
-    let pos: CANNON.Vec3 = new CANNON.Vec3(_cmpTransform.local.translation.x, _cmpTransform.local.translation.y, _cmpTransform.local.translation.z);
+    let scale: CANNON.Vec3 = new CANNON.Vec3(node.mtxWorld.scaling.x / 2, node.mtxWorld.scaling.y / 2, node.mtxWorld.scaling.z / 2);
+    let pos: CANNON.Vec3 = new CANNON.Vec3(node.mtxWorld.translation.x, node.mtxWorld.translation.y, node.mtxWorld.translation.z);
     let rotation: CANNON.Quaternion = new CANNON.Quaternion();
     rotation.setFromEuler(node.mtxWorld.rotation.x, node.mtxWorld.rotation.y, node.mtxWorld.rotation.z);
+    f.Debug.log(pos);
 
     let mat: CANNON.Material = new CANNON.Material();
     mat.friction = 1;
@@ -139,19 +140,19 @@ namespace FudgePhysics_Communication {
     // roll (x-axis rotation)
     let sinr_cosp: number = 2 * (q.w * q.x + q.y * q.z);
     let cosr_cosp: number = 1 - 2 * (q.x * q.x + q.y * q.y);
-    angles.x = Math.atan2(sinr_cosp, cosr_cosp) * f.Loop.getFpsRealAverage(); //*Framerate? ;
+    angles.x = Math.atan2(sinr_cosp, cosr_cosp) * f.Loop.getFpsGameAverage(); //*Framerate? ;
 
     // pitch (y-axis rotation)
     let sinp: number = 2 * (q.w * q.y - q.z * q.x);
     if (Math.abs(sinp) >= 1)
-      angles.y = copysign(Math.PI / 2, sinp) * f.Loop.getFpsRealAverage(); // use 90 degrees if out of range
+      angles.y = copysign(Math.PI / 2, sinp) * f.Loop.getFpsGameAverage(); // use 90 degrees if out of range
     else
-      angles.y = Math.asin(sinp) * f.Loop.getFpsRealAverage();
+      angles.y = Math.asin(sinp) * f.Loop.getFpsGameAverage();
 
     // yaw (z-axis rotation)
     let siny_cosp: number = 2 * (q.w * q.z + q.x * q.y);
     let cosy_cosp: number = 1 - 2 * (q.y * q.y + q.z * q.z);
-    angles.z = Math.atan2(siny_cosp, cosy_cosp) * f.Loop.getFpsRealAverage();
+    angles.z = Math.atan2(siny_cosp, cosy_cosp) * f.Loop.getFpsGameAverage();
     //f.Debug.log(angles);
     return angles;
   }
