@@ -1,5 +1,5 @@
 ///<reference types="../../Core/Build/FudgeCore.js"/>
-///<reference types="./Libraries/cannon.min.js"/>
+///<reference types="../Physics_Library/cannon.min.js"/>
 
 namespace FudgePhysics_Communication {
   import f = FudgeCore;
@@ -9,6 +9,7 @@ namespace FudgePhysics_Communication {
   window.addEventListener("load", init);
   const app: HTMLCanvasElement = document.querySelector("canvas");
   let viewPort: f.Viewport;
+  let cmpCamera: f.ComponentCamera;
   let hierarchy: f.Node;
   let fps: number;
   const times: number[] = [];
@@ -27,7 +28,7 @@ namespace FudgePhysics_Communication {
     let ground: f.Node = createCompleteMeshNode("Ground", new f.Material("Ground", f.ShaderFlat, new f.CoatColored(new f.Color(0.2, 0.2, 0.2, 1))), new f.MeshCube());
     let cmpGroundMesh: f.ComponentTransform = ground.getComponent(f.ComponentTransform);
 
-    cmpGroundMesh.local.scale(new f.Vector3(20, 0.3, 20));
+    cmpGroundMesh.local.scale(new f.Vector3(10, 0.3, 10));
     hierarchy.appendChild(ground);
 
     cubes[0] = createCompleteMeshNode("Cube_1", new f.Material("Cube", f.ShaderFlat, new f.CoatColored(new f.Color(1, 0, 0, 1))), new f.MeshCube());
@@ -42,7 +43,7 @@ namespace FudgePhysics_Communication {
     cmpLight.pivot.lookAt(new f.Vector3(0.5, -1, -0.8));
     hierarchy.addComponent(cmpLight);
 
-    let cmpCamera: f.ComponentCamera = new f.ComponentCamera();
+    cmpCamera = new f.ComponentCamera();
     cmpCamera.backgroundColor = f.Color.CSS("GREY");
     cmpCamera.pivot.translate(new f.Vector3(2, 2, 10));
     cmpCamera.pivot.lookAt(f.Vector3.ZERO());
@@ -58,20 +59,24 @@ namespace FudgePhysics_Communication {
     viewPort.initialize("Viewport", hierarchy, cmpCamera, app);
 
     viewPort.showSceneGraph();
-
+    viewPort.activatePointerEvent(f.EVENT_POINTER.DOWN, true);
+    viewPort.addEventListener(f.EVENT_POINTER.DOWN, hndPointerDown);
+    viewPort.activatePointerEvent(f.EVENT_POINTER.UP, true);
+    viewPort.addEventListener(f.EVENT_POINTER.UP, hndPointerUp);
     f.Loop.addEventListener(f.EVENT.LOOP_FRAME, update);
     f.Loop.start(f.LOOP_MODE.FRAME_REQUEST, 60, true);
   }
 
   let from: CANNON.Vec3 = new CANNON.Vec3(-5, 0.3, 0);
-  let to: CANNON.Vec3 = new CANNON.Vec3(5, 0.3, 0);
+  let to: CANNON.Vec3 = getRayEndPoint(from, new f.Vector3(1, 0, 0), 10); //new CANNON.Vec3(5, 0.3, 0);
   let result = new CANNON.RaycastResult();
   let raycastOptions = {};
   let matHit: f.Material = new f.Material("Ground", f.ShaderFlat, new f.CoatColored(new f.Color(0, 1, 0, 1)));
   let matNormal: f.Material = new f.Material("Ground", f.ShaderFlat, new f.CoatColored(new f.Color(1, 0, 0, 1)));
+  let posProjection: f.Vector2;
+  let screenPos: f.Vector2;
 
   function update(): void {
-
     //Physics CANNON
     world.step(f.Loop.timeFrameGame / 1000);
     applyPhysicsBody(cubes[0].getComponent(f.ComponentTransform), 1);
@@ -169,6 +174,46 @@ namespace FudgePhysics_Communication {
 
   function copysign(a: number, b: number): number {
     return b < 0 ? -Math.abs(a) : Math.abs(a);
+  }
+
+  //to define a cannon ray not with it's start and end but direction and length
+  function getRayEndPoint(start: f.Vector3, direction: f.Vector3, length: number): f.Vector3 {
+    let endpoint: f.Vector3 = f.Vector3.ZERO();
+    endpoint.add(start);
+    direction.scale(length);
+    endpoint.add(direction);
+    return endpoint;
+  }
+
+  function hndPointerDown(_event: f.EventPointer): void {
+    let cam: f.Node = cmpCamera.getContainer();
+    //Canvas Space to Cam/World Space
+    posProjection = viewPort.pointClientToProjection(new f.Vector2(_event.pointerX, _event.pointerY));
+
+    //Ray
+    let origin: f.Vector3 = new f.Vector3(-posProjection.x, posProjection.y, 1);
+    origin.transform(cmpCamera.pivot);
+    let dir: f.Vector3 = cmpCamera.pivot.rotation;
+    dir = new f.Vector3(0.5, -1, -0.8);
+    // dir.normalize();
+    f.Debug.log("EndCalc:" + dir);
+    //dir.transform(cmpCamera.pivot, false);
+    let end: CANNON.Vec3 = getRayEndPoint(origin, dir, 30);
+    cmpCamera
+    let hitResult = new CANNON.RaycastResult();
+    let options = {};
+    f.Debug.log("End:" + end);
+    f.Debug.log("Origin:" + origin);
+    hitResult.reset();
+    world.raycastClosest(origin, end, options, hitResult);
+    f.Debug.log(hitResult);
+    bodies[1].type = CANNON.Body.KINEMATIC;
+    bodies[1].velocity = new CANNON.Vec3(0, 0, 0);
+
+  }
+
+  function hndPointerUp(_event: f.EventPointer) {
+    bodies[1].type = CANNON.Body.DYNAMIC;
   }
 
 }

@@ -1,5 +1,5 @@
 ///<reference types="../../Core/Build/FudgeCore.js"/>
-///<reference types="./Libraries/cannon.min.js"/>
+///<reference types="../Physics_Library/cannon.min.js"/>
 
 namespace FudgePhysics_Communication {
   import f = FudgeCore;
@@ -49,18 +49,18 @@ namespace FudgePhysics_Communication {
     cmpCamera.pivot.translate(new f.Vector3(2, 2, 10));
     cmpCamera.pivot.lookAt(f.Vector3.ZERO());
 
-    //Physics CANNON
-    world.gravity = new CANNON.Vec3(0, -9.81, 0);
-    world.allowSleep = true;
-    // initializePhysicsBody(ground.getComponent(f.ComponentTransform), 0, 0);
-    // initializePhysicsBody(cmpCubeTransform, 1, 1);
-    // initializePhysicsBody(cmpCubeTransform2, 1, 2);
-    //EndPhysics
-
     viewPort = new f.Viewport();
     viewPort.initialize("Viewport", hierarchy, cmpCamera, app);
 
     viewPort.showSceneGraph();
+
+    //Physics CANNON
+    world.gravity = new CANNON.Vec3(0, -9.81, 0);
+    world.allowSleep = true;
+    initializePhysicsBody(ground.getComponent(f.ComponentTransform), 0, 0);
+    initializePhysicsBody(cmpCubeTransform, 1, 1);
+    initializePhysicsBody(cmpCubeTransform2, 1, 2);
+    //EndPhysics
 
     f.Loop.addEventListener(f.EVENT.LOOP_FRAME, update);
     f.Loop.start(f.LOOP_MODE.FRAME_REQUEST, 60, true);
@@ -70,9 +70,9 @@ namespace FudgePhysics_Communication {
   function update(): void {
 
     //Physics CANNON
-    // world.step(f.Loop.timeFrameGame / 1000);
-    // applyPhysicsBody(cubes[0].getComponent(f.ComponentTransform), 1);
-    // applyPhysicsBody(cubes[1].getComponent(f.ComponentTransform), 2);
+    world.step(f.Loop.timeFrameGame / 1000);
+    applyPhysicsBody(cubes[0].getComponent(f.ComponentTransform), 1);
+    applyPhysicsBody(cubes[1].getComponent(f.ComponentTransform), 2);
     //EndPhysics
 
     viewPort.draw();

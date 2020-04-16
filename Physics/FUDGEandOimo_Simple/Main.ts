@@ -1,5 +1,5 @@
 ///<reference types="../../Core/Build/FudgeCore.js"/>
-///<reference types="./Libraries/oimo.min.js"/>
+///<reference types="../Physics_Library/oimo.min.js"/>
 
 namespace FudgePhysics_Communication {
   import f = FudgeCore;
@@ -44,7 +44,7 @@ namespace FudgePhysics_Communication {
 
     cubes[1] = createCompleteMeshNode("Cube_2", new f.Material("Cube", f.ShaderFlat, new f.CoatColored(new f.Color(1, 0, 0, 1))), new f.MeshCube());
     let cmpCubeTransform2: f.ComponentTransform = cubes[1].getComponent(f.ComponentTransform);
-    cmpCubeTransform2.local.translate(new f.Vector3(0, 3.5, 0.405));
+    cmpCubeTransform2.local.translate(new f.Vector3(0, 3.5, 0.4));
     hierarchy.appendChild(cubes[1]);
 
     let cmpLight: f.ComponentLight = new f.ComponentLight(new f.LightDirectional(f.Color.CSS("WHITE")));

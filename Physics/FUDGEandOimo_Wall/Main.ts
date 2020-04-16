@@ -1,5 +1,5 @@
 ///<reference types="../../Core/Build/FudgeCore.js"/>
-///<reference types="./Libraries/oimo.min.js"/>
+///<reference types="../Physics_Library/oimo.min.js"/>
 
 namespace FudgePhysics_Communication {
   import f = FudgeCore;

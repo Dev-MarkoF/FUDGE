@@ -1,5 +1,5 @@
 ///<reference types="../../Core/Build/FudgeCore.js"/>
-///<reference types="./Libraries/ammo.js"/>
+///<reference types="../Physics_Library/ammo.js"/>
 
 let world: Ammo.btDiscreteDynamicsWorld;
 
