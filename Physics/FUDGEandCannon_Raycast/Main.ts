@@ -37,6 +37,11 @@ namespace FudgePhysics_Communication {
     //  cubes[0].mtxWorld.rotateX(45);
     hierarchy.appendChild(cubes[0]);
 
+    cubes[1] = createCompleteMeshNode("Cube_1", new f.Material("Cube2", f.ShaderFlat, new f.CoatColored(new f.Color(1, 1, 0, 1))), new f.MeshCube());
+    let cmpCubeTransform2: f.ComponentTransform = cubes[1].getComponent(f.ComponentTransform);
+    cmpCubeTransform2.local.translate(new f.Vector3(0, 3, 0));
+    hierarchy.appendChild(cubes[1]);
+
 
 
     let cmpLight: f.ComponentLight = new f.ComponentLight(new f.LightDirectional(f.Color.CSS("WHITE")));
@@ -53,6 +58,7 @@ namespace FudgePhysics_Communication {
     world.allowSleep = true;
     initializePhysicsBody(ground.getComponent(f.ComponentTransform), 0, 0);
     initializePhysicsBody(cmpCubeTransform, 1, 1);
+    initializePhysicsBody(cmpCubeTransform2, 0, 2);
     //EndPhysics
 
     viewPort = new f.Viewport();
@@ -80,6 +86,7 @@ namespace FudgePhysics_Communication {
     //Physics CANNON
     world.step(f.Loop.timeFrameGame / 1000);
     applyPhysicsBody(cubes[0].getComponent(f.ComponentTransform), 1);
+    applyPhysicsBody(cubes[1].getComponent(f.ComponentTransform), 2);
     result.reset();
     world.raycastClosest(from, to, raycastOptions, result);
     if (result.body != null && result.body.id == 1) {
@@ -180,8 +187,9 @@ namespace FudgePhysics_Communication {
   function getRayEndPoint(start: f.Vector3, direction: f.Vector3, length: number): f.Vector3 {
     let endpoint: f.Vector3 = f.Vector3.ZERO();
     endpoint.add(start);
-    direction.scale(length);
-    endpoint.add(direction);
+    let endDirection: f.Vector3 = direction;
+    endDirection.scale(length);
+    endpoint.add(endDirection);
     return endpoint;
   }
 
@@ -189,26 +197,47 @@ namespace FudgePhysics_Communication {
     let cam: f.Node = cmpCamera.getContainer();
     //Canvas Space to Cam/World Space
     posProjection = viewPort.pointClientToProjection(new f.Vector2(_event.pointerX, _event.pointerY));
+    let projection: f.Vector3 = cmpCamera.project(cmpCamera.pivot.translation);
+    let posClient: f.Vector2 = viewPort.pointClipToClient(projection.toVector2());
+    let posScreen: f.Vector2 = viewPort.pointClientToScreen(posClient);
+
+    // f.Debug.log("posProj: " + posProjection);
+    // f.Debug.log("camProj: " + projection);
+    // f.Debug.log("posClient: " + posClient);
+    // f.Debug.log("posScreen: " + posScreen);
+
 
     //Ray
-    let origin: f.Vector3 = new f.Vector3(-posProjection.x, posProjection.y, 1);
-    origin.transform(cmpCamera.pivot);
-    let dir: f.Vector3 = cmpCamera.pivot.rotation;
-    dir = new f.Vector3(0.5, -1, -0.8);
+    let origin: f.Vector3 = new f.Vector3(posProjection.x, posProjection.y, 1);
+    origin.transform(cmpCamera.pivot, true);
+    let dir: f.Vector3 = new f.Vector3(0, 0, 1);
+    dir.transform(cmpCamera.ViewProjectionMatrix, false);
     // dir.normalize();
-    f.Debug.log("EndCalc:" + dir);
-    //dir.transform(cmpCamera.pivot, false);
-    let end: CANNON.Vec3 = getRayEndPoint(origin, dir, 30);
-    cmpCamera
+
+    let end: CANNON.Vec3 = getRayEndPoint(origin, dir, 20);
     let hitResult = new CANNON.RaycastResult();
     let options = {};
-    f.Debug.log("End:" + end);
-    f.Debug.log("Origin:" + origin);
+
     hitResult.reset();
     world.raycastClosest(origin, end, options, hitResult);
-    f.Debug.log(hitResult);
+
+
+
+    let mutator: f.Mutator = {};
+    mutator["translation"] = end;
+    cubes[1].mtxLocal.mutate(mutator);
+
+
+    bodies[1].position = new CANNON.Vec3(hitResult.hitPointWorld.x, hitResult.hitPointWorld.y, hitResult.hitPointWorld.z);
     bodies[1].type = CANNON.Body.KINEMATIC;
     bodies[1].velocity = new CANNON.Vec3(0, 0, 0);
+
+    f.Debug.log("EndCalc:" + dir);
+    // f.Debug.log("CubePos:" + bodies[1].position);
+    f.Debug.log("End:" + end);
+    f.Debug.log("Origin:" + origin);
+    f.Debug.log(hitResult);
+    // f.Debug.log("PosNew: " + bodies[1].position);
 
   }
 
