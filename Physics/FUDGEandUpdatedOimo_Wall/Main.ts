@@ -9,6 +9,8 @@ import f = FudgeCore;
 namespace FudgePhysics_Communication {
   import oimo = window.OIMO;
 
+  let starttimer: number = 2;
+
   window.addEventListener("load", init);
   const app: HTMLCanvasElement = document.querySelector("canvas");
   let viewPort: f.Viewport;
@@ -69,13 +71,16 @@ namespace FudgePhysics_Communication {
   }
 
   function update(): void {
-
-    //Physics OIMO
-    world.step(f.Loop.timeFrameGame / 1000);
-    for (let i: number = 1; i < bodies.length; i++) { //Alle außer dem Grund
-      applyPhysicsBody(cubes[i - 1].getComponent(f.ComponentTransform), i);
+    if (starttimer <= 0) {
+      //Physics OIMO
+      world.step(f.Loop.timeFrameGame / 1000);
+      for (let i: number = 1; i < bodies.length; i++) { //Alle außer dem Grund
+        applyPhysicsBody(cubes[i - 1].getComponent(f.ComponentTransform), i);
+      }
+      //EndPhysics
+    } else {
+      starttimer -= f.Loop.timeFrameGame / 1000;
     }
-    //EndPhysics
 
     viewPort.draw();
     measureFPS();
@@ -132,14 +137,12 @@ namespace FudgePhysics_Communication {
     let node: f.Node = _cmpTransform.getContainer();
     let tmpPosition: f.Vector3 = new f.Vector3(bodies[no].getPosition().x, bodies[no].getPosition().y, bodies[no].getPosition().z);
 
-    let rotMutator: f.Mutator = {};
+    let mutator: f.Mutator = {};
     let tmpRotation: f.Vector3 = makeRotationFromQuaternion(bodies[no].getOrientation(), node.mtxWorld.rotation);
     //f.Debug.log(tmpRotation);
-    rotMutator["rotation"] = tmpRotation;
-    //node.mtxLocal.rotateX(tmpRotation.x);
-    node.mtxLocal.mutate(rotMutator);
-    rotMutator["translation"] = tmpPosition;
-    node.mtxLocal.mutate(rotMutator);
+    mutator["rotation"] = tmpRotation;
+    mutator["translation"] = tmpPosition;
+    node.mtxLocal.mutate(mutator);
   }
 
 

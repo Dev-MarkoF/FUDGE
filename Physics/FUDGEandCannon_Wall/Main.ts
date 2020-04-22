@@ -16,8 +16,9 @@ namespace FudgePhysics_Communication {
   let fpsDisplay: HTMLElement = document.querySelector("h2#FPS");
   let bodies = new Array();
   let bodiesNo: number = 0;
-
   let world = new c.World();
+
+  let starttimer = 2;
 
   function init(_event: Event): void {
     f.Debug.log(app);
@@ -33,6 +34,7 @@ namespace FudgePhysics_Communication {
     //CANNON Physics Ground/Settings
     world.gravity = new CANNON.Vec3(0, -9.81, 0);
     world.allowSleep = true;
+    world.solver.iterations = 10;
     initializePhysicsBody(ground.getComponent(f.ComponentTransform), 0, 0);
 
 
@@ -46,7 +48,7 @@ namespace FudgePhysics_Communication {
         cmpCubeTransform.local.translate(new f.Vector3(-5 + b, a + 5, 0));
         hierarchy.appendChild(cubes[cubeNo]);
         //Physics
-        f.Debug.log(cmpCubeTransform.getContainer().name);
+        //f.Debug.log(cmpCubeTransform.getContainer().name);
         initializePhysicsBody(cmpCubeTransform, 1, 1 + cubeNo);
         cubeNo++;
       }
@@ -74,13 +76,16 @@ namespace FudgePhysics_Communication {
 
 
   function update(): void {
-
-    //Physics CANNON
-    world.step(f.Loop.timeFrameGame / 1000);
-    for (let i: number = 1; i < bodies.length; i++) {
-      applyPhysicsBody(cubes[i - 1].getComponent(f.ComponentTransform), i);
+    if (starttimer <= 0) {
+      //Physics CANNON
+      world.step(f.Loop.timeFrameGame / 1000);
+      for (let i: number = 1; i < bodies.length; i++) {
+        applyPhysicsBody(cubes[i - 1].getComponent(f.ComponentTransform), i);
+      }
+      //EndPhysics
+    } else {
+      starttimer -= f.Loop.timeFrameGame / 1000;
     }
-    //EndPhysics
 
     viewPort.draw();
     measureFPS();
@@ -130,7 +135,8 @@ namespace FudgePhysics_Communication {
       material: mat,
       allowSleep: true,
       sleepSpeedLimit: 0.25, // Body will feel sleepy if speed<1 (speed == norm of velocity)
-      sleepTimeLimit: 1 // Body falls asleep after 1s of sleepiness
+      sleepTimeLimit: 1, // Body falls asleep after 1s of sleepiness
+      linearDamping: 0.3
     });
     world.addBody(bodies[no]);
   }
@@ -141,23 +147,22 @@ namespace FudgePhysics_Communication {
     let tmpPosition: f.Vector3 = new f.Vector3(bodies[no].position.x, bodies[no].position.y, bodies[no].position.z);
 
     let mutator: f.Mutator = {};
-    let tmpRotation: f.Vector3 = makeRotationFromQuaternion(bodies[no].quaternion, node.mtxLocal.rotation);
+    let tmpRotation: f.Vector3 = makeRotationFromQuaternion(bodies[no].quaternion);
 
     mutator["rotation"] = tmpRotation;
-    node.mtxLocal.mutate(mutator);
     mutator["translation"] = tmpPosition;
     node.mtxLocal.mutate(mutator);
 
   }
 
 
-  function makeRotationFromQuaternion(q: any, targetAxis: f.Vector3 = new f.Vector3(1, 1, 1)): f.Vector3 {
+  function makeRotationFromQuaternion(q: any): f.Vector3 {
     let angles: f.Vector3 = new f.Vector3();
 
     // roll (x-axis rotation)
     let sinr_cosp: number = 2 * (q.w * q.x + q.y * q.z);
     let cosr_cosp: number = 1 - 2 * (q.x * q.x + q.y * q.y);
-    angles.x = Math.atan2(sinr_cosp, cosr_cosp) * 60; //f.Loop.getFpsRealAverage(); //*Framerate? //* 60;
+    angles.x = Math.atan2(sinr_cosp, cosr_cosp) * 60; //f.Loop.getFpsRealAverage(); //*Framerate?
 
     // pitch (y-axis rotation)
     let sinp: number = 2 * (q.w * q.y - q.z * q.x);
@@ -173,7 +178,6 @@ namespace FudgePhysics_Communication {
     //f.Debug.log(angles);
     return angles;
   }
-
 
   function copysign(a: number, b: number): number {
     return b < 0 ? -Math.abs(a) : Math.abs(a);

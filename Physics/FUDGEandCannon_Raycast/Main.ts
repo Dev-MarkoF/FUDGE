@@ -42,6 +42,18 @@ namespace FudgePhysics_Communication {
     cmpCubeTransform2.local.translate(new f.Vector3(0, 3, 0));
     hierarchy.appendChild(cubes[1]);
 
+    cubes[2] = createCompleteMeshNode("Cube_1", new f.Material("CubeRay", f.ShaderFlat, new f.CoatColored(new f.Color(0, 0, 1, 1))), new f.MeshCube());
+    let cmpCubeTransform3: f.ComponentTransform = cubes[2].getComponent(f.ComponentTransform);
+    cmpCubeTransform3.local.translate(new f.Vector3(1, 1, 0));
+    cmpCubeTransform3.local.scale(new f.Vector3(0.2, 0.2, 0.2));
+    hierarchy.appendChild(cubes[2]);
+
+    cubes[3] = createCompleteMeshNode("Cube_1", new f.Material("CubeRay", f.ShaderFlat, new f.CoatColored(new f.Color(0, 0, 0.5, 1))), new f.MeshCube());
+    cmpCubeTransform3 = cubes[3].getComponent(f.ComponentTransform);
+    cmpCubeTransform3.local.translate(new f.Vector3(2, 2, 0));
+    cmpCubeTransform3.local.scale(new f.Vector3(0.2, 0.2, 0.2));
+    hierarchy.appendChild(cubes[3]);
+
 
 
     let cmpLight: f.ComponentLight = new f.ComponentLight(new f.LightDirectional(f.Color.CSS("WHITE")));
@@ -195,8 +207,9 @@ namespace FudgePhysics_Communication {
 
   function hndPointerDown(_event: f.EventPointer): void {
     let cam: f.Node = cmpCamera.getContainer();
+    let mouse: f.Vector2 = new f.Vector2(_event.pointerX, _event.pointerY);
     //Canvas Space to Cam/World Space
-    posProjection = viewPort.pointClientToProjection(new f.Vector2(_event.pointerX, _event.pointerY));
+    posProjection = viewPort.pointClientToProjection(mouse);
     let projection: f.Vector3 = cmpCamera.project(cmpCamera.pivot.translation);
     let posClient: f.Vector2 = viewPort.pointClipToClient(projection.toVector2());
     let posScreen: f.Vector2 = viewPort.pointClientToScreen(posClient);
@@ -208,13 +221,13 @@ namespace FudgePhysics_Communication {
 
 
     //Ray
-    let origin: f.Vector3 = new f.Vector3(posProjection.x, posProjection.y, 1);
+    let origin: f.Vector3 = new f.Vector3(-posProjection.x * 2, posProjection.y * 2, 1.5);
     origin.transform(cmpCamera.pivot, true);
     let dir: f.Vector3 = new f.Vector3(0, 0, 1);
-    dir.transform(cmpCamera.ViewProjectionMatrix, false);
-    // dir.normalize();
+    dir.transform(cmpCamera.pivot, false); //cmpCamera.ViewProjectionMatrix, false);
+    dir.normalize();
 
-    let end: CANNON.Vec3 = getRayEndPoint(origin, dir, 20);
+    let end: CANNON.Vec3 = getRayEndPoint(origin, dir, 10);
     let hitResult = new CANNON.RaycastResult();
     let options = {};
 
@@ -224,25 +237,28 @@ namespace FudgePhysics_Communication {
 
 
     let mutator: f.Mutator = {};
+    mutator["translation"] = origin;
+    cubes[2].mtxLocal.mutate(mutator);
     mutator["translation"] = end;
-    cubes[1].mtxLocal.mutate(mutator);
+    cubes[3].mtxLocal.mutate(mutator);
+
 
 
     bodies[1].position = new CANNON.Vec3(hitResult.hitPointWorld.x, hitResult.hitPointWorld.y, hitResult.hitPointWorld.z);
-    bodies[1].type = CANNON.Body.KINEMATIC;
-    bodies[1].velocity = new CANNON.Vec3(0, 0, 0);
+    // bodies[1].type = CANNON.Body.KINEMATIC;
+    // bodies[1].velocity = new CANNON.Vec3(0, 0, 0);
 
     f.Debug.log("EndCalc:" + dir);
-    // f.Debug.log("CubePos:" + bodies[1].position);
+    f.Debug.log("CubePos:" + bodies[1].position);
     f.Debug.log("End:" + end);
     f.Debug.log("Origin:" + origin);
     f.Debug.log(hitResult);
-    // f.Debug.log("PosNew: " + bodies[1].position);
+    //f.Debug.log("PosNew: " + bodies[1].position);
 
   }
 
   function hndPointerUp(_event: f.EventPointer) {
-    bodies[1].type = CANNON.Body.DYNAMIC;
+    // bodies[1].type = CANNON.Body.DYNAMIC;
   }
 
 }

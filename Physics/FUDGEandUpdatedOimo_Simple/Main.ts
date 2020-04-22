@@ -20,6 +20,9 @@ namespace FudgePhysics_Communication {
   let bodies = new Array();
   let world = new oimo.World();
 
+  let matHit: f.Material = new f.Material("Ground", f.ShaderFlat, new f.CoatColored(new f.Color(0, 1, 0, 1)));
+  let matNormal: f.Material = new f.Material("Ground", f.ShaderFlat, new f.CoatColored(new f.Color(1, 0, 0, 1)));
+
   function init(_event: Event): void {
     f.Debug.log(app);
     f.RenderManager.initialize();
@@ -73,6 +76,7 @@ namespace FudgePhysics_Communication {
     applyPhysicsBody(cubes[0].getComponent(f.ComponentTransform), 1);
     applyPhysicsBody(cubes[1].getComponent(f.ComponentTransform), 2);
     //EndPhysics
+    raycastMatChange();
 
     viewPort.draw();
     measureFPS();
@@ -119,6 +123,8 @@ namespace FudgePhysics_Communication {
     let rb: oimo.RigidBody = new oimo.RigidBody(bodyc);
     rb.addShape(new oimo.Shape(shapec));
     rb.setMassData(massData);
+    rb.getShapeList().setRestitution(0);
+    rb.getShapeList().setFriction(1);
     bodies[no] = rb;
     world.addRigidBody(rb);
   }
@@ -128,17 +134,26 @@ namespace FudgePhysics_Communication {
     let tmpPosition: f.Vector3 = new f.Vector3(bodies[no].getPosition().x, bodies[no].getPosition().y, bodies[no].getPosition().z);
 
     let rotMutator: f.Mutator = {};
-    let tmpRotation: f.Vector3 = makeRotationFromQuaternion(bodies[no].getOrientation(), node.mtxWorld.rotation);
-    //f.Debug.log(tmpRotation);
+    let tmpRotation: f.Vector3 = makeRotationFromQuaternion(bodies[no].getOrientation());
     rotMutator["rotation"] = tmpRotation;
-    //node.mtxLocal.rotateX(tmpRotation.x);
-    node.mtxLocal.mutate(rotMutator);
     rotMutator["translation"] = tmpPosition;
     node.mtxLocal.mutate(rotMutator);
   }
 
+  function raycastMatChange(): void {
+    let ray: oimo.RayCastClosest = new oimo.RayCastClosest();
+    let begin: oimo.Vec3 = new oimo.Vec3(- 5, 0.3, 0);
+    let end: oimo.Vec3 = getRayEndPoint(begin, new f.Vector3(1, 0, 0), 10);
+    ray.clear();
+    world.rayCast(begin, end, ray);
+    if (ray.hit)
+      cubes[0].getComponent(f.ComponentMaterial).material = matHit;
+    else {
+      cubes[0].getComponent(f.ComponentMaterial).material = matNormal;
+    }
+  }
 
-  function makeRotationFromQuaternion(q: any, targetAxis: f.Vector3 = new f.Vector3(1, 1, 1)): f.Vector3 {
+  function makeRotationFromQuaternion(q: any): f.Vector3 {
     let angles: f.Vector3 = new f.Vector3();
 
     // roll (x-axis rotation)
@@ -162,6 +177,16 @@ namespace FudgePhysics_Communication {
 
   function copysign(a: number, b: number): number {
     return b < 0 ? -Math.abs(a) : Math.abs(a);
+  }
+
+  function getRayEndPoint(start: f.Vector3, direction: f.Vector3, length: number): f.Vector3 {
+    let endpoint: f.Vector3 = f.Vector3.ZERO();
+    endpoint.add(start);
+    let endDirection: f.Vector3 = direction;
+    endDirection.scale(length);
+    endpoint.add(endDirection);
+    return endpoint;
+
   }
 
 }

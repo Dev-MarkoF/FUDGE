@@ -32,7 +32,7 @@ namespace FudgePhysics_Communication {
     cubes[0] = createCompleteMeshNode("Cube_1", new f.Material("Cube", f.ShaderFlat, new f.CoatColored(new f.Color(1, 0, 0, 1))), new f.MeshCube());
     let cmpCubeTransform: f.ComponentTransform = cubes[0].getComponent(f.ComponentTransform);
     cmpCubeTransform.local.translate(new f.Vector3(0, 2, 0));
-    cubes[0].mtxWorld.rotateX(45);
+    //cubes[0].mtxWorld.rotateX(45);
     hierarchy.appendChild(cubes[0]);
 
     cubes[1] = createCompleteMeshNode("Cube_2", new f.Material("Cube", f.ShaderFlat, new f.CoatColored(new f.Color(1, 0, 0, 1))), new f.MeshCube());
@@ -51,6 +51,7 @@ namespace FudgePhysics_Communication {
 
     //Physics CANNON
     world.gravity = new CANNON.Vec3(0, -9.81, 0);
+    //world.solver.iterations = 10;
     world.allowSleep = true;
     initializePhysicsBody(ground.getComponent(f.ComponentTransform), 0, 0);
     initializePhysicsBody(cmpCubeTransform, 1, 1);
@@ -126,10 +127,8 @@ namespace FudgePhysics_Communication {
     let tmpRotation: f.Vector3 = makeRotationFromQuaternion(bodies[no].quaternion, node.mtxLocal.rotation);
 
     mutator["rotation"] = tmpRotation;
-    node.mtxLocal.mutate(mutator);
     mutator["translation"] = tmpPosition;
     node.mtxLocal.mutate(mutator);
-
   }
 
 
