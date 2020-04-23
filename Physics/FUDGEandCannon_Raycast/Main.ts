@@ -146,7 +146,8 @@ namespace FudgePhysics_Communication {
       material: mat,
       allowSleep: true,
       sleepSpeedLimit: 0.25, // Body will feel sleepy if speed<1 (speed == norm of velocity)
-      sleepTimeLimit: 1 // Body falls asleep after 1s of sleepiness
+      sleepTimeLimit: 1, // Body falls asleep after 1s of sleepiness
+      linearDamping: 0.3
     });
     world.addBody(bodies[no]);
   }
@@ -225,7 +226,7 @@ namespace FudgePhysics_Communication {
     origin.transform(cmpCamera.pivot, true);
     let dir: f.Vector3 = new f.Vector3(0, 0, 1);
     dir.transform(cmpCamera.pivot, false); //cmpCamera.ViewProjectionMatrix, false);
-    dir.normalize();
+    //dir.normalize();
 
     let end: CANNON.Vec3 = getRayEndPoint(origin, dir, 10);
     let hitResult = new CANNON.RaycastResult();
