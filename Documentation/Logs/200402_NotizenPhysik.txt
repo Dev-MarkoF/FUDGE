@@ -1,0 +1,12 @@
+Physik Integration:
+- Fudge benötigt eine Integration von Quaternionen, die Rotation wird in Form von Matrizen gespeichert,
+aber Physik Engines sind alle auf Quaternionen ausgelegt.
+
+- Derzeitige Umrechnung von Quaternionen ist Framerate abhängig und ist daher leicht ungenau.
+
+- Alle bisher betrachteten Physik Engines bis auf EnergyJS sind bisher in ihrer Grundform integrierbar.
+
+- Es muss eine Physik-Welt erstellt werden, welche ihre eigenen Berechnungen über Rigidbodies ausführt und
+diese wieder den Fudge Nodes bzw. der Transform der übergeben werden.
+
+- Es ergibt sich daher möglicherweise, dass es mehrere Physik Komponenten benötigt für Dinge wie Federn und Gelenke

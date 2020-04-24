@@ -1,0 +1,19 @@
+Physik Integration:
+- Wichtige Funktionen der Integration ist die Abdeckung von: (in Absteigender Reihenfolge)
+	> Collision - Hierarchie mit Betrachten, d.h. Basisobjekt wird beeinflusst, alle Kindobjekte übernehmen
+	> Raycast
+	> Collision Events
+	> Joints / Hinges / Springs
+	> Collision Trigger
+	
+- Interaktionsqualität ist wichtiger als Funktionsumfang und Genauigkeit, ebenso die Performanz (sofern 
+sie nicht ausschlaggebend einbricht)
+
+- WebAssembly wird nur von ammo.js unterstützt, die Vorteile sind von geringem Wert in kleinen Beispielen,
+und mit höheren initialen Ladezeiten verbunden
+
+- Cannon.js und Ammo.js sehen derzeit am vielversprechensten aus, wobei Oimo.js bis auf wenige Ausnahmen, ebenso 
+das Meiste abdeckt
+
+- Physik könnte möglicherweise eine eigene Update Loop benötigen, derzeit unklar. Aber die Berechnungen sollten 
+möglichst konstant ausgeführt werden und die Übertragung auf die Darstellung kann davon unabhängig langsamer agieren.

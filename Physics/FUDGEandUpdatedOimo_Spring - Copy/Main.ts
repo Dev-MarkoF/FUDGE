@@ -1,13 +1,13 @@
 ///<reference path="../../Core/Build/FudgeCore.d.ts"/>
 ///<reference path="../Physics_Library/OimoPhysics.d.ts"/>
 
-//import { oimo } from "../Physics_Library/OimoPhysics";
+import { oimo } from "../Physics_Library/OimoPhysics";
 
 
 
 
 namespace FudgePhysics_Communication {
-  import oimo = window.OIMO;
+  //import oimo = window.OIMO;
   import f = FudgeCore;
 
 

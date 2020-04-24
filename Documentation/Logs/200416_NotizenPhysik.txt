@@ -1,0 +1,6 @@
+Physik Integration:
+- Setzen von Physik Berechnungen bzw. Übertragung von Welt auf Lokal in den Rendermanager, nach dem ersten Pass (Transform/Lights)
+- Oimo.js stammt ursprünglich von Oimo Physics welche ein Update erfahren haben, sich ein wenig anders verhält, aber mehr Funktionen bietet
+	-> Muss weiter untersucht werden, da Oimo.js wichtige Funktionen wie Raycast nicht enthält
+- Bisherige Tests zeigen, dass CannonJs zwar in der Performanz Ammo.js überlegen ist, aber weniger Funktionen bietet darunter auch wichtige,
+wie z.B. Capsule Colider fehlen

@@ -1,0 +1,9 @@
+Physik Integration:
+- Auswahl einer Physik Engine vorerst endgültig treffen, anhand von Abwägung der Wichtigkeit von Funktionen
+	> Funktionsumfang - ammo.js
+	> Dokumentation und Beispiele - cannonjs, oimophysics
+	> Bedienfreundlichkeit - cannonjs, oimophysics
+
+-> OimoPhysics besitzt eine Typescript Definition, allerdings ist die Einbindung fehlerhaft? System Error
+	-> Tsconfig, module Einbindung überprüfen - typescript lang artikel zu modulsystemen lesen
+	
