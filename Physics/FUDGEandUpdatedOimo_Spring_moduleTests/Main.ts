@@ -5,11 +5,9 @@ import { oimo } from "../Physics_Library/OimoPhysics";
 
 
 
-
 namespace FudgePhysics_Communication {
   //import oimo = window.OIMO;
   import f = FudgeCore;
-
 
   window.addEventListener("load", init);
   const app: HTMLCanvasElement = document.querySelector("canvas");
@@ -20,8 +18,8 @@ namespace FudgePhysics_Communication {
   let cubes: f.Node[] = new Array();
   let fpsDisplay: HTMLElement = document.querySelector("h2#FPS");
   let bodies = new Array();
-  let world = new oimo.World();
-  let floorSpring: oimo.joint;
+  let world = new oimo.dynamics.World();
+  let floorSpring: oimo.dynamics.constraint.joint.Joint;
 
   let matHit: f.Material = new f.Material("Ground", f.ShaderFlat, new f.CoatColored(new f.Color(0, 1, 0, 1)));
   let matNormal: f.Material = new f.Material("Ground", f.ShaderFlat, new f.CoatColored(new f.Color(1, 0, 0, 1)));
@@ -128,19 +126,19 @@ namespace FudgePhysics_Communication {
 
   function initializePhysicsBody(_cmpTransform: f.ComponentTransform, dynamic: boolean, no: number) {
     let node: f.Node = _cmpTransform.getContainer();
-    let scale: oimo.Vec3 = new oimo.Vec3(node.mtxLocal.scaling.x / 2, node.mtxLocal.scaling.y / 2, node.mtxLocal.scaling.z / 2);
-    let shapec: oimo.ShapeConfig = new oimo.ShapeConfig();
-    let geometry: oimo.Geometry = new oimo.BoxGeometry(scale);
+    let scale: oimo.common.Vec3 = new oimo.common.Vec3(node.mtxLocal.scaling.x / 2, node.mtxLocal.scaling.y / 2, node.mtxLocal.scaling.z / 2);
+    let shapec: oimo.dynamics.rigidbody.ShapeConfig = new oimo.dynamics.rigidbody.ShapeConfig();
+    let geometry: oimo.collision.geometry.Geometry = new oimo.collision.geometry.BoxGeometry(scale);
     shapec.geometry = geometry;
-    let massData: oimo.MassData = new oimo.MassData();
+    let massData: oimo.dynamics.rigidbody.MassData = new oimo.dynamics.rigidbody.MassData();
     massData.mass = 1;
 
-    let bodyc: oimo.RigidBodyConfig = new oimo.RigidBodyConfig();
-    bodyc.type = dynamic ? oimo.RigidBodyType.DYNAMIC : oimo.RigidBodyType.STATIC;
-    bodyc.position = new oimo.Vec3(node.mtxLocal.translation.x, node.mtxLocal.translation.y, node.mtxLocal.translation.z);
-    bodyc.rotation.fromEulerXyz(new oimo.Vec3(node.mtxLocal.rotation.x, node.mtxLocal.rotation.y, node.mtxLocal.rotation.z));
-    let rb: oimo.RigidBody = new oimo.RigidBody(bodyc);
-    rb.addShape(new oimo.Shape(shapec));
+    let bodyc: oimo.dynamics.rigidbody.RigidBodyConfig = new oimo.dynamics.rigidbody.RigidBodyConfig();
+    bodyc.type = dynamic ? oimo.dynamics.rigidbody.RigidBodyType.DYNAMIC : oimo.dynamics.rigidbody.RigidBodyType.STATIC;
+    bodyc.position = new oimo.common.Vec3(node.mtxLocal.translation.x, node.mtxLocal.translation.y, node.mtxLocal.translation.z);
+    bodyc.rotation.fromEulerXyz(new oimo.common.Vec3(node.mtxLocal.rotation.x, node.mtxLocal.rotation.y, node.mtxLocal.rotation.z));
+    let rb: oimo.dynamics.rigidbody.RigidBody = new oimo.dynamics.rigidbody.RigidBody(bodyc);
+    rb.addShape(new oimo.dynamics.rigidbody.Shape(shapec));
     rb.setMassData(massData);
     rb.getShapeList().setRestitution(0);
     rb.getShapeList().setFriction(1);
@@ -160,9 +158,9 @@ namespace FudgePhysics_Communication {
   }
 
   function raycastMatChange(): void {
-    let ray: oimo.RayCastClosest = new oimo.RayCastClosest();
-    let begin: oimo.Vec3 = new oimo.Vec3(- 5, 0.3, 0);
-    let end: oimo.Vec3 = getRayEndPoint(begin, new f.Vector3(1, 0, 0), 10);
+    let ray: oimo.dynamics.callback.RayCastClosest = new oimo.dynamics.callback.RayCastClosest();
+    let begin: oimo.common.Vec3 = new oimo.common.Vec3(- 5, 0.3, 0);
+    let end: oimo.common.Vec3 = getRayEndPoint(begin, new f.Vector3(1, 0, 0), 10);
     ray.clear();
     world.rayCast(begin, end, ray);
     if (ray.hit)
@@ -172,7 +170,7 @@ namespace FudgePhysics_Communication {
     }
   }
 
-  function makeRotationFromQuaternion(q: any): f.Vector3 {
+  function makeRotationFromQuaternion(q: any): f.Vector3 { //
     let angles: f.Vector3 = new f.Vector3();
 
     // roll (x-axis rotation)
@@ -207,16 +205,16 @@ namespace FudgePhysics_Communication {
     return endpoint;
   }
 
-  function addPrismaticJoint(rb1: oimo.RigidBody, rb2: oimo.RigidBody): oimo.PrismaticJoint {
-    let axis: oimo.Vec3 = new oimo.Vec3(0, 1, 0);
-    let anchor: oimo.Vec3 = rb1.getPosition();
-    let jc: oimo.PrismaticJointConfig = new oimo.PrismaticJointConfig();
+  function addPrismaticJoint(rb1: oimo.dynamics.rigidbody.RigidBody, rb2: oimo.dynamics.rigidbody.RigidBody): oimo.dynamics.constraint.joint.PrismaticJoint {
+    let axis: oimo.common.Vec3 = new oimo.common.Vec3(0, 1, 0);
+    let anchor: oimo.common.Vec3 = rb1.getPosition();
+    let jc: oimo.dynamics.constraint.joint.PrismaticJointConfig = new oimo.dynamics.constraint.joint.PrismaticJointConfig();
     jc.init(rb1, rb2, anchor, axis);
-    let springDamper: oimo.SpringDamper = new oimo.SpringDamper().setSpring(3, 0.2);
-    let limitMotor: oimo.TranslationalLimitMotor = new oimo.TranslationalLimitMotor().setLimits(0, 0);
+    let springDamper: oimo.dynamics.constraint.joint.SpringDamper = new oimo.dynamics.constraint.joint.SpringDamper().setSpring(3, 0.2);
+    let limitMotor: oimo.dynamics.constraint.joint.TranslationalLimitMotor = new oimo.dynamics.constraint.joint.TranslationalLimitMotor().setLimits(0, 0);
     jc.springDamper = springDamper;
     jc.limitMotor = limitMotor;
-    let j: oimo.PrismaticJoint = new oimo.PrismaticJoint(jc);
+    let j: oimo.dynamics.constraint.joint.PrismaticJoint = new oimo.dynamics.constraint.joint.PrismaticJoint(jc);
     world.addJoint(j);
     return j;
   }
