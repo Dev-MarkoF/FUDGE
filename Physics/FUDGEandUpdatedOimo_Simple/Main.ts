@@ -146,8 +146,10 @@ namespace FudgePhysics_Communication {
     let end: oimo.Vec3 = getRayEndPoint(begin, new f.Vector3(1, 0, 0), 10);
     ray.clear();
     world.rayCast(begin, end, ray);
-    if (ray.hit)
+    if (ray.hit) {
+      f.Debug.log(ray);
       cubes[0].getComponent(f.ComponentMaterial).material = matHit;
+    }
     else {
       cubes[0].getComponent(f.ComponentMaterial).material = matNormal;
     }
