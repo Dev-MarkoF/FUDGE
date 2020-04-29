@@ -5,11 +5,8 @@
 import f = FudgeCore;
 
 
-
-
 Ammo().then(function (Ammo) {
 
-  let world: Ammo.btDiscreteDynamicsWorld;
 
   const app: HTMLCanvasElement = document.querySelector("canvas");
   let viewPort: f.Viewport;
@@ -18,7 +15,21 @@ Ammo().then(function (Ammo) {
   const times: number[] = [];
   let cubes: f.Node[] = new Array();
   let fpsDisplay: HTMLElement = document.querySelector("h2#FPS");
+
+  //Physics Variables
+  let world: Ammo.btDiscreteDynamicsWorld;
   let bodies = new Array();
+  let transform: Ammo.btTransform = new Ammo.btTransform();
+
+  //Raycast Variables
+  let tempVRayOrigin = new Ammo.btVector3(-5, 1.2, 0);
+  let tempVRayDest = new Ammo.btVector3(5, 1.2, 0);
+  let closestRayResultCallback = new Ammo.ClosestRayResultCallback(tempVRayOrigin, tempVRayDest);
+  let matHit: f.Material = new f.Material("Ground", f.ShaderFlat, new f.CoatColored(new f.Color(0, 1, 0, 1)));
+  let matHitOther: f.Material = new f.Material("Ground", f.ShaderFlat, new f.CoatColored(new f.Color(0, 1, 0.7, 1)));
+  let matNormal: f.Material = new f.Material("Ground", f.ShaderFlat, new f.CoatColored(new f.Color(1, 0, 0, 1)));
+
+
 
   let collisionConfiguration = new Ammo.btDefaultCollisionConfiguration(),
     dispatcher = new Ammo.btCollisionDispatcher(collisionConfiguration),
@@ -105,15 +116,9 @@ Ammo().then(function (Ammo) {
     });
   }
 
-  let tempVRayOrigin = new Ammo.btVector3(-5, 0.3, 0);
-  let tempVRayDest = new Ammo.btVector3(5, 0.3, 0);
-  let closestRayResultCallback = new Ammo.ClosestRayResultCallback(tempVRayOrigin, tempVRayDest);
-  let matHit: f.Material = new f.Material("Ground", f.ShaderFlat, new f.CoatColored(new f.Color(0, 1, 0, 1)));
-  let matNormal: f.Material = new f.Material("Ground", f.ShaderFlat, new f.CoatColored(new f.Color(1, 0, 0, 1)));
-
   function raycast() {
     // Reset closestRayResultCallback to reuse it
-    var rayCallBack = Ammo.castObject(closestRayResultCallback, Ammo.RayResultCallback);
+    let rayCallBack = Ammo.castObject(closestRayResultCallback, Ammo.RayResultCallback);
     rayCallBack.set_m_closestHitFraction(1);
     rayCallBack.set_m_collisionObject(null);
 
@@ -121,11 +126,16 @@ Ammo().then(function (Ammo) {
     world.rayTest(tempVRayOrigin, tempVRayDest, closestRayResultCallback);
 
     if (closestRayResultCallback.hasHit()) {
-
-      cubes[0].getComponent(f.ComponentMaterial).material = matHit;
+      let callbackBody = Ammo.castObject(closestRayResultCallback.get_m_collisionObject(), Ammo.btRigidBody);
+      if (callbackBody == bodies[1]) {
+        cubes[0].getComponent(f.ComponentMaterial).material = matHit;
+      } else if (callbackBody == bodies[2]) {
+        cubes[1].getComponent(f.ComponentMaterial).material = matHitOther;
+      }
     }
     else {
       cubes[0].getComponent(f.ComponentMaterial).material = matNormal;
+      cubes[1].getComponent(f.ComponentMaterial).material = matNormal;
     }
 
   }
@@ -166,7 +176,6 @@ Ammo().then(function (Ammo) {
     world.addRigidBody(body);
   }
 
-  let transform: Ammo.btTransform = new Ammo.btTransform();
   function applyPhysicsBody(_cmpTransform: f.ComponentTransform, no: number): void {
     let node: f.Node = _cmpTransform.getContainer();
 
@@ -177,6 +186,8 @@ Ammo().then(function (Ammo) {
     let origin = transform.getOrigin();
     let tmpPosition: f.Vector3 = new f.Vector3(origin.x(), origin.y(), origin.z());
     let rotation = transform.getRotation();
+    //let rotTemp: Ammo.btVector3 = transform.getRotation().getAxis(); //Rotationen nicht aus Quaterions berechnen
+    //let rot: f.Vector3 = new f.Vector3(rotTemp.x(), rotTemp.y(), rotTemp.z());
     let rotQuat = new Array();
     rotQuat.x = rotation.x();
     rotQuat.y = rotation.y();

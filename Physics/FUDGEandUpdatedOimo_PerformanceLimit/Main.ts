@@ -65,6 +65,7 @@ namespace FudgePhysics_Communication {
     if (starttimer <= 0) {
       //Physics OIMO
       world.step(f.Loop.timeFrameGame / 1000);
+      //world.step(1 / 60);
       applyPhysicsBody(ground.getComponent(f.ComponentTransform), 0);
       for (let i: number = 1; i < bodies.length; i++) {
         applyPhysicsBody(cubes[i - 1].getComponent(f.ComponentTransform), i);
