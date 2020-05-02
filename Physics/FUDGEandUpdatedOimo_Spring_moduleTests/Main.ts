@@ -5,10 +5,12 @@ import { oimo } from "../Physics_Library/OimoPhysics";
 
 
 
+
 namespace FudgePhysics_Communication {
   //import oimo = window.OIMO;
-  import f = FudgeCore;
 
+  import f = FudgeCore;
+  f.Debug.log("Test");
   window.addEventListener("load", init);
   const app: HTMLCanvasElement = document.querySelector("canvas");
   let viewPort: f.Viewport;
