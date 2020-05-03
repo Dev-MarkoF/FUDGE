@@ -188,14 +188,14 @@ Ammo().then(function (Ammo) {
     let rotation = transform.getRotation();
     //let rotTemp: Ammo.btVector3 = transform.getRotation().getAxis(); //Rotationen nicht aus Quaterions berechnen
     //let rot: f.Vector3 = new f.Vector3(rotTemp.x(), rotTemp.y(), rotTemp.z());
-    let rotQuat = new Array();
-    rotQuat.x = rotation.x();
-    rotQuat.y = rotation.y();
-    rotQuat.z = rotation.z();
-    rotQuat.w = rotation.w();
+    let rotQuat: f.Quaternion = new f.Quaternion(rotation.x(), rotation.y(), rotation.z(), rotation.w()); //new Array();
+    // rotQuat.x = rotation.x();
+    // rotQuat.y = rotation.y();
+    // rotQuat.z = rotation.z();
+    // rotQuat.w = rotation.w();
 
     let mutator: f.Mutator = {};
-    let tmpRotation: f.Vector3 = makeRotationFromQuaternion(rotQuat, node.mtxLocal.rotation);
+    let tmpRotation: f.Vector3 = rotQuat.toDegrees(); //makeRotationFromQuaternion(rotQuat, node.mtxLocal.rotation);
 
     mutator["rotation"] = tmpRotation;
     node.mtxLocal.mutate(mutator);
@@ -223,7 +223,7 @@ Ammo().then(function (Ammo) {
     // yaw (z-axis rotation)
     let siny_cosp: number = 2 * (q.w * q.z + q.x * q.y);
     let cosy_cosp: number = 1 - 2 * (q.y * q.y + q.z * q.z);
-    angles.z = Math.atan2(siny_cosp, cosy_cosp) * f.Loop.getFpsRealAverage();;
+    angles.z = Math.atan2(siny_cosp, cosy_cosp) * f.Loop.getFpsRealAverage();
     //f.Debug.log(angles);
     return angles;
   }

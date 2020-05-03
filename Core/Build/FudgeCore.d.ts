@@ -1423,6 +1423,19 @@ declare namespace FudgeCore {
 }
 declare namespace FudgeCore {
     /**
+       * Acts as the physical representation of the [[Node]] it's attached to.
+       * It's the connection between the Fudge Rendered World and the Physics World
+       * @authors Marko Fehrenbach, HFU, 2020
+       */
+    class ComponentRigidbody extends Component {
+        /**
+         * Testfunction to show it's there
+         */
+        test(): void;
+    }
+}
+declare namespace FudgeCore {
+    /**
      * Base class for scripts the user writes
      * @authors Jirka Dell'Oro-Friedl, HFU, 2019
      */
@@ -3072,6 +3085,43 @@ declare namespace FudgeCore {
          * @param _nodeResource
          */
         private set;
+    }
+}
+declare namespace FudgeCore {
+    /**
+      * Storing and manipulating rotations in the form of quaternions.
+      * Constructed out of the 4 components x,y,z,w.
+      * @authors Marko Fehrenbach, HFU, 2020
+      */
+    class Quaternion extends Mutable {
+        private x;
+        private y;
+        private z;
+        private w;
+        constructor(_x?: number, _y?: number, _z?: number, _w?: number);
+        get X(): number;
+        get Y(): number;
+        get Z(): number;
+        get W(): number;
+        set X(_x: number);
+        set Y(_y: number);
+        set Z(_z: number);
+        set W(_w: number);
+        /**
+         * Create quaternion from vector3 angles in degree
+         */
+        setFromVector3(rollX: number, pitchY: number, yawZ: number): void;
+        /**
+         * Return euler angles in vector3 from quaterion
+         */
+        toEulerangles(): Vector3;
+        /**
+         * Return angles in degrees as vector3 from quaterion
+         */
+        toDegrees(): Vector3;
+        getMutator(): Mutator;
+        protected reduceMutator(_mutator: Mutator): void;
+        private copysign;
     }
 }
 declare namespace FudgeCore {

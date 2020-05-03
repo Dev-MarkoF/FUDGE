@@ -1,7 +1,7 @@
 ///<reference path="../../Core/Build/FudgeCore.d.ts"/>
 ///<reference path="../Physics_Library/OimoPhysics.d.ts"/>
 
-import { oimo } from "../Physics_Library/OimoPhysics";
+import * as oimo from "../Physics_Library/OimoPhysics";
 
 
 
@@ -152,11 +152,13 @@ namespace FudgePhysics_Communication {
     let node: f.Node = _cmpTransform.getContainer();
     let tmpPosition: f.Vector3 = new f.Vector3(bodies[no].getPosition().x, bodies[no].getPosition().y, bodies[no].getPosition().z);
 
-    let rotMutator: f.Mutator = {};
-    let tmpRotation: f.Vector3 = makeRotationFromQuaternion(bodies[no].getOrientation());
-    rotMutator["rotation"] = tmpRotation;
-    rotMutator["translation"] = tmpPosition;
-    node.mtxLocal.mutate(rotMutator);
+    let mutator: f.Mutator = {};
+    let orientation = bodies[no].getOrientation();
+    let tmpQuat: f.Quaternion = new f.Quaternion(orientation.x, orientation.y, orientation.z, orientation.w);
+    let tmpRotation: f.Vector3 = tmpQuat.toDegrees();
+    mutator["rotation"] = tmpRotation;
+    mutator["translation"] = tmpPosition;
+    node.mtxLocal.mutate(mutator);
   }
 
   function raycastMatChange(): void {
@@ -170,32 +172,6 @@ namespace FudgePhysics_Communication {
     else {
       cubes[0].getComponent(f.ComponentMaterial).material = matNormal;
     }
-  }
-
-  function makeRotationFromQuaternion(q: any): f.Vector3 { //
-    let angles: f.Vector3 = new f.Vector3();
-
-    // roll (x-axis rotation)
-    let sinr_cosp: number = 2 * (q.w * q.x + q.y * q.z);
-    let cosr_cosp: number = 1 - 2 * (q.x * q.x + q.y * q.y);
-    angles.x = Math.atan2(sinr_cosp, cosr_cosp) * 60;
-
-    // pitch (y-axis rotation)
-    let sinp: number = 2 * (q.w * q.y - q.z * q.x);
-    if (Math.abs(sinp) >= 1)
-      angles.y = copysign(Math.PI / 2, sinp) * 60; // use 90 degrees if out of range
-    else
-      angles.y = Math.asin(sinp);
-
-    // yaw (z-axis rotation)
-    let siny_cosp: number = 2 * (q.w * q.z + q.x * q.y);
-    let cosy_cosp: number = 1 - 2 * (q.y * q.y + q.z * q.z);
-    angles.z = Math.atan2(siny_cosp, cosy_cosp) * 60;
-    return angles;
-  }
-
-  function copysign(a: number, b: number): number {
-    return b < 0 ? -Math.abs(a) : Math.abs(a);
   }
 
   function getRayEndPoint(start: f.Vector3, direction: f.Vector3, length: number): f.Vector3 {

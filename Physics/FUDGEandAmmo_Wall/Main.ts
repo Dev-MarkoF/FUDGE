@@ -154,14 +154,10 @@ namespace FudgePhysics_Communication {
     let origin = transform.getOrigin();
     let tmpPosition: f.Vector3 = new f.Vector3(origin.x(), origin.y(), origin.z());
     let rotation = transform.getRotation();
-    let rotQuat = new Array();
-    rotQuat.x = rotation.x();
-    rotQuat.y = rotation.y();
-    rotQuat.z = rotation.z();
-    rotQuat.w = rotation.w();
+    let rotQuat: f.Quaternion = new f.Quaternion(rotation.x(), rotation.y(), rotation.z(), rotation.w());
 
     let mutator: f.Mutator = {};
-    let tmpRotation: f.Vector3 = makeRotationFromQuaternion(rotQuat, node.mtxLocal.rotation);
+    let tmpRotation: f.Vector3 = rotQuat.toDegrees();
 
 
     mutator["rotation"] = tmpRotation;
@@ -169,30 +165,6 @@ namespace FudgePhysics_Communication {
     mutator["translation"] = tmpPosition;
     node.mtxLocal.mutate(mutator);
 
-  }
-
-
-  function makeRotationFromQuaternion(q: any, targetAxis: f.Vector3 = new f.Vector3(1, 1, 1)): f.Vector3 {
-    let angles: f.Vector3 = new f.Vector3();
-
-    // roll (x-axis rotation)
-    let sinr_cosp: number = 2 * (q.w * q.x + q.y * q.z);
-    let cosr_cosp: number = 1 - 2 * (q.x * q.x + q.y * q.y);
-    angles.x = Math.atan2(sinr_cosp, cosr_cosp) * 60; //*Framerate? //* 180;
-
-    // pitch (y-axis rotation)
-    let sinp: number = 2 * (q.w * q.y - q.z * q.x);
-    if (Math.abs(sinp) >= 1)
-      angles.y = copysign(Math.PI / 2, sinp) * 60; // use 90 degrees if out of range
-    else
-      angles.y = Math.asin(sinp) * 60;
-
-    // yaw (z-axis rotation)
-    let siny_cosp: number = 2 * (q.w * q.z + q.x * q.y);
-    let cosy_cosp: number = 1 - 2 * (q.y * q.y + q.z * q.z);
-    angles.z = Math.atan2(siny_cosp, cosy_cosp) * 60;
-    //f.Debug.log(angles);
-    return angles;
   }
 
   function makeQuaternionFromRotation(yawY: number, pitchX: number, rollZ: number): number[] { //From C# .Net Quaternion Class
@@ -220,11 +192,6 @@ namespace FudgePhysics_Communication {
     result[3] = cy * cp * cr + sy * sp * sr;
 
     return result;
-  }
-
-
-  function copysign(a: number, b: number): number {
-    return b < 0 ? -Math.abs(a) : Math.abs(a);
   }
 
 }

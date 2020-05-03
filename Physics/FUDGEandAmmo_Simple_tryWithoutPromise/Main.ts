@@ -160,6 +160,7 @@ namespace Fudge_PysicsCommunication {
     let cmpMaterial: f.ComponentMaterial = new f.ComponentMaterial(_material);
 
     let cmpTransform: f.ComponentTransform = new f.ComponentTransform();
+
     node.addComponent(cmpMesh);
     node.addComponent(cmpMaterial);
     node.addComponent(cmpTransform);
@@ -200,16 +201,11 @@ namespace Fudge_PysicsCommunication {
     let origin = transform.getOrigin();
     let tmpPosition: f.Vector3 = new f.Vector3(origin.x(), origin.y(), origin.z());
     let rotation = transform.getRotation();
-    //let rotTemp: Ammo.btVector3 = transform.getRotation().getAxis(); //Rotationen nicht aus Quaterions berechnen
-    //let rot: f.Vector3 = new f.Vector3(rotTemp.x(), rotTemp.y(), rotTemp.z());
-    let rotQuat = new Array();
-    rotQuat.x = rotation.x();
-    rotQuat.y = rotation.y();
-    rotQuat.z = rotation.z();
-    rotQuat.w = rotation.w();
+
+    let rotQuat: f.Quaternion = new f.Quaternion(rotation.x(), rotation.y(), rotation.z(), rotation.w());
 
     let mutator: f.Mutator = {};
-    let tmpRotation: f.Vector3 = makeRotationFromQuaternion(rotQuat, node.mtxLocal.rotation);
+    let tmpRotation: f.Vector3 = rotQuat.toDegrees();
 
     mutator["rotation"] = tmpRotation;
     node.mtxLocal.mutate(mutator);
@@ -218,29 +214,6 @@ namespace Fudge_PysicsCommunication {
 
   }
 
-
-  function makeRotationFromQuaternion(q: any, targetAxis: f.Vector3 = new f.Vector3(1, 1, 1)): f.Vector3 {
-    let angles: f.Vector3 = new f.Vector3();
-
-    // roll (x-axis rotation)
-    let sinr_cosp: number = 2 * (q.w * q.x + q.y * q.z);
-    let cosr_cosp: number = 1 - 2 * (q.x * q.x + q.y * q.y);
-    angles.x = Math.atan2(sinr_cosp, cosr_cosp) * f.Loop.getFpsRealAverage(); //*Framerate? //* 180;
-
-    // pitch (y-axis rotation)
-    let sinp: number = 2 * (q.w * q.y - q.z * q.x);
-    if (Math.abs(sinp) >= 1)
-      angles.y = copysign(Math.PI / 2, sinp) * f.Loop.getFpsRealAverage(); // use 90 degrees if out of range
-    else
-      angles.y = Math.asin(sinp) * f.Loop.getFpsRealAverage();
-
-    // yaw (z-axis rotation)
-    let siny_cosp: number = 2 * (q.w * q.z + q.x * q.y);
-    let cosy_cosp: number = 1 - 2 * (q.y * q.y + q.z * q.z);
-    angles.z = Math.atan2(siny_cosp, cosy_cosp) * f.Loop.getFpsRealAverage();;
-    //f.Debug.log(angles);
-    return angles;
-  }
 
   function makeQuaternionFromRotation(yawY: number, pitchX: number, rollZ: number): number[] { //From C# .Net Quaternion Class
     //  Roll first, about axis the object is facing, then
@@ -270,8 +243,5 @@ namespace Fudge_PysicsCommunication {
   }
 
 
-  function copysign(a: number, b: number): number {
-    return b < 0 ? -Math.abs(a) : Math.abs(a);
-  }
 
 }
