@@ -10,7 +10,6 @@ namespace FudgePhysics_Communication {
   import oimo = window.OIMO;
   import f = FudgeCore;
 
-
   window.addEventListener("load", init);
   const app: HTMLCanvasElement = document.querySelector("canvas");
   let viewPort: f.Viewport;

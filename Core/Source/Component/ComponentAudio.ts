@@ -31,9 +31,9 @@ namespace FudgeCore {
     public static readonly iSubclass: number = Component.registerSubclass(ComponentAudio);
     /** places and directs the panner relative to the world transform of the [[Node]]  */
     public pivot: Matrix4x4 = Matrix4x4.IDENTITY();
-    
+
     protected singleton: boolean = false;
-    
+
     private gain: GainNode;
     private panner: PannerNode;
     private source: AudioBufferSourceNode;

@@ -30,7 +30,6 @@ Ammo().then(function (Ammo) {
   let matNormal: f.Material = new f.Material("Ground", f.ShaderFlat, new f.CoatColored(new f.Color(1, 0, 0, 1)));
 
 
-
   let collisionConfiguration = new Ammo.btDefaultCollisionConfiguration(),
     dispatcher = new Ammo.btCollisionDispatcher(collisionConfiguration),
     overlappingPairCache = new Ammo.btDbvtBroadphase(),

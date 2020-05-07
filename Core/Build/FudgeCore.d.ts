@@ -1423,19 +1423,6 @@ declare namespace FudgeCore {
 }
 declare namespace FudgeCore {
     /**
-       * Acts as the physical representation of the [[Node]] it's attached to.
-       * It's the connection between the Fudge Rendered World and the Physics World
-       * @authors Marko Fehrenbach, HFU, 2020
-       */
-    class ComponentRigidbody extends Component {
-        /**
-         * Testfunction to show it's there
-         */
-        test(): void;
-    }
-}
-declare namespace FudgeCore {
-    /**
      * Base class for scripts the user writes
      * @authors Jirka Dell'Oro-Friedl, HFU, 2019
      */
@@ -3085,6 +3072,62 @@ declare namespace FudgeCore {
          * @param _nodeResource
          */
         private set;
+    }
+}
+declare namespace FudgeCore {
+    /**
+       * Acts as the physical representation of the [[Node]] it's attached to.
+       * It's the connection between the Fudge Rendered World and the Physics World
+       * @authors Marko Fehrenbach, HFU, 2020
+       */
+    class ComponentRigidbody extends Component {
+        constructor();
+        /**
+         * Testfunction to show it's there
+         */
+        test(): void;
+        private addRigidbodyToWorld;
+        private removeRigidbodyFromWorld;
+    }
+}
+declare namespace FudgeCore {
+    const enum EVENT_PHYSICS {
+        /** broadcast to a [[Node]] and all [[Nodes]] in the branch it's the root of */
+        TRIGGER_ENTER = "TriggerEnteredCollision",
+        /** broadcast to a [[Node]] and all [[Nodes]] in the branch it's the root of */
+        TRIGGER_LEAVE = "TriggerLeftCollision",
+        /** broadcast to a [[Node]] and all [[Nodes]] in the branch it's the root of */
+        COLLISION_ENTER = "ColliderEnteredCollision",
+        /** broadcast to a [[Node]] and all [[Nodes]] in the branch it's the root of */
+        COLLISION_LEAVE = "ColliderLeftCollision",
+        /** broadcast to a [[Node]] and all [[Nodes]] in the branch it's the root of */
+        RAYCAST_HIT = "RigidbodyWasHitByRay"
+    }
+}
+declare namespace FudgeCore {
+    /**
+   * Layers to place a node on, not every layer should collide with every layer
+   */
+    enum PHYSICS_LAYER {
+        DEFAULT = 0,
+        STATIC = 1000,
+        KINEMATIC = 2000,
+        TRIGGER = 4000,
+        LAYER_1 = 1,
+        LAYER_2 = 2,
+        LAYER_3 = 3,
+        LAYER_4 = 4
+    }
+    /**
+   * Main Physics Class to hold information about the physical representation of the scene
+   * @author Marko Fehrenbach, HFU, 2020
+   */
+    class PhysicsWorld {
+        static instance: PhysicsWorld;
+        /**
+       * Creating a physical world to represent the [[Node]] Scene Tree
+       */
+        static initializePhysics(): void;
     }
 }
 declare namespace FudgeCore {
