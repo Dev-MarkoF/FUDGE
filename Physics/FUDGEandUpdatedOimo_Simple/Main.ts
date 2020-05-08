@@ -7,7 +7,7 @@ import f = FudgeCore;
 
 
 namespace FudgePhysics_Communication {
-  import oimo = window.OIMO;
+  import oimo = OIMO;
 
   window.addEventListener("load", init);
   const app: HTMLCanvasElement = document.querySelector("canvas");
@@ -19,6 +19,7 @@ namespace FudgePhysics_Communication {
   let fpsDisplay: HTMLElement = document.querySelector("h2#FPS");
   let bodies = new Array();
   let world = new oimo.World();
+
 
   let matHit: f.Material = new f.Material("Ground", f.ShaderFlat, new f.CoatColored(new f.Color(0, 1, 0, 1)));
   let matNormal: f.Material = new f.Material("Ground", f.ShaderFlat, new f.CoatColored(new f.Color(1, 0, 0, 1)));
@@ -147,7 +148,7 @@ namespace FudgePhysics_Communication {
     ray.clear();
     world.rayCast(begin, end, ray);
     if (ray.hit) {
-      f.Debug.log(ray);
+      //f.Debug.log(ray);
       cubes[0].getComponent(f.ComponentMaterial).material = matHit;
     }
     else {
@@ -181,13 +182,13 @@ namespace FudgePhysics_Communication {
     return b < 0 ? -Math.abs(a) : Math.abs(a);
   }
 
-  function getRayEndPoint(start: f.Vector3, direction: f.Vector3, length: number): f.Vector3 {
+  function getRayEndPoint(start: oimo.Vec3, direction: f.Vector3, length: number): oimo.Vec3 {
     let endpoint: f.Vector3 = f.Vector3.ZERO();
-    endpoint.add(start);
+    endpoint.add(new f.Vector3(start.x, start.y, start.z));
     let endDirection: f.Vector3 = direction;
     endDirection.scale(length);
     endpoint.add(endDirection);
-    return endpoint;
+    return new oimo.Vec3(endpoint.x, endpoint.y, endpoint.z);
 
   }
 

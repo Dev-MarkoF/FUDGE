@@ -15,15 +15,17 @@ namespace Fudge_PysicsCommunication {
   let cubes: f.Node[] = new Array();
   let fpsDisplay: HTMLElement = document.querySelector("h2#FPS");
 
-  //Physics Variables
+  //Physics Variables -> Can't be initialized until Ammo is loaded
   let world: Ammo.btDiscreteDynamicsWorld;
   let bodies = new Array();
   let transform: Ammo.btTransform;
 
   //Raycast Variables
-  let tempVRayOrigin;
-  let tempVRayDest;
-  let closestRayResultCallback;
+  let tempVRayOrigin: Ammo.btVector3;
+  let tempVRayDest: Ammo.btVector3;
+  let closestRayResultCallback: Ammo.ClosestRayResultCallback;
+
+  //Materials
   let matHit: f.Material = new f.Material("Ground", f.ShaderFlat, new f.CoatColored(new f.Color(0, 1, 0, 1)));
   let matHitOther: f.Material = new f.Material("Ground", f.ShaderFlat, new f.CoatColored(new f.Color(0, 1, 0.7, 1)));
   let matNormal: f.Material = new f.Material("Ground", f.ShaderFlat, new f.CoatColored(new f.Color(1, 0, 0, 1)));
