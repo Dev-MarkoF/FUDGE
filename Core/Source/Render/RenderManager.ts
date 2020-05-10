@@ -83,9 +83,38 @@ namespace FudgeCore {
       if (_node.getParent())
         matrix = _node.getParent().mtxWorld;
 
+      RenderManager.setupPhysicalTransform(_node);
+
       RenderManager.setupTransformAndLights(_node, matrix);
 
       RenderManager.drawBranchRecursive(_node, _cmpCamera, _drawNode);
+
+    }
+
+    /**
+     * Physics Part -> Take all nodes with cmpRigidbody, and overwrite their world position/rotation with the one coming from 
+     * the rb component. 
+     */
+    private static setupPhysicalTransform(_node: Node): void {
+      if (Physics.instance != null) {
+        for (let name in _node.getChildren()) {
+          let childNode: Node = _node.getChildren()[name];
+          let cmpRigidbody: ComponentRigidbody = childNode.getComponent(ComponentRigidbody);
+          if (cmpRigidbody != null) {
+            Debug.log("Call for Transform");
+            let cmpTransform: ComponentTransform = childNode.getComponent(ComponentTransform);
+            if (cmpTransform) {
+              let mutator: Mutator = {};
+              mutator["rotation"] = cmpRigidbody.getRotation();
+              mutator["translation"] = cmpRigidbody.getPosition();
+              childNode.mtxLocal.mutate(mutator);
+              Debug.log(childNode.mtxLocal.translation.y);
+              Debug.log("Called With Transform");
+              //Override any position/rotation, Physical Objects do not know hierachy unless it's established through physics
+            }
+          }
+        }
+      }
     }
 
     /**

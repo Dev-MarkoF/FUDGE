@@ -1,3 +1,4 @@
+/// <reference path="../../Physics/OIMOPhysics.d.ts" />
 declare namespace FudgeCore {
     /**
      * Base class for the different DebugTargets, mainly for technical purpose of inheritance
@@ -3081,13 +3082,40 @@ declare namespace FudgeCore {
        * @authors Marko Fehrenbach, HFU, 2020
        */
     class ComponentRigidbody extends Component {
-        constructor();
+        private rigidbody;
+        private massData;
+        private collider;
+        private rigidbodyInfo;
+        constructor(_mass?: number, _type?: PHYSICS_TYPE, _colliderType?: COLLIDER_TYPE, _transform?: ComponentTransform);
+        testRendering(): void;
         /**
-         * Testfunction to show it's there
+       * Get the friction of the rigidbody, which is the factor of sliding resistance of this rigidbody on surfaces
+       */
+        getFriction(): number;
+        /**
+       * Set the friction of the rigidbody, which is the factor of  sliding resistance of this rigidbody on surfaces
+       */
+        setFriction(_friction: number): void;
+        /**
+     * Get the restitution of the rigidbody, which is the factor of bounciness of this rigidbody on surfaces
+     */
+        getRestitution(): number;
+        /**
+       * Set the restitution of the rigidbody, which is the factor of bounciness of this rigidbody on surfaces
+       */
+        setRestitution(_restitution: number): void;
+        /**
+       * Get the current POSITION of the [[Node]] in the physical space
+       */
+        getPosition(): Vector3;
+        /**
+         * Get the current ROTATION of the [[Node]] in the physical space
          */
-        test(): void;
+        getRotation(): Vector3;
         private addRigidbodyToWorld;
         private removeRigidbodyFromWorld;
+        private createRigidbody;
+        private createCollider;
     }
 }
 declare namespace FudgeCore {
@@ -3119,15 +3147,60 @@ declare namespace FudgeCore {
         LAYER_4 = 4
     }
     /**
+  * Different Types of Physical Interaction, DYNAMIC is fully influenced by physics and only physics, STATIC means immovable,
+  * KINEMATIC is only moved through physical code.
+  */
+    enum PHYSICS_TYPE {
+        DYNAMIC,
+        STATIC,
+        KINEMATIC
+    }
+    enum COLLIDER_TYPE {
+        BOX = 0,
+        SPHERE = 1,
+        CAPSULE = 2,
+        CYLINDER = 3
+    }
+    /**
    * Main Physics Class to hold information about the physical representation of the scene
    * @author Marko Fehrenbach, HFU, 2020
    */
-    class PhysicsWorld {
-        static instance: PhysicsWorld;
+    class Physics {
+        static instance: Physics;
+        private world;
         /**
        * Creating a physical world to represent the [[Node]] Scene Tree
        */
         static initializePhysics(): void;
+        /**
+     * Getting the solver iterations of the physics engine. Higher iteration numbers increase accuracy but decrease performance
+     */
+        getSolverIterations(): number;
+        /**
+    * Setting the solver iterations of the physics engine. Higher iteration numbers increase accuracy but decrease performance
+    */
+        setSolverIterations(_value: number): void;
+        /**
+    * Get the applied gravitational force to physical objects. Default earth gravity = 9.81 m/s
+    */
+        getGravity(): Vector3;
+        /**
+    * Set the applied gravitational force to physical objects. Default earth gravity = 9.81 m/s
+    */
+        setGravity(_value: Vector3): void;
+        /**
+      * Adding a new OIMO Rigidbody to the OIMO World, happens automatically when adding a FUDGE Rigidbody Component
+      */
+        addRigidbody(_rigidbody: OIMO.RigidBody): void;
+        /**
+     * Removing a OIMO Rigidbody to the OIMO World, happens automatically when adding a FUDGE Rigidbody Component
+     */
+        removeRigidbody(_rigidbody: OIMO.RigidBody): void;
+        /**
+     * Simulates the physical world. _deltaTime is the amount of time between physical steps, default is 60 frames per second ~17ms
+     */
+        simulate(_deltaTime?: number): void;
+        private createWorld;
     }
 }
 declare namespace FudgeCore {
@@ -3222,6 +3295,11 @@ declare namespace FudgeCore {
          * Draws the branch starting with the given [[Node]] using the camera given [[ComponentCamera]].
          */
         static drawBranch(_node: Node, _cmpCamera: ComponentCamera, _drawNode?: Function): void;
+        /**
+         * Physics Part -> Take all nodes with cmpRigidbody, and overwrite their world position/rotation with the one coming from
+         * the rb component.
+         */
+        private static setupPhysicalTransform;
         /**
          * Recursivly iterates over the branch and renders each node and all successors with the given render function
          */

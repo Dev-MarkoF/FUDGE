@@ -14,22 +14,98 @@ namespace FudgeCore {
   }
 
   /**
+* Different Types of Physical Interaction, DYNAMIC is fully influenced by physics and only physics, STATIC means immovable, 
+* KINEMATIC is only moved through physical code.
+*/
+  export enum PHYSICS_TYPE {
+    DYNAMIC = OIMO.RigidBodyType.DYNAMIC,
+    STATIC = OIMO.RigidBodyType.STATIC,
+    KINEMATIC = OIMO.RigidBodyType.KINEMATIC
+  }
+
+  export enum COLLIDER_TYPE {
+    BOX,
+    SPHERE,
+    CAPSULE,
+    CYLINDER
+  }
+
+  /**
  * Main Physics Class to hold information about the physical representation of the scene
  * @author Marko Fehrenbach, HFU, 2020
  */
-  export class PhysicsWorld {
-    public static instance: PhysicsWorld;
+  export class Physics {
+
+    public static instance: Physics;
+
+    private world: OIMO.World;
 
     /**
    * Creating a physical world to represent the [[Node]] Scene Tree
    */
     public static initializePhysics(): void {
       if (this.instance == null) {
-        this.instance = new PhysicsWorld();
+        this.instance = new Physics();
+        this.instance.createWorld();
       }
-      //Implement Settings for Solver Iterations, Gravitation and such
+
     }
 
-    //TODO: Functions for Raycast, Check for Specific Collision, Set/Get Values like Gravity, Add/Remove Rigidbody, Springs and more
+    /**
+ * Getting the solver iterations of the physics engine. Higher iteration numbers increase accuracy but decrease performance
+ */
+    public getSolverIterations(): number {
+      return Physics.instance.world.getNumPositionIterations();
+    }
+
+    /**
+* Setting the solver iterations of the physics engine. Higher iteration numbers increase accuracy but decrease performance
+*/
+    public setSolverIterations(_value: number): void {
+      Physics.instance.world.setNumPositionIterations(_value);
+      Physics.instance.world.setNumVelocityIterations(_value);
+    }
+
+    /**
+* Get the applied gravitational force to physical objects. Default earth gravity = 9.81 m/s
+*/
+    public getGravity(): Vector3 {
+      let tmpVec: OIMO.Vec3 = Physics.instance.world.getGravity();
+      return new Vector3(tmpVec.x, tmpVec.y, tmpVec.z);
+    }
+
+    /**
+* Set the applied gravitational force to physical objects. Default earth gravity = 9.81 m/s
+*/
+    public setGravity(_value: Vector3): void {
+      let tmpVec: OIMO.Vec3 = new OIMO.Vec3(_value.x, _value.y, _value.z);
+      Physics.instance.world.setGravity(tmpVec);
+    }
+
+    /**
+  * Adding a new OIMO Rigidbody to the OIMO World, happens automatically when adding a FUDGE Rigidbody Component
+  */
+    public addRigidbody(_rigidbody: OIMO.RigidBody): void {
+      Physics.instance.world.addRigidBody(_rigidbody);
+    }
+
+    /**
+ * Removing a OIMO Rigidbody to the OIMO World, happens automatically when adding a FUDGE Rigidbody Component
+ */
+    public removeRigidbody(_rigidbody: OIMO.RigidBody): void {
+      Physics.instance.world.removeRigidBody(_rigidbody);
+    }
+
+    /**
+ * Simulates the physical world. _deltaTime is the amount of time between physical steps, default is 60 frames per second ~17ms
+ */
+    public simulate(_deltaTime: number = 1 / 60): void {
+      Physics.instance.world.step(_deltaTime);
+    }
+
+    private createWorld(): void {
+      Physics.instance.world = new OIMO.World();
+    }
+
   }
 }
