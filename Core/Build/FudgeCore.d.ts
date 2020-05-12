@@ -3082,12 +3082,16 @@ declare namespace FudgeCore {
        * @authors Marko Fehrenbach, HFU, 2020
        */
     class ComponentRigidbody extends Component {
+        static readonly iSubclass: number;
         private rigidbody;
         private massData;
         private collider;
+        private colliderType;
+        private colliderInfo;
         private rigidbodyInfo;
         constructor(_mass?: number, _type?: PHYSICS_TYPE, _colliderType?: COLLIDER_TYPE, _transform?: ComponentTransform);
-        testRendering(): void;
+        private static getGameStartTransform;
+        updateFromTransform(): void;
         /**
        * Get the friction of the rigidbody, which is the factor of sliding resistance of this rigidbody on surfaces
        */
@@ -3129,7 +3133,9 @@ declare namespace FudgeCore {
         /** broadcast to a [[Node]] and all [[Nodes]] in the branch it's the root of */
         COLLISION_LEAVE = "ColliderLeftCollision",
         /** broadcast to a [[Node]] and all [[Nodes]] in the branch it's the root of */
-        RAYCAST_HIT = "RigidbodyWasHitByRay"
+        RAYCAST_HIT = "RigidbodyWasHitByRay",
+        /** broadcast to a [[Node]] and all [[Nodes]] in the branch it's the root of */
+        INITIALIZE = "Initialized"
     }
 }
 declare namespace FudgeCore {
@@ -3167,7 +3173,7 @@ declare namespace FudgeCore {
    */
     class Physics {
         static instance: Physics;
-        private world;
+        world: OIMO.World;
         /**
        * Creating a physical world to represent the [[Node]] Scene Tree
        */

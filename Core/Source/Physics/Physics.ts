@@ -38,7 +38,7 @@ namespace FudgeCore {
 
     public static instance: Physics;
 
-    private world: OIMO.World;
+    public world: OIMO.World;
 
     /**
    * Creating a physical world to represent the [[Node]] Scene Tree

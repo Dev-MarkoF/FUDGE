@@ -99,17 +99,15 @@ namespace FudgeCore {
       if (Physics.instance != null) {
         for (let name in _node.getChildren()) {
           let childNode: Node = _node.getChildren()[name];
+          RenderManager.setupPhysicalTransform(childNode);
           let cmpRigidbody: ComponentRigidbody = childNode.getComponent(ComponentRigidbody);
           if (cmpRigidbody != null) {
-            Debug.log("Call for Transform");
             let cmpTransform: ComponentTransform = childNode.getComponent(ComponentTransform);
             if (cmpTransform) {
               let mutator: Mutator = {};
               mutator["rotation"] = cmpRigidbody.getRotation();
               mutator["translation"] = cmpRigidbody.getPosition();
               childNode.mtxLocal.mutate(mutator);
-              Debug.log(childNode.mtxLocal.translation.y);
-              Debug.log("Called With Transform");
               //Override any position/rotation, Physical Objects do not know hierachy unless it's established through physics
             }
           }
