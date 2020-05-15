@@ -96,7 +96,7 @@ namespace FudgeCore {
      * the rb component. 
      */
     private static setupPhysicalTransform(_node: Node): void {
-      if (Physics.instance != null) {
+      if (Physics.world != null) {
         for (let name in _node.getChildren()) {
           let childNode: Node = _node.getChildren()[name];
           RenderManager.setupPhysicalTransform(childNode);

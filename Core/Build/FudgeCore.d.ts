@@ -3078,15 +3078,16 @@ declare namespace FudgeCore {
 declare namespace FudgeCore {
     /**
        * Acts as the physical representation of the [[Node]] it's attached to.
-       * It's the connection between the Fudge Rendered World and the Physics World
+       * It's the connection between the Fudge Rendered world and the Physics world
        * @authors Marko Fehrenbach, HFU, 2020
        */
     class ComponentRigidbody extends Component {
         static readonly iSubclass: number;
+        physicsType: PHYSICS_TYPE;
+        colliderType: COLLIDER_TYPE;
         private rigidbody;
         private massData;
         private collider;
-        private colliderType;
         private colliderInfo;
         private rigidbodyInfo;
         constructor(_mass?: number, _type?: PHYSICS_TYPE, _colliderType?: COLLIDER_TYPE, _transform?: ComponentTransform);
@@ -3167,17 +3168,32 @@ declare namespace FudgeCore {
         CAPSULE = 2,
         CYLINDER = 3
     }
+    class RayHitInfo {
+        hitDistance: number;
+        hitPoint: Vector3;
+        rigidbodyComponent: ComponentRigidbody;
+        hitNormal: Vector3;
+        node: Node;
+        constructor();
+    }
     /**
    * Main Physics Class to hold information about the physical representation of the scene
    * @author Marko Fehrenbach, HFU, 2020
    */
     class Physics {
-        static instance: Physics;
-        world: OIMO.World;
+        static world: Physics;
+        private oimoWorld;
         /**
        * Creating a physical world to represent the [[Node]] Scene Tree
        */
         static initializePhysics(): void;
+        /**
+    * Cast a RAY into the physical world from a origin point in a certain direction. Receiving informations about the hit object and the
+    * hit point.
+    */
+        static raycast(_origin: Vector3, _direction: Vector3, _length: number, _hitInfo: RayHitInfo): RayHitInfo;
+        private static getRayEndPoint;
+        private static getRayDistance;
         /**
      * Getting the solver iterations of the physics engine. Higher iteration numbers increase accuracy but decrease performance
      */

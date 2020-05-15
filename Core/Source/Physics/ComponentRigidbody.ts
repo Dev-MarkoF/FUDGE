@@ -3,47 +3,54 @@
 namespace FudgeCore {
   /**
      * Acts as the physical representation of the [[Node]] it's attached to.
-     * It's the connection between the Fudge Rendered World and the Physics World
+     * It's the connection between the Fudge Rendered world and the Physics world
      * @authors Marko Fehrenbach, HFU, 2020
      */
   export class ComponentRigidbody extends Component {
     public static readonly iSubclass: number = Component.registerSubclass(ComponentRigidbody);
 
+    public physicsType: PHYSICS_TYPE = PHYSICS_TYPE.DYNAMIC;
+    public colliderType: COLLIDER_TYPE;
+
     private rigidbody: OIMO.RigidBody;
     private massData: OIMO.MassData;
     private collider: OIMO.Shape;
-    private colliderType: COLLIDER_TYPE;
     private colliderInfo: OIMO.ShapeConfig;
     private rigidbodyInfo: OIMO.RigidBodyConfig;
 
     constructor(_mass: number = 1, _type: PHYSICS_TYPE = PHYSICS_TYPE.DYNAMIC, _colliderType: COLLIDER_TYPE = COLLIDER_TYPE.BOX, _transform: ComponentTransform = null) {
       super();
+      _transform.addEventListener(EVENT.MUTATE, this.updateFromTransform);
       this.createRigidbody(_mass, _type, _colliderType, _transform);
       this.addEventListener(EVENT.COMPONENT_ADD, this.addRigidbodyToWorld);
       this.addEventListener(EVENT.COMPONENT_REMOVE, this.removeRigidbodyFromWorld);
       Loop.addEventListener(EVENT.LOOP_FRAME, ComponentRigidbody.getGameStartTransform);
-      Loop.addEventListener(EVENT_PHYSICS.INITIALIZE, this.updateFromTransform);
+      //Loop.addEventListener(EVENT_PHYSICS.INITIALIZE, this.updateFromTransform);
     }
 
     private static getGameStartTransform(): void {
-      let event: Event = new Event(EVENT_PHYSICS.INITIALIZE);
+      // let event: Event = new Event(EVENT_PHYSICS.INITIALIZE);
       // Loop.dispatchEvent(event);
       Debug.log("EventDispatched");
       Loop.removeEventListener(EVENT.LOOP_FRAME, ComponentRigidbody.getGameStartTransform);
     }
 
     public updateFromTransform(): void {
-      Loop.removeEventListener(EVENT_PHYSICS.INITIALIZE, this.updateFromTransform);
-      //let local: Matrix4x4 = super.getContainer().getComponent(ComponentTransform).local;
-      let local: Matrix4x4 = new Matrix4x4();
-      let position: Vector3 = local.translation;
-      let rotation: Vector3 = local.rotation;
-      let scaling: Vector3 = local.scaling;
-      this.rigidbody.setPosition(new OIMO.Vec3(position.x, position.y, position.z));
-      this.rigidbody.setRotationXyz(new OIMO.Vec3(rotation.x, rotation.y, rotation.z));
-      this.rigidbody.removeShape(this.collider);
-      this.createCollider(new OIMO.Vec3(scaling.x, scaling.y, scaling.z), this.colliderType);
-      this.rigidbody.addShape(this.collider);
+      //Loop.removeEventListener(EVENT_PHYSICS.INITIALIZE, this.updateFromTransform);
+      // let local: Matrix4x4 = super.getContainer().getComponent(ComponentTransform).local;
+      // let position: Vector3 = local.translation;
+      // let rotation: Vector3 = local.rotation;
+      // let scaling: Vector3 = local.scaling;
+      // this.rigidbody.setPosition(new OIMO.Vec3(position.x, position.y, position.z));
+      // this.rigidbody.setRotationXyz(new OIMO.Vec3(rotation.x, rotation.y, rotation.z));
+      // //this.rigidbody.removeShape(this.collider);
+      // this.rigidbody.removeShape(this.rigidbody.getShapeList());
+      // this.createCollider(new OIMO.Vec3(scaling.x, scaling.y, scaling.z), this.colliderType);
+      // this.collider = new OIMO.Shape(this.colliderInfo);
+      // this.rigidbody.addShape(this.collider);
+      this.removeRigidbodyFromWorld();
+      this.createRigidbody(this.rigidbody.getMass(), this.physicsType, this.colliderType, super.getContainer().getComponent(ComponentTransform));
+      this.addRigidbodyToWorld();
       Debug.log("Called");
     }
 
@@ -96,11 +103,11 @@ namespace FudgeCore {
 
 
     private addRigidbodyToWorld(): void {
-      Physics.instance.addRigidbody(this.rigidbody);
+      Physics.world.addRigidbody(this.rigidbody);
     }
 
     private removeRigidbodyFromWorld(): void {
-      Physics.instance.removeRigidbody(this.rigidbody);
+      Physics.world.removeRigidbody(this.rigidbody);
     }
 
     private createRigidbody(_mass: number, _type: PHYSICS_TYPE, _colliderType: COLLIDER_TYPE, _transform: ComponentTransform): void {
@@ -126,8 +133,10 @@ namespace FudgeCore {
       this.rigidbodyInfo.rotation.fromEulerXyz(new OIMO.Vec3(rotation.x, rotation.y, rotation.z));
       this.rigidbody = new OIMO.RigidBody(this.rigidbodyInfo);
       this.collider = new OIMO.Shape(this.colliderInfo);
+      this.collider.userData = this;
       this.rigidbody.addShape(this.collider);
       this.rigidbody.setMassData(this.massData);
+      this.rigidbody.userData = super.getContainer();
 
     }
 

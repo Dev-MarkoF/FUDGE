@@ -1,13 +1,9 @@
 ///<reference types="../../../../Core/Build/FudgeCore.js"/>
-///<reference types="../../../../Physics/OimoPhysics.js"/>
 import f = FudgeCore;
-//import { oimo } from "../Physics_Library/OimoPhysics";
-
 
 
 
 namespace FudgePhysics_Communication {
-  import oimo = OIMO;
 
   window.addEventListener("load", init);
   const app: HTMLCanvasElement = document.querySelector("canvas");
@@ -17,8 +13,7 @@ namespace FudgePhysics_Communication {
   const times: number[] = [];
   let cubes: f.Node[] = new Array();
   let fpsDisplay: HTMLElement = document.querySelector("h2#FPS");
-  let bodies = new Array();
-  let world = new oimo.World();
+
 
 
 
@@ -40,6 +35,7 @@ namespace FudgePhysics_Communication {
     cubes[1] = createCompleteMeshNode("Cube_2", new f.Material("Cube", f.ShaderFlat, new f.CoatColored(new f.Color(1, 0, 0, 1))), new f.MeshCube(), 1, f.PHYSICS_TYPE.DYNAMIC);
     let cmpCubeTransform2: f.ComponentTransform = cubes[1].getComponent(f.ComponentTransform);
     hierarchy.appendChild(cubes[1]);
+    cmpCubeTransform2.local.translate(new f.Vector3(0, 3.5, 0.41));
 
     let cmpLight: f.ComponentLight = new f.ComponentLight(new f.LightDirectional(f.Color.CSS("WHITE")));
     cmpLight.pivot.lookAt(new f.Vector3(0.5, -1, -0.8));
@@ -50,23 +46,30 @@ namespace FudgePhysics_Communication {
     cmpCamera.pivot.translate(new f.Vector3(2, 2, 10));
     cmpCamera.pivot.lookAt(f.Vector3.ZERO());
 
+    f.Debug.log(cubes[1].getComponent(f.ComponentRigidbody).getContainer());
+    cubes[1].getComponent(f.ComponentRigidbody).updateFromTransform();
+
 
     viewPort = new f.Viewport();
     viewPort.initialize("Viewport", hierarchy, cmpCamera, app);
 
     viewPort.showSceneGraph();
-
     f.Loop.addEventListener(f.EVENT.LOOP_FRAME, update);
     f.Loop.start();
   }
 
+
+  let origin: f.Vector3 = new f.Vector3(-5, 0.25, 0);
+  let direction: f.Vector3 = new f.Vector3(1, 0, 0);
+  let hitInfo: f.RayHitInfo = new f.RayHitInfo();
   function update(): void {
 
     //Physics 
-    f.Physics.instance.simulate();
+    f.Physics.world.simulate();
     //f.Debug.log(cubes[0].getComponent(f.ComponentRigidbody).getPosition());
     //EndPhysics
-
+    f.Physics.raycast(origin, direction, 10, hitInfo);
+    f.Debug.log(hitInfo);
     viewPort.draw();
     measureFPS();
   }
@@ -96,11 +99,12 @@ namespace FudgePhysics_Communication {
     if (i == 1)
       cmpTransform.local.translate(new f.Vector3(0, 2, 0));
 
-    if (i == 2)
-      cmpTransform.local.translate(new f.Vector3(0, 3.5, 0.41));
+    // if (i == 2)
+    // cmpTransform.local.translate(new f.Vector3(0, 3.5, 0.41));
 
     let cmpRigidbody: f.ComponentRigidbody = new f.ComponentRigidbody(_mass, _physicsType, f.COLLIDER_TYPE.BOX, cmpTransform);
-
+    cmpRigidbody.setFriction(1);
+    cmpRigidbody.setRestitution(0);
     node.addComponent(cmpMesh);
     node.addComponent(cmpMaterial);
     node.addComponent(cmpTransform);
