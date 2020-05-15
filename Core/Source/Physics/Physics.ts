@@ -2,7 +2,7 @@ namespace FudgeCore {
   /**
  * Layers to place a node on, not every layer should collide with every layer 
  */
-  export enum PHYSICS_LAYER { //TODO Give a possiblithy to set which layer collides with which, CollisionMatrix?
+  export enum PHYSICS_GROUP { //TODO Give a possiblithy to set which layer collides with which, CollisionMatrix?
     DEFAULT = 0,
     STATIC = 1000,
     KINEMATIC = 2000,
@@ -31,6 +31,7 @@ namespace FudgeCore {
   }
 
   export class RayHitInfo {
+    public hit: boolean;
     public hitDistance: number;
     public hitPoint: Vector3;
     public rigidbodyComponent: ComponentRigidbody;
@@ -38,7 +39,10 @@ namespace FudgeCore {
     public node: Node;
 
     constructor() {
+      this.hit = false;
       this.hitDistance = 0;
+      this.hitPoint = Vector3.ZERO();
+      this.hitNormal = Vector3.ZERO();
     }
   }
 
@@ -67,23 +71,23 @@ namespace FudgeCore {
 * Cast a RAY into the physical world from a origin point in a certain direction. Receiving informations about the hit object and the
 * hit point.
 */
-    public static raycast(_origin: Vector3, _direction: Vector3, _length: number = 1, _hitInfo: RayHitInfo): RayHitInfo {
+    public static raycast(_origin: Vector3, _direction: Vector3, _length: number = 1, _group: PHYSICS_GROUP = PHYSICS_GROUP.DEFAULT): RayHitInfo {
       //TODO-Optimization-Later: Implement Hit Layer Masks by ray specific objects on each layer (complex raycast maybe own function)
-      _hitInfo = new RayHitInfo();
+      let hitInfo = new RayHitInfo();
       let ray: OIMO.RayCastClosest = new OIMO.RayCastClosest();
       let begin: OIMO.Vec3 = new OIMO.Vec3(- 5, 0.3, 0);
       let end: OIMO.Vec3 = this.getRayEndPoint(new OIMO.Vec3(_origin.x, _origin.y, _origin.z), new Vector3(_direction.x, _direction.y, _direction.z), _length);
-
       ray.clear();
       Physics.world.oimoWorld.rayCast(begin, end, ray);
       if (ray.hit) {
-        _hitInfo.hitPoint = new Vector3(ray.position.x, ray.position.y, ray.position.z);
-        _hitInfo.hitNormal = new Vector3(ray.normal.x, ray.normal.y, ray.normal.z);
-        _hitInfo.hitDistance = this.getRayDistance(_origin, _hitInfo.hitPoint);
-        _hitInfo.rigidbodyComponent = ray.shape.userData;
-        _hitInfo.node = _hitInfo.rigidbodyComponent.getContainer();
+        hitInfo.hit = true;
+        hitInfo.hitPoint = new Vector3(ray.position.x, ray.position.y, ray.position.z);
+        hitInfo.hitNormal = new Vector3(ray.normal.x, ray.normal.y, ray.normal.z);
+        hitInfo.hitDistance = this.getRayDistance(_origin, hitInfo.hitPoint);
+        hitInfo.rigidbodyComponent = ray.shape.userData;
+        hitInfo.node = hitInfo.rigidbodyComponent.getContainer();
       }
-      return _hitInfo;
+      return hitInfo;
     }
 
 

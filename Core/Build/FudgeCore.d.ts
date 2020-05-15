@@ -3143,7 +3143,7 @@ declare namespace FudgeCore {
     /**
    * Layers to place a node on, not every layer should collide with every layer
    */
-    enum PHYSICS_LAYER {
+    enum PHYSICS_GROUP {
         DEFAULT = 0,
         STATIC = 1000,
         KINEMATIC = 2000,
@@ -3169,6 +3169,7 @@ declare namespace FudgeCore {
         CYLINDER = 3
     }
     class RayHitInfo {
+        hit: boolean;
         hitDistance: number;
         hitPoint: Vector3;
         rigidbodyComponent: ComponentRigidbody;
@@ -3191,7 +3192,7 @@ declare namespace FudgeCore {
     * Cast a RAY into the physical world from a origin point in a certain direction. Receiving informations about the hit object and the
     * hit point.
     */
-        static raycast(_origin: Vector3, _direction: Vector3, _length: number, _hitInfo: RayHitInfo): RayHitInfo;
+        static raycast(_origin: Vector3, _direction: Vector3, _length?: number, _group?: PHYSICS_GROUP): RayHitInfo;
         private static getRayEndPoint;
         private static getRayDistance;
         /**

@@ -68,7 +68,7 @@ namespace FudgePhysics_Communication {
     f.Physics.world.simulate();
     //f.Debug.log(cubes[0].getComponent(f.ComponentRigidbody).getPosition());
     //EndPhysics
-    f.Physics.raycast(origin, direction, 10, hitInfo);
+    hitInfo = f.Physics.raycast(origin, direction, 10);
     f.Debug.log(hitInfo);
     viewPort.draw();
     measureFPS();
