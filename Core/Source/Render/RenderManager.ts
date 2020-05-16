@@ -90,6 +90,53 @@ namespace FudgeCore {
       RenderManager.drawBranchRecursive(_node, _cmpCamera, _drawNode);
 
     }
+    //#endregion
+
+    //#region Transformation & Lights
+    /**
+     * Recursively iterates over the branch starting with the node given, recalculates all world transforms, 
+     * collects all lights and feeds all shaders used in the branch with these lights
+     */
+    public static setupTransformAndLights(_node: Node, _world: Matrix4x4 = Matrix4x4.IDENTITY(), _lights: MapLightTypeToLightList = new Map(), _shadersUsed: (typeof Shader)[] = null): void {
+      let firstLevel: boolean = (_shadersUsed == null);
+      if (firstLevel)
+        _shadersUsed = [];
+
+      let world: Matrix4x4 = _world;
+
+      let cmpTransform: ComponentTransform = _node.cmpTransform;
+      if (cmpTransform)
+        world = Matrix4x4.MULTIPLICATION(_world, cmpTransform.local);
+
+      _node.mtxWorld = world;
+      _node.timestampUpdate = RenderManager.timestampUpdate;
+
+      let cmpLights: ComponentLight[] = _node.getComponents(ComponentLight);
+      for (let cmpLight of cmpLights) {
+        let type: TypeOfLight = cmpLight.light.getType();
+        let lightsOfType: ComponentLight[] = _lights.get(type);
+        if (!lightsOfType) {
+          lightsOfType = [];
+          _lights.set(type, lightsOfType);
+        }
+        lightsOfType.push(cmpLight);
+      }
+
+      let cmpMaterial: ComponentMaterial = _node.getComponent(ComponentMaterial);
+      if (cmpMaterial) {
+        let shader: typeof Shader = cmpMaterial.material.getShader();
+        if (_shadersUsed.indexOf(shader) < 0)
+          _shadersUsed.push(shader);
+      }
+
+      for (let child of _node.getChildren()) {
+        RenderManager.setupTransformAndLights(child, world, _lights, _shadersUsed);
+      }
+
+      if (firstLevel)
+        for (let shader of _shadersUsed)
+          RenderManager.setLightsInShader(shader, _lights);
+    }
 
     /**
      * Physics Part -> Take all nodes with cmpRigidbody, and overwrite their world position/rotation with the one coming from 
@@ -101,7 +148,7 @@ namespace FudgeCore {
           let childNode: Node = _node.getChildren()[name];
           RenderManager.setupPhysicalTransform(childNode);
           let cmpRigidbody: ComponentRigidbody = childNode.getComponent(ComponentRigidbody);
-          if (cmpRigidbody != null) {
+          if (cmpRigidbody != null) { //Case of Dynamic Rigidbody
             let cmpTransform: ComponentTransform = childNode.getComponent(ComponentTransform);
             if (cmpTransform) {
               let mutator: Mutator = {};
@@ -217,53 +264,6 @@ namespace FudgeCore {
       }
 
       return targetTexture;
-    }
-    //#endregion
-
-    //#region Transformation & Lights
-    /**
-     * Recursively iterates over the branch starting with the node given, recalculates all world transforms, 
-     * collects all lights and feeds all shaders used in the branch with these lights
-     */
-    private static setupTransformAndLights(_node: Node, _world: Matrix4x4 = Matrix4x4.IDENTITY(), _lights: MapLightTypeToLightList = new Map(), _shadersUsed: (typeof Shader)[] = null): void {
-      let firstLevel: boolean = (_shadersUsed == null);
-      if (firstLevel)
-        _shadersUsed = [];
-
-      let world: Matrix4x4 = _world;
-
-      let cmpTransform: ComponentTransform = _node.cmpTransform;
-      if (cmpTransform)
-        world = Matrix4x4.MULTIPLICATION(_world, cmpTransform.local);
-
-      _node.mtxWorld = world;
-      _node.timestampUpdate = RenderManager.timestampUpdate;
-
-      let cmpLights: ComponentLight[] = _node.getComponents(ComponentLight);
-      for (let cmpLight of cmpLights) {
-        let type: TypeOfLight = cmpLight.light.getType();
-        let lightsOfType: ComponentLight[] = _lights.get(type);
-        if (!lightsOfType) {
-          lightsOfType = [];
-          _lights.set(type, lightsOfType);
-        }
-        lightsOfType.push(cmpLight);
-      }
-
-      let cmpMaterial: ComponentMaterial = _node.getComponent(ComponentMaterial);
-      if (cmpMaterial) {
-        let shader: typeof Shader = cmpMaterial.material.getShader();
-        if (_shadersUsed.indexOf(shader) < 0)
-          _shadersUsed.push(shader);
-      }
-
-      for (let child of _node.getChildren()) {
-        RenderManager.setupTransformAndLights(child, world, _lights, _shadersUsed);
-      }
-
-      if (firstLevel)
-        for (let shader of _shadersUsed)
-          RenderManager.setLightsInShader(shader, _lights);
     }
 
     /**

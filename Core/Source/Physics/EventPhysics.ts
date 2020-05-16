@@ -9,8 +9,6 @@ namespace FudgeCore {
     /** broadcast to a [[Node]] and all [[Nodes]] in the branch it's the root of */
     COLLISION_LEAVE = "ColliderLeftCollision",
     /** broadcast to a [[Node]] and all [[Nodes]] in the branch it's the root of */
-    RAYCAST_HIT = "RigidbodyWasHitByRay",
-    /** broadcast to a [[Node]] and all [[Nodes]] in the branch it's the root of */
     INITIALIZE = "Initialized"
   }
 }

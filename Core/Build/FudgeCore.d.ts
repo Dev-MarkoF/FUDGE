@@ -3085,14 +3085,19 @@ declare namespace FudgeCore {
         static readonly iSubclass: number;
         physicsType: PHYSICS_TYPE;
         colliderType: COLLIDER_TYPE;
+        collisionGroup: PHYSICS_GROUP;
+        get mass(): number;
+        set mass(value: number);
         private rigidbody;
         private massData;
         private collider;
         private colliderInfo;
         private rigidbodyInfo;
-        constructor(_mass?: number, _type?: PHYSICS_TYPE, _colliderType?: COLLIDER_TYPE, _transform?: ComponentTransform);
-        private static getGameStartTransform;
-        updateFromTransform(): void;
+        constructor(_mass?: number, _type?: PHYSICS_TYPE, _colliderType?: COLLIDER_TYPE, _group?: PHYSICS_GROUP, _transform?: Matrix4x4);
+        /**
+       * Removes and recreates the Rigidbody from the world matrix of the [[Node]]
+       */
+        updateFromWorld(): void;
         /**
        * Get the friction of the rigidbody, which is the factor of sliding resistance of this rigidbody on surfaces
        */
@@ -3114,9 +3119,30 @@ declare namespace FudgeCore {
        */
         getPosition(): Vector3;
         /**
+      * Sets the current POSITION of the [[Node]] in the physical space
+      */
+        setPosition(_value: Vector3): void;
+        /**
          * Get the current ROTATION of the [[Node]] in the physical space
          */
         getRotation(): Vector3;
+        /**
+         * Sets the current ROTATION of the [[Node]] in the physical space, in degree.
+         */
+        setRotation(_value: Vector3): void;
+        /**
+        * Get the current VELOCITY of the [[Node]]
+        */
+        getVelocity(): Vector3;
+        /**
+         * Sets the current VELOCITY of the [[Node]]
+         */
+        setVelocity(_value: Vector3): void;
+        /**
+         * Sends a ray through this specific body ignoring the rest of the world and checks if this body was hit by the ray,
+         * returning info about the hit.
+         */
+        raycastThisBody(_origin: Vector3, _direction: Vector3, _length: number): RayHitInfo;
         private addRigidbodyToWorld;
         private removeRigidbodyFromWorld;
         private createRigidbody;
@@ -3134,29 +3160,25 @@ declare namespace FudgeCore {
         /** broadcast to a [[Node]] and all [[Nodes]] in the branch it's the root of */
         COLLISION_LEAVE = "ColliderLeftCollision",
         /** broadcast to a [[Node]] and all [[Nodes]] in the branch it's the root of */
-        RAYCAST_HIT = "RigidbodyWasHitByRay",
-        /** broadcast to a [[Node]] and all [[Nodes]] in the branch it's the root of */
         INITIALIZE = "Initialized"
     }
 }
 declare namespace FudgeCore {
     /**
-   * Layers to place a node on, not every layer should collide with every layer
+   * Groups to place a node in, not every group should collide with every group. Use a Mask in to exclude collisions
    */
     enum PHYSICS_GROUP {
         DEFAULT = 0,
-        STATIC = 1000,
-        KINEMATIC = 2000,
         TRIGGER = 4000,
-        LAYER_1 = 1,
-        LAYER_2 = 2,
-        LAYER_3 = 3,
-        LAYER_4 = 4
+        GROUP_1 = 1,
+        GROUP_2 = 2,
+        GROUP_3 = 3,
+        GROUP_4 = 4
     }
     /**
-  * Different Types of Physical Interaction, DYNAMIC is fully influenced by physics and only physics, STATIC means immovable,
-  * KINEMATIC is only moved through physical code.
-  */
+    * Different Types of Physical Interaction, DYNAMIC is fully influenced by physics and only physics, STATIC means immovable,
+    * KINEMATIC is only moved through physical code.
+    */
     enum PHYSICS_TYPE {
         DYNAMIC,
         STATIC,
@@ -3174,55 +3196,60 @@ declare namespace FudgeCore {
         hitPoint: Vector3;
         rigidbodyComponent: ComponentRigidbody;
         hitNormal: Vector3;
-        node: Node;
         constructor();
     }
     /**
-   * Main Physics Class to hold information about the physical representation of the scene
-   * @author Marko Fehrenbach, HFU, 2020
-   */
+    * Main Physics Class to hold information about the physical representation of the scene
+    * @author Marko Fehrenbach, HFU, 2020
+    */
     class Physics {
         static world: Physics;
         private oimoWorld;
+        private bodyList;
         /**
        * Creating a physical world to represent the [[Node]] Scene Tree
        */
         static initializePhysics(): void;
         /**
-    * Cast a RAY into the physical world from a origin point in a certain direction. Receiving informations about the hit object and the
-    * hit point.
-    */
+      * Cast a RAY into the physical world from a origin point in a certain direction. Receiving informations about the hit object and the
+      * hit point.
+      */
         static raycast(_origin: Vector3, _direction: Vector3, _length?: number, _group?: PHYSICS_GROUP): RayHitInfo;
+        /**
+      * Starts the physical world by checking that each body has the correct values from transform
+      */
+        static start(_sceneTree: Node): void;
         private static getRayEndPoint;
         private static getRayDistance;
         /**
-     * Getting the solver iterations of the physics engine. Higher iteration numbers increase accuracy but decrease performance
-     */
+      * Getting the solver iterations of the physics engine. Higher iteration numbers increase accuracy but decrease performance
+      */
         getSolverIterations(): number;
         /**
-    * Setting the solver iterations of the physics engine. Higher iteration numbers increase accuracy but decrease performance
-    */
+      * Setting the solver iterations of the physics engine. Higher iteration numbers increase accuracy but decrease performance
+      */
         setSolverIterations(_value: number): void;
         /**
-    * Get the applied gravitational force to physical objects. Default earth gravity = 9.81 m/s
-    */
+      * Get the applied gravitational force to physical objects. Default earth gravity = 9.81 m/s
+      */
         getGravity(): Vector3;
         /**
-    * Set the applied gravitational force to physical objects. Default earth gravity = 9.81 m/s
-    */
+      * Set the applied gravitational force to physical objects. Default earth gravity = 9.81 m/s
+      */
         setGravity(_value: Vector3): void;
         /**
       * Adding a new OIMO Rigidbody to the OIMO World, happens automatically when adding a FUDGE Rigidbody Component
       */
-        addRigidbody(_rigidbody: OIMO.RigidBody): void;
+        addRigidbody(_rigidbody: OIMO.RigidBody, _cmpRB: ComponentRigidbody): void;
         /**
-     * Removing a OIMO Rigidbody to the OIMO World, happens automatically when adding a FUDGE Rigidbody Component
-     */
-        removeRigidbody(_rigidbody: OIMO.RigidBody): void;
+      * Removing a OIMO Rigidbody to the OIMO World, happens automatically when adding a FUDGE Rigidbody Component
+      */
+        removeRigidbody(_rigidbody: OIMO.RigidBody, _cmpRB: ComponentRigidbody): void;
         /**
-     * Simulates the physical world. _deltaTime is the amount of time between physical steps, default is 60 frames per second ~17ms
-     */
+      * Simulates the physical world. _deltaTime is the amount of time between physical steps, default is 60 frames per second ~17ms
+      */
         simulate(_deltaTime?: number): void;
+        private updateWorldFromWorldMatrix;
         private createWorld;
     }
 }
@@ -3319,6 +3346,11 @@ declare namespace FudgeCore {
          */
         static drawBranch(_node: Node, _cmpCamera: ComponentCamera, _drawNode?: Function): void;
         /**
+         * Recursively iterates over the branch starting with the node given, recalculates all world transforms,
+         * collects all lights and feeds all shaders used in the branch with these lights
+         */
+        static setupTransformAndLights(_node: Node, _world?: Matrix4x4, _lights?: MapLightTypeToLightList, _shadersUsed?: (typeof Shader)[]): void;
+        /**
          * Physics Part -> Take all nodes with cmpRigidbody, and overwrite their world position/rotation with the one coming from
          * the rb component.
          */
@@ -3339,11 +3371,6 @@ declare namespace FudgeCore {
          * Creates a texture buffer to be uses as pick-buffer
          */
         private static getRayCastTexture;
-        /**
-         * Recursively iterates over the branch starting with the node given, recalculates all world transforms,
-         * collects all lights and feeds all shaders used in the branch with these lights
-         */
-        private static setupTransformAndLights;
         /**
          * Set light data in shaders
          */
