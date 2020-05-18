@@ -1,47 +1,5 @@
 namespace FudgeCore {
-  /**
- * Groups to place a node in, not every group should collide with every group. Use a Mask in to exclude collisions
- */
-  export enum PHYSICS_GROUP { //TODO Give a possiblithy to set which layer collides with which, CollisionMatrix?
-    DEFAULT = 0,
-    TRIGGER = 4000,
-    GROUP_1 = 1,
-    GROUP_2 = 2,
-    GROUP_3 = 3,
-    GROUP_4 = 4
-  }
 
-  /**
-  * Different Types of Physical Interaction, DYNAMIC is fully influenced by physics and only physics, STATIC means immovable, 
-  * KINEMATIC is only moved through physical code.
-  */
-  export enum PHYSICS_TYPE {
-    DYNAMIC = OIMO.RigidBodyType.DYNAMIC,
-    STATIC = OIMO.RigidBodyType.STATIC,
-    KINEMATIC = OIMO.RigidBodyType.KINEMATIC
-  }
-
-  export enum COLLIDER_TYPE {
-    BOX,
-    SPHERE,
-    CAPSULE,
-    CYLINDER
-  }
-
-  export class RayHitInfo {
-    public hit: boolean;
-    public hitDistance: number;
-    public hitPoint: Vector3;
-    public rigidbodyComponent: ComponentRigidbody;
-    public hitNormal: Vector3;
-
-    constructor() {
-      this.hit = false;
-      this.hitDistance = 0;
-      this.hitPoint = Vector3.ZERO();
-      this.hitNormal = Vector3.ZERO();
-    }
-  }
 
   /**
   * Main Physics Class to hold information about the physical representation of the scene
@@ -78,13 +36,18 @@ namespace FudgeCore {
       if (_group == PHYSICS_GROUP.DEFAULT) { //Case 1: Raycasting the whole world, normal mode
         Physics.world.oimoWorld.rayCast(begin, end, ray);
       } else { //Raycasting on each body in a specific group
-        let hitBodyInGroup: boolean;
+        let allHits: RayHitInfo[] = new Array();
         this.world.bodyList.forEach(function (value: ComponentRigidbody): void {
-          if (value.collisionGroup == _group && hitBodyInGroup == false) {
+          if (value.collisionGroup == _group) {
             hitInfo = value.raycastThisBody(_origin, _direction, _length);
-            if (hitInfo.hit == true) {
-              hitBodyInGroup = true;
+            if (hitInfo.hit == true) { //Every hit is could potentially be the closest
+              allHits.push(hitInfo);
             }
+          }
+        });
+        allHits.forEach(function (value: RayHitInfo): void { //get the closest hitInfo
+          if (value.hitDistance < hitInfo.hitDistance || hitInfo.hit == false) {
+            hitInfo = value;
           }
         });
       }
@@ -179,6 +142,10 @@ namespace FudgeCore {
       Physics.world.oimoWorld.step(_deltaTime);
     }
 
+    public checkEvents(): void {
+      this.checkForTrigger();
+    }
+
     private updateWorldFromWorldMatrix(): void {
       let bodiesToUpdate: ComponentRigidbody[] = new Array(); //Copy Array because removing/readding in the updateFromworld
       this.bodyList.forEach(function (value: ComponentRigidbody): void {
@@ -194,6 +161,34 @@ namespace FudgeCore {
     private createWorld(): void {
       Physics.world.oimoWorld = new OIMO.World();
     }
+
+    //#region EVENTS
+    //Trigger-Events - get every rb's in the trigger group, check each with every rb and if overlapping send event
+    private isCollided(triggerRigidbody: OIMO.RigidBody, secondRigidbody: OIMO.RigidBody): boolean {
+      let shape1: OIMO.Aabb = triggerRigidbody.getShapeList().getAabb();
+      let shape2: OIMO.Aabb = secondRigidbody.getShapeList().getAabb();
+      let colliding: boolean = shape1.overlap(shape2);
+      return colliding;
+    }
+
+    private checkForTrigger(): void {
+      let triggerBodies: ComponentRigidbody[] = new Array();
+      this.bodyList.forEach(function (value: ComponentRigidbody): void {
+        if (value.collisionGroup == PHYSICS_GROUP.TRIGGER) {
+          triggerBodies.push(value);
+        }
+      });
+      triggerBodies.forEach((value: ComponentRigidbody): void => {
+        this.bodyList.forEach((_secondValue: ComponentRigidbody): void => {
+          let triggered: boolean = this.isCollided(value.getOimoRigidbody(), _secondValue.getOimoRigidbody());
+          if (triggered) {
+            _secondValue.reactToEvent(EVENT_PHYSICS.TRIGGER_ENTER, value);
+          }
+        });
+      });
+    }
+
+    //#endregion
 
 
   }

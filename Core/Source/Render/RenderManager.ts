@@ -144,19 +144,22 @@ namespace FudgeCore {
      */
     private static setupPhysicalTransform(_node: Node): void {
       if (Physics.world != null) {
+        Physics.world.checkEvents();
         for (let name in _node.getChildren()) {
           let childNode: Node = _node.getChildren()[name];
           RenderManager.setupPhysicalTransform(childNode);
           let cmpRigidbody: ComponentRigidbody = childNode.getComponent(ComponentRigidbody);
-          if (cmpRigidbody != null) { //Case of Dynamic Rigidbody
-            let cmpTransform: ComponentTransform = childNode.getComponent(ComponentTransform);
-            if (cmpTransform) {
-              let mutator: Mutator = {};
-              mutator["rotation"] = cmpRigidbody.getRotation();
-              mutator["translation"] = cmpRigidbody.getPosition();
-              childNode.mtxLocal.mutate(mutator);
-              //Override any position/rotation, Physical Objects do not know hierachy unless it's established through physics
-            }
+          let cmpTransform: ComponentTransform = childNode.getComponent(ComponentTransform);
+          if (cmpTransform != null && cmpRigidbody != null && cmpRigidbody.physicsType != PHYSICS_TYPE.KINEMATIC) { //Case of Dynamic Rigidbody
+            let mutator: Mutator = {};
+            mutator["rotation"] = cmpRigidbody.getRotation();
+            mutator["translation"] = cmpRigidbody.getPosition();
+            childNode.mtxLocal.mutate(mutator);
+            //Override any position/rotation, Physical Objects do not know hierachy unless it's established through physics
+          }
+          if (cmpTransform != null && cmpRigidbody != null && cmpRigidbody.physicsType == PHYSICS_TYPE.KINEMATIC) { //Case of Kinematic Rigidbody
+            cmpRigidbody.setPosition(childNode.mtxWorld.translation);
+            cmpRigidbody.setRotation(childNode.mtxWorld.rotation);
           }
         }
       }

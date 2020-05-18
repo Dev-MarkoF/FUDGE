@@ -3083,17 +3083,45 @@ declare namespace FudgeCore {
        */
     class ComponentRigidbody extends Component {
         static readonly iSubclass: number;
-        physicsType: PHYSICS_TYPE;
-        colliderType: COLLIDER_TYPE;
-        collisionGroup: PHYSICS_GROUP;
+        get physicsType(): PHYSICS_TYPE;
+        set physicsType(_value: PHYSICS_TYPE);
+        get colliderType(): COLLIDER_TYPE;
+        set colliderType(_value: COLLIDER_TYPE);
+        get collisionGroup(): PHYSICS_GROUP;
+        set collisionGroup(_value: PHYSICS_GROUP);
+        offsetPosition: Vector3;
+        offsetRotation: Vector3;
+        offsetScaling: Vector3;
+        /**
+       * Returns the physical weight of the [[Node]]
+       */
         get mass(): number;
-        set mass(value: number);
+        /**
+      * Setting the physical weight of the [[Node]] in kg
+      */
+        set mass(_value: number);
+        get linearDamping(): number;
+        set linearDamping(_value: number);
+        get angularDamping(): number;
+        set angularDamping(_value: number);
         private rigidbody;
         private massData;
         private collider;
         private colliderInfo;
         private rigidbodyInfo;
+        private contactNumPrev;
+        private contactNumCurrent;
+        private contacts;
+        private rbType;
+        private colType;
+        private colGroup;
         constructor(_mass?: number, _type?: PHYSICS_TYPE, _colliderType?: COLLIDER_TYPE, _group?: PHYSICS_GROUP, _transform?: Matrix4x4);
+        /**
+        * Returns the rigidbody in the form the physics engine is using it, should not be used unless a functionality
+        * is not provided through the FUDGE Integration.
+        */
+        getOimoRigidbody(): OIMO.RigidBody;
+        checkContacts(): void;
         /**
        * Removes and recreates the Rigidbody from the world matrix of the [[Node]]
        */
@@ -3139,6 +3167,43 @@ declare namespace FudgeCore {
          */
         setVelocity(_value: Vector3): void;
         /**
+         * Applies a continous FORCE at the center of the RIGIDBODY in the three dimensions. Considering the rigidbody's MASS.
+         * The force is measured in newton, 1kg needs about 10 Newton to fight against gravity.
+         */
+        applyForce(_force: Vector3): void;
+        /**
+        * Applies a continous FORCE at a specific point in the world to the RIGIDBODY in the three dimensions. Considering the rigidbody's MASS
+        */
+        applyForceAtPoint(_force: Vector3, _worldPoint: Vector3): void;
+        /**
+        * Applies a continous ROTATIONAL FORCE (Torque) to the RIGIDBODY in the three dimensions. Considering the rigidbody's MASS
+        */
+        applyTorque(_rotationalForce: Vector3): void;
+        /**
+        * Applies a instant FORCE at a point/rigidbodycenter to the RIGIDBODY in the three dimensions. Considering the rigidbod's MASS
+        * Influencing the angular speed and the linear speed.
+        */
+        applyImpulseAtPoint(_impulse: Vector3, _worldPoint?: Vector3): void;
+        /**
+        * Applies a instant FORCE to the RIGIDBODY in the three dimensions. Considering the rigidbody's MASS
+        * Only influencing it's speed not rotation.
+        */
+        applyLinearImpulse(_impulse: Vector3): void;
+        /**
+       * Applies a instant ROTATIONAL-FORCE to the RIGIDBODY in the three dimensions. Considering the rigidbody's MASS
+       * Only influencing it's rotation.
+       */
+        applyAngularImpulse(_rotationalImpulse: Vector3): void;
+        /**
+       * Changing the VELOCITY of the RIGIDBODY. Only influencing the linear speed not angular
+       */
+        addVelocity(_value: Vector3): void;
+        /**
+       * Changing the VELOCITY of the RIGIDBODY. Only influencing the angular speed not the linear
+       */
+        addAngularVelocity(_value: Vector3): void;
+        reactToEvent(_eventType: EVENT_PHYSICS, _other: ComponentRigidbody): void;
+        /**
          * Sends a ray through this specific body ignoring the rest of the world and checks if this body was hit by the ray,
          * returning info about the hit.
          */
@@ -3150,54 +3215,6 @@ declare namespace FudgeCore {
     }
 }
 declare namespace FudgeCore {
-    const enum EVENT_PHYSICS {
-        /** broadcast to a [[Node]] and all [[Nodes]] in the branch it's the root of */
-        TRIGGER_ENTER = "TriggerEnteredCollision",
-        /** broadcast to a [[Node]] and all [[Nodes]] in the branch it's the root of */
-        TRIGGER_LEAVE = "TriggerLeftCollision",
-        /** broadcast to a [[Node]] and all [[Nodes]] in the branch it's the root of */
-        COLLISION_ENTER = "ColliderEnteredCollision",
-        /** broadcast to a [[Node]] and all [[Nodes]] in the branch it's the root of */
-        COLLISION_LEAVE = "ColliderLeftCollision",
-        /** broadcast to a [[Node]] and all [[Nodes]] in the branch it's the root of */
-        INITIALIZE = "Initialized"
-    }
-}
-declare namespace FudgeCore {
-    /**
-   * Groups to place a node in, not every group should collide with every group. Use a Mask in to exclude collisions
-   */
-    enum PHYSICS_GROUP {
-        DEFAULT = 0,
-        TRIGGER = 4000,
-        GROUP_1 = 1,
-        GROUP_2 = 2,
-        GROUP_3 = 3,
-        GROUP_4 = 4
-    }
-    /**
-    * Different Types of Physical Interaction, DYNAMIC is fully influenced by physics and only physics, STATIC means immovable,
-    * KINEMATIC is only moved through physical code.
-    */
-    enum PHYSICS_TYPE {
-        DYNAMIC,
-        STATIC,
-        KINEMATIC
-    }
-    enum COLLIDER_TYPE {
-        BOX = 0,
-        SPHERE = 1,
-        CAPSULE = 2,
-        CYLINDER = 3
-    }
-    class RayHitInfo {
-        hit: boolean;
-        hitDistance: number;
-        hitPoint: Vector3;
-        rigidbodyComponent: ComponentRigidbody;
-        hitNormal: Vector3;
-        constructor();
-    }
     /**
     * Main Physics Class to hold information about the physical representation of the scene
     * @author Marko Fehrenbach, HFU, 2020
@@ -3249,8 +3266,63 @@ declare namespace FudgeCore {
       * Simulates the physical world. _deltaTime is the amount of time between physical steps, default is 60 frames per second ~17ms
       */
         simulate(_deltaTime?: number): void;
+        checkEvents(): void;
         private updateWorldFromWorldMatrix;
         private createWorld;
+        private isCollided;
+        private checkForTrigger;
+    }
+}
+declare namespace FudgeCore {
+    const enum EVENT_PHYSICS {
+        /** broadcast to a [[Node]] and all [[Nodes]] in the branch it's the root of */
+        TRIGGER_ENTER = "TriggerEnteredCollision",
+        /** broadcast to a [[Node]] and all [[Nodes]] in the branch it's the root of */
+        TRIGGER_LEAVE = "TriggerLeftCollision",
+        /** broadcast to a [[Node]] and all [[Nodes]] in the branch it's the root of */
+        COLLISION_ENTER = "ColliderEnteredCollision",
+        /** broadcast to a [[Node]] and all [[Nodes]] in the branch it's the root of */
+        COLLISION_LEAVE = "ColliderLeftCollision",
+        /** broadcast to a [[Node]] and all [[Nodes]] in the branch it's the root of */
+        INITIALIZE = "Initialized"
+    }
+    /**
+  * Groups to place a node in, not every group should collide with every group. Use a Mask in to exclude collisions
+  */
+    enum PHYSICS_GROUP {
+        DEFAULT = 1,
+        TRIGGER = 60000,
+        GROUP_1 = 2,
+        GROUP_2 = 4,
+        GROUP_3 = 8,
+        GROUP_4 = 16
+    }
+    /**
+    * Different types of physical interaction, DYNAMIC is fully influenced by physics and only physics, STATIC means immovable,
+    * KINEMATIC is moved through transform and animation instead of physics code.
+    */
+    enum PHYSICS_TYPE {
+        DYNAMIC,
+        STATIC,
+        KINEMATIC
+    }
+    /**
+    * Different types of collider shapes, with different options in scaling BOX = Vector3(length, height, depth),
+    * SPHERE = Vector3(diameter, x, x), CAPSULE = Vector3(diameter, height, x), CYLINDEr = Vector3(diameter, height, x); x == unused.
+    */
+    enum COLLIDER_TYPE {
+        BOX = 0,
+        SPHERE = 1,
+        CAPSULE = 2,
+        CYLINDER = 3
+    }
+    class RayHitInfo {
+        hit: boolean;
+        hitDistance: number;
+        hitPoint: Vector3;
+        rigidbodyComponent: ComponentRigidbody;
+        hitNormal: Vector3;
+        constructor();
     }
 }
 declare namespace FudgeCore {
