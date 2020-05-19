@@ -70,17 +70,21 @@ namespace FudgeCore {
       this.rigidbody.setAngularDamping(_value);
     }
 
+    public collisions: ComponentRigidbody[] = new Array();
+    public triggers: ComponentRigidbody[] = new Array();
+
     private rigidbody: OIMO.RigidBody;
     private massData: OIMO.MassData = new OIMO.MassData();
     private collider: OIMO.Shape;
     private colliderInfo: OIMO.ShapeConfig;
     private rigidbodyInfo: OIMO.RigidBodyConfig = new OIMO.RigidBodyConfig();
-    private contactNumPrev: Number = 0;
-    private contactNumCurrent: Number = 0;
-    private contacts: OIMO.Contact[] = new Array();
     private rbType: PHYSICS_TYPE = PHYSICS_TYPE.DYNAMIC;
     private colType: COLLIDER_TYPE = COLLIDER_TYPE.BOX;
     private colGroup: PHYSICS_GROUP = PHYSICS_GROUP.DEFAULT;
+    private restitution: number = 0.2;
+    private friction: number = 0;
+
+
 
     constructor(_mass: number = 1, _type: PHYSICS_TYPE = PHYSICS_TYPE.DYNAMIC, _colliderType: COLLIDER_TYPE = COLLIDER_TYPE.BOX, _group: PHYSICS_GROUP = PHYSICS_GROUP.DEFAULT, _transform: Matrix4x4 = null) {
       super();
@@ -101,20 +105,77 @@ namespace FudgeCore {
       return this.rigidbody;
     }
 
-    public checkContacts(): void {
-      this.contactNumCurrent = this.rigidbody._numContactLinks;
-      if (this.contactNumCurrent != this.contactNumPrev) {
-        if (this.contactNumCurrent >= this.contactNumPrev) {
-          Debug.log("More Contacts"); //Go through list add new contacts -> check up on prev/next array functionality in javascript
-          Debug.log(this.rigidbody._contactLinkListLast);
+    public checkCollisionEvents(): void {
+      let list: OIMO.ContactLink = this.rigidbody.getContactLinkList();
+      let objHit: ComponentRigidbody;
+      let objHit2: ComponentRigidbody;
+      let event: Event;
+      //ADD
+      for (let i: number = 0; i < this.rigidbody.getNumContectLinks(); i++) {
+        objHit = list.getContact().getShape1().userData;
+        objHit2 = list.getContact().getShape2().userData;
+        if (objHit.getOimoRigidbody() != this.getOimoRigidbody() && this.collisions.indexOf(objHit) == -1) {
+          this.collisions.push(objHit);
+          event = new CustomEvent(EVENT_PHYSICS.COLLISION_ENTER, { detail: objHit });
+          this.dispatchEvent(event);
+          Debug.log("collisionEntered " + objHit.getContainer().name);
+          //dispatch added Event to this RB with the hit object
         }
-        else {
-          Debug.log("Less Contacts"); //Go through list remove leaving contacts
+        if (objHit2 != this && this.collisions.indexOf(objHit2) == -1) {
+          this.collisions.push(objHit2);
+          event = new CustomEvent(EVENT_PHYSICS.COLLISION_ENTER, { detail: objHit2 });
+          this.dispatchEvent(event);
+          Debug.log("collisionEntered " + objHit2.getContainer().name);
+          //dispatch added Event
         }
-        Debug.log(this.contacts);
+        list = list.getNext();
       }
-      this.contactNumPrev = this.contactNumCurrent;
+      //REMOVE
+      this.collisions.forEach((value: ComponentRigidbody) => { //Every Collider in the list is checked if the collision is still happening
+        let isColliding: boolean = false;
+        list = this.rigidbody.getContactLinkList();
+        for (let i: number = 0; i < this.rigidbody.getNumContectLinks(); i++) {
+          objHit = list.getContact().getShape1().userData;
+          objHit2 = list.getContact().getShape2().userData;
+          if (value == objHit || value == objHit2) {
+            isColliding = true;
+          }
+          list = list.getNext();
+        }
+        if (isColliding == false) {
+          let index: number = this.collisions.indexOf(value);
+          this.collisions.splice(index);
+          Debug.log("collisionLeft " + value.getContainer().name);
+          //dispatch removed event
+        }
+      });
+      //Possible to also dispatch a stay event for all that are still in the Array
     }
+
+    public checkTriggerEvents(): void {
+      let possibleTriggers: ComponentRigidbody[] = Physics.world.getTriggerList();
+      //ADD
+      possibleTriggers.forEach((value: ComponentRigidbody) => {
+        let overlapping: boolean = this.collidesWith(this.getOimoRigidbody(), value.getOimoRigidbody());
+        if (overlapping && this.triggers.indexOf(value) == -1) {
+          this.triggers.push(value);
+          Debug.log("TriggerEntered" + value.getContainer().name);
+          //dispatch added event
+        }
+      });
+      //REMOVE
+      this.triggers.forEach((value: ComponentRigidbody) => { //Every Collider in the list is checked if the collision is still happening
+        let isTriggering: boolean = this.collidesWith(this.getOimoRigidbody(), value.getOimoRigidbody());
+        if (isTriggering == false) {
+          let index: number = this.collisions.indexOf(value);
+          this.collisions.splice(index);
+          Debug.log("TriggerLeft " + value.getContainer().name);
+          //dispatch removed event
+        }
+      });
+    }
+
+
 
     /**
    * Removes and recreates the Rigidbody from the world matrix of the [[Node]]
@@ -126,11 +187,10 @@ namespace FudgeCore {
       // let scaling: Vector3 = local.scaling;
       // this.rigidbody.setPosition(new OIMO.Vec3(position.x, position.y, position.z));
       // this.rigidbody.setRotationXyz(new OIMO.Vec3(rotation.x, rotation.y, rotation.z));
-      // //this.rigidbody.removeShape(this.collider);;
+      // this.rigidbody.removeShape(this.collider);
       // this.createCollider(new OIMO.Vec3(scaling.x, scaling.y, scaling.z), this.colliderType);
       // this.collider = new OIMO.Shape(this.colliderInfo);
       // this.rigidbody.addShape(this.collider);
-      // this.rigidbody.removeShape(this.rigidbody.getShapeList());
       this.removeRigidbodyFromWorld();
       this.createRigidbody(this.mass, this.physicsType, this.colliderType, null, this.collisionGroup);
       this.addRigidbodyToWorld();
@@ -141,7 +201,7 @@ namespace FudgeCore {
    * Get the friction of the rigidbody, which is the factor of sliding resistance of this rigidbody on surfaces
    */
     public getFriction(): number {
-      return this.rigidbody.getShapeList().getFriction();
+      return this.friction;
     }
 
 
@@ -149,21 +209,23 @@ namespace FudgeCore {
    * Set the friction of the rigidbody, which is the factor of  sliding resistance of this rigidbody on surfaces
    */
     public setFriction(_friction: number): void {
-      this.rigidbody.getShapeList().setFriction(_friction);
+      this.friction = _friction;
+      this.rigidbody.getShapeList().setFriction(this.friction);
     }
 
     /**
  * Get the restitution of the rigidbody, which is the factor of bounciness of this rigidbody on surfaces
  */
     public getRestitution(): number {
-      return this.rigidbody.getShapeList().getRestitution();
+      return this.restitution;
     }
 
     /**
    * Set the restitution of the rigidbody, which is the factor of bounciness of this rigidbody on surfaces
    */
     public setRestitution(_restitution: number): void {
-      this.rigidbody.getShapeList().setRestitution(_restitution);
+      this.restitution = _restitution;
+      this.rigidbody.getShapeList().setRestitution(this.restitution);
     }
 
     /**
@@ -347,6 +409,8 @@ namespace FudgeCore {
         this.collider.setCollisionMask(PHYSICS_GROUP.DEFAULT | PHYSICS_GROUP.GROUP_1 | PHYSICS_GROUP.GROUP_2 | PHYSICS_GROUP.GROUP_3 | PHYSICS_GROUP.GROUP_4);
       this.rigidbody.addShape(this.collider);
       this.rigidbody.setMassData(this.massData);
+      this.rigidbody.getShapeList().setRestitution(this.restitution);
+      this.rigidbody.getShapeList().setFriction(this.friction);
     }
 
     private createCollider(_scale: OIMO.Vec3, _colliderType: COLLIDER_TYPE): void {
@@ -369,6 +433,13 @@ namespace FudgeCore {
       }
       shapeConf.geometry = geometry;
       this.colliderInfo = shapeConf;
+    }
+
+    private collidesWith(triggerRigidbody: OIMO.RigidBody, secondRigidbody: OIMO.RigidBody): boolean {
+      let shape1: OIMO.Aabb = triggerRigidbody.getShapeList().getAabb();
+      let shape2: OIMO.Aabb = secondRigidbody.getShapeList().getAabb();
+      let colliding: boolean = shape1.overlap(shape2);
+      return colliding;
     }
 
   }

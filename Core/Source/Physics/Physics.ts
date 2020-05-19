@@ -11,6 +11,7 @@ namespace FudgeCore {
 
     private oimoWorld: OIMO.World;
     private bodyList: ComponentRigidbody[] = new Array();
+    private triggerBodyList: ComponentRigidbody[] = new Array();
 
     /**
    * Creating a physical world to represent the [[Node]] Scene Tree
@@ -61,6 +62,7 @@ namespace FudgeCore {
       return hitInfo;
     }
 
+
     /**
   * Starts the physical world by checking that each body has the correct values from transform
   */
@@ -68,7 +70,6 @@ namespace FudgeCore {
       RenderManager.setupTransformAndLights(_sceneTree);
       this.world.updateWorldFromWorldMatrix();
     }
-
 
     private static getRayEndPoint(start: OIMO.Vec3, direction: Vector3, length: number): OIMO.Vec3 {
       let endpoint: Vector3 = Vector3.ZERO();
@@ -85,6 +86,15 @@ namespace FudgeCore {
       let dz: number = origin.z - hitPoint.z;
 
       return Math.sqrt(dx * dx + dy * dy + dz * dz);
+    }
+
+
+    public getBodyList(): ComponentRigidbody[] {
+      return this.bodyList;
+    }
+
+    public getTriggerList(): ComponentRigidbody[] {
+      return this.triggerBodyList;
     }
 
     /**
@@ -164,28 +174,27 @@ namespace FudgeCore {
 
     //#region EVENTS
     //Trigger-Events - get every rb's in the trigger group, check each with every rb and if overlapping send event
-    private isCollided(triggerRigidbody: OIMO.RigidBody, secondRigidbody: OIMO.RigidBody): boolean {
-      let shape1: OIMO.Aabb = triggerRigidbody.getShapeList().getAabb();
-      let shape2: OIMO.Aabb = secondRigidbody.getShapeList().getAabb();
-      let colliding: boolean = shape1.overlap(shape2);
-      return colliding;
-    }
+    // private collidesWith(triggerRigidbody: OIMO.RigidBody, secondRigidbody: OIMO.RigidBody): boolean {
+    //   let shape1: OIMO.Aabb = triggerRigidbody.getShapeList().getAabb();
+    //   let shape2: OIMO.Aabb = secondRigidbody.getShapeList().getAabb();
+    //   let colliding: boolean = shape1.overlap(shape2);
+    //   return colliding;
+    // }
 
     private checkForTrigger(): void {
-      let triggerBodies: ComponentRigidbody[] = new Array();
-      this.bodyList.forEach(function (value: ComponentRigidbody): void {
+      this.bodyList.forEach((value: ComponentRigidbody): void => {
         if (value.collisionGroup == PHYSICS_GROUP.TRIGGER) {
-          triggerBodies.push(value);
+          this.triggerBodyList.push(value);
         }
       });
-      triggerBodies.forEach((value: ComponentRigidbody): void => {
-        this.bodyList.forEach((_secondValue: ComponentRigidbody): void => {
-          let triggered: boolean = this.isCollided(value.getOimoRigidbody(), _secondValue.getOimoRigidbody());
-          if (triggered) {
-            _secondValue.reactToEvent(EVENT_PHYSICS.TRIGGER_ENTER, value);
-          }
-        });
-      });
+      // triggerBodies.forEach((value: ComponentRigidbody): void => {
+      //   this.bodyList.forEach((_secondValue: ComponentRigidbody): void => {
+      //     let triggered: boolean = this.collidesWith(value.getOimoRigidbody(), _secondValue.getOimoRigidbody());
+      //     if (triggered) {
+      //       _secondValue.reactToEvent(EVENT_PHYSICS.TRIGGER_ENTER, value);
+      //     }
+      //   });
+      // });
     }
 
     //#endregion

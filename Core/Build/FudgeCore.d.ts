@@ -3104,24 +3104,26 @@ declare namespace FudgeCore {
         set linearDamping(_value: number);
         get angularDamping(): number;
         set angularDamping(_value: number);
+        collisions: ComponentRigidbody[];
+        triggers: ComponentRigidbody[];
         private rigidbody;
         private massData;
         private collider;
         private colliderInfo;
         private rigidbodyInfo;
-        private contactNumPrev;
-        private contactNumCurrent;
-        private contacts;
         private rbType;
         private colType;
         private colGroup;
+        private restitution;
+        private friction;
         constructor(_mass?: number, _type?: PHYSICS_TYPE, _colliderType?: COLLIDER_TYPE, _group?: PHYSICS_GROUP, _transform?: Matrix4x4);
         /**
         * Returns the rigidbody in the form the physics engine is using it, should not be used unless a functionality
         * is not provided through the FUDGE Integration.
         */
         getOimoRigidbody(): OIMO.RigidBody;
-        checkContacts(): void;
+        checkCollisionEvents(): void;
+        checkTriggerEvents(): void;
         /**
        * Removes and recreates the Rigidbody from the world matrix of the [[Node]]
        */
@@ -3212,6 +3214,7 @@ declare namespace FudgeCore {
         private removeRigidbodyFromWorld;
         private createRigidbody;
         private createCollider;
+        private collidesWith;
     }
 }
 declare namespace FudgeCore {
@@ -3223,6 +3226,7 @@ declare namespace FudgeCore {
         static world: Physics;
         private oimoWorld;
         private bodyList;
+        private triggerBodyList;
         /**
        * Creating a physical world to represent the [[Node]] Scene Tree
        */
@@ -3238,6 +3242,8 @@ declare namespace FudgeCore {
         static start(_sceneTree: Node): void;
         private static getRayEndPoint;
         private static getRayDistance;
+        getBodyList(): ComponentRigidbody[];
+        getTriggerList(): ComponentRigidbody[];
         /**
       * Getting the solver iterations of the physics engine. Higher iteration numbers increase accuracy but decrease performance
       */
@@ -3269,7 +3275,6 @@ declare namespace FudgeCore {
         checkEvents(): void;
         private updateWorldFromWorldMatrix;
         private createWorld;
-        private isCollided;
         private checkForTrigger;
     }
 }
