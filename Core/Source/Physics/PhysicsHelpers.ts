@@ -3,11 +3,11 @@ namespace FudgeCore {
     /** broadcast to a [[Node]] and all [[Nodes]] in the branch it's the root of */
     TRIGGER_ENTER = "TriggerEnteredCollision",
     /** broadcast to a [[Node]] and all [[Nodes]] in the branch it's the root of */
-    TRIGGER_LEAVE = "TriggerLeftCollision",
+    TRIGGER_EXIT = "TriggerLeftCollision",
     /** broadcast to a [[Node]] and all [[Nodes]] in the branch it's the root of */
     COLLISION_ENTER = "ColliderEnteredCollision",
     /** broadcast to a [[Node]] and all [[Nodes]] in the branch it's the root of */
-    COLLISION_LEAVE = "ColliderLeftCollision",
+    COLLISION_EXIT = "ColliderLeftCollision",
     /** broadcast to a [[Node]] and all [[Nodes]] in the branch it's the root of */
     INITIALIZE = "Initialized"
   }

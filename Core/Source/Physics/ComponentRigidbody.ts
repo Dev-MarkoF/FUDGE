@@ -82,7 +82,7 @@ namespace FudgeCore {
     private colType: COLLIDER_TYPE = COLLIDER_TYPE.BOX;
     private colGroup: PHYSICS_GROUP = PHYSICS_GROUP.DEFAULT;
     private restitution: number = 0.2;
-    private friction: number = 0;
+    private friction: number = 0.5;
 
 
 
@@ -118,15 +118,13 @@ namespace FudgeCore {
           this.collisions.push(objHit);
           event = new CustomEvent(EVENT_PHYSICS.COLLISION_ENTER, { detail: objHit });
           this.dispatchEvent(event);
-          Debug.log("collisionEntered " + objHit.getContainer().name);
-          //dispatch added Event to this RB with the hit object
+          // Debug.log("collisionEntered " + objHit.getContainer().name);
         }
         if (objHit2 != this && this.collisions.indexOf(objHit2) == -1) {
           this.collisions.push(objHit2);
           event = new CustomEvent(EVENT_PHYSICS.COLLISION_ENTER, { detail: objHit2 });
           this.dispatchEvent(event);
-          Debug.log("collisionEntered " + objHit2.getContainer().name);
-          //dispatch added Event
+          // Debug.log("collisionEntered " + objHit2.getContainer().name);
         }
         list = list.getNext();
       }
@@ -145,8 +143,9 @@ namespace FudgeCore {
         if (isColliding == false) {
           let index: number = this.collisions.indexOf(value);
           this.collisions.splice(index);
-          Debug.log("collisionLeft " + value.getContainer().name);
-          //dispatch removed event
+          // Debug.log("collisionLeft " + value.getContainer().name);
+          event = new CustomEvent(EVENT_PHYSICS.COLLISION_EXIT, { detail: value });
+          this.dispatchEvent(event);
         }
       });
       //Possible to also dispatch a stay event for all that are still in the Array
@@ -154,13 +153,15 @@ namespace FudgeCore {
 
     public checkTriggerEvents(): void {
       let possibleTriggers: ComponentRigidbody[] = Physics.world.getTriggerList();
+      let event: Event;
       //ADD
       possibleTriggers.forEach((value: ComponentRigidbody) => {
         let overlapping: boolean = this.collidesWith(this.getOimoRigidbody(), value.getOimoRigidbody());
         if (overlapping && this.triggers.indexOf(value) == -1) {
           this.triggers.push(value);
-          Debug.log("TriggerEntered" + value.getContainer().name);
-          //dispatch added event
+          // Debug.log("TriggerEntered" + value.getContainer().name);
+          event = new CustomEvent(EVENT_PHYSICS.TRIGGER_ENTER, { detail: value });
+          this.dispatchEvent(event);
         }
       });
       //REMOVE
@@ -168,9 +169,10 @@ namespace FudgeCore {
         let isTriggering: boolean = this.collidesWith(this.getOimoRigidbody(), value.getOimoRigidbody());
         if (isTriggering == false) {
           let index: number = this.collisions.indexOf(value);
-          this.collisions.splice(index);
-          Debug.log("TriggerLeft " + value.getContainer().name);
-          //dispatch removed event
+          this.triggers.splice(index);
+          // Debug.log("TriggerLeft " + value.getContainer().name);
+          event = new CustomEvent(EVENT_PHYSICS.TRIGGER_EXIT, { detail: value });
+          this.dispatchEvent(event);
         }
       });
     }

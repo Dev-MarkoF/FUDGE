@@ -50,10 +50,10 @@ namespace FudgePhysics_Communication {
     // hierarchy.appendChild(cubes[2]);
     // cmpCubeTransform3.local.translate(new f.Vector3(0.5, 7, 0.5));
 
-    // cubes[3] = createCompleteMeshNode("Cube_3", new f.Material("Cube", f.ShaderFlat, new f.CoatColored(new f.Color(0, 1, 0, 1))), new f.MeshCube(), 1, f.PHYSICS_TYPE.STATIC, f.PHYSICS_GROUP.TRIGGER);
-    // let cmpCubeTransform4: f.ComponentTransform = cubes[3].getComponent(f.ComponentTransform);
-    // hierarchy.appendChild(cubes[3]);
-    // cmpCubeTransform4.local.translate(new f.Vector3(0, 0.5, 0));
+    cubes[3] = createCompleteMeshNode("Cube_3", new f.Material("Cube", f.ShaderFlat, new f.CoatColored(new f.Color(0, 1, 0, 1))), new f.MeshCube(), 1, f.PHYSICS_TYPE.STATIC, f.PHYSICS_GROUP.TRIGGER);
+    let cmpCubeTransform4: f.ComponentTransform = cubes[3].getComponent(f.ComponentTransform);
+    hierarchy.appendChild(cubes[3]);
+    cmpCubeTransform4.local.translate(new f.Vector3(0, 0.5, 0));
 
     let cmpLight: f.ComponentLight = new f.ComponentLight(new f.LightDirectional(f.Color.CSS("WHITE")));
     cmpLight.pivot.lookAt(new f.Vector3(0.5, -1, -0.8));
@@ -64,22 +64,37 @@ namespace FudgePhysics_Communication {
     cmpCamera.pivot.translate(new f.Vector3(2, 2, 10));
     cmpCamera.pivot.lookAt(f.Vector3.ZERO());
 
-    cubes[0].getComponent(f.ComponentRigidbody).addEventListener(f.EVENT_PHYSICS.COLLISION_ENTER, collisionHandler);
-
+    cubes[0].getComponent(f.ComponentRigidbody).addEventListener(f.EVENT_PHYSICS.COLLISION_ENTER, onCollisionEnter as EventListener);
+    cubes[0].getComponent(f.ComponentRigidbody).addEventListener(f.EVENT_PHYSICS.TRIGGER_ENTER, onTriggerEnter as EventListener);
+    cubes[0].getComponent(f.ComponentRigidbody).addEventListener(f.EVENT_PHYSICS.COLLISION_EXIT, onCollisionExit as EventListener);
+    cubes[0].getComponent(f.ComponentRigidbody).addEventListener(f.EVENT_PHYSICS.TRIGGER_EXIT, onTriggerExit as EventListener);
 
     viewPort = new f.Viewport();
     viewPort.initialize("Viewport", hierarchy, cmpCamera, app);
 
     viewPort.showSceneGraph();
     f.Loop.addEventListener(f.EVENT.LOOP_FRAME, update);
-    cubes[0].getComponent(f.ComponentRigidbody).setRestitution(1);
+    cubes[0].getComponent(f.ComponentRigidbody).setRestitution(1.3);
     f.Physics.start(hierarchy);
     f.Loop.start();
   }
 
-  function collisionHandler(_event: CustomEvent): void {
-    f.Debug.log(_event.detail);
+  function onCollisionEnter(_event: CustomEvent): void {
+    f.Debug.log("ColEnter: " + _event.detail.getContainer().name);
   }
+
+  function onCollisionExit(_event: CustomEvent): void {
+    f.Debug.log("ColExit: " + _event.detail.getContainer().name);
+  }
+
+  function onTriggerEnter(_event: CustomEvent): void {
+    f.Debug.log("TriggerEnter: " + _event.detail.getContainer().name);
+  }
+
+  function onTriggerExit(_event: CustomEvent): void {
+    f.Debug.log("TriggerExit: " + _event.detail.getContainer().name);
+  }
+
 
   function update(): void {
 

@@ -38,22 +38,18 @@ namespace FudgePhysics_Communication {
     cubes[0] = createCompleteMeshNode("Cube_1", new f.Material("Cube", f.ShaderFlat, new f.CoatColored(new f.Color(1, 0, 0, 1))), new f.MeshCube(), 1, f.PHYSICS_TYPE.DYNAMIC, f.PHYSICS_GROUP.GROUP_2);
     let cmpCubeTransform: f.ComponentTransform = cubes[0].getComponent(f.ComponentTransform);
     hierarchy.appendChild(cubes[0]);
-    cmpCubeTransform.local.translate(new f.Vector3(2, 7, 0));
+    cmpCubeTransform.local.translate(new f.Vector3(0, 7, 0));
 
-    cubes[1] = createCompleteMeshNode("Cube_2", new f.Material("Cube", f.ShaderFlat, new f.CoatColored(new f.Color(1, 0, 0, 1))), new f.MeshCube(), 1, f.PHYSICS_TYPE.DYNAMIC, f.PHYSICS_GROUP.GROUP_1);
+    cubes[1] = createCompleteMeshNode("Cube_2", new f.Material("Cube", f.ShaderFlat, new f.CoatColored(new f.Color(1, 1, 0, 1))), new f.MeshCube(), 1, f.PHYSICS_TYPE.DYNAMIC, f.PHYSICS_GROUP.GROUP_1);
     let cmpCubeTransform2: f.ComponentTransform = cubes[1].getComponent(f.ComponentTransform);
-    hierarchy.appendChild(cubes[1]);
-    cmpCubeTransform2.local.translate(new f.Vector3(0, 3.5, 0.48));
+    cubes[0].appendChild(cubes[1]);
+    cubes[1].removeComponent(cubes[1].getComponent(f.ComponentRigidbody));
+    cmpCubeTransform2.local.translate(new f.Vector3(0, 1, 0));
 
     cubes[2] = createCompleteMeshNode("Cube_3", new f.Material("Cube", f.ShaderFlat, new f.CoatColored(new f.Color(1, 0, 0, 1))), new f.MeshCube(), 1, f.PHYSICS_TYPE.DYNAMIC);
     let cmpCubeTransform3: f.ComponentTransform = cubes[2].getComponent(f.ComponentTransform);
     hierarchy.appendChild(cubes[2]);
-    cmpCubeTransform3.local.translate(new f.Vector3(0.5, 7, 0.5));
-
-    cubes[3] = createCompleteMeshNode("Cube_3", new f.Material("Cube", f.ShaderFlat, new f.CoatColored(new f.Color(0, 1, 0, 1))), new f.MeshCube(), 1, f.PHYSICS_TYPE.STATIC, f.PHYSICS_GROUP.TRIGGER);
-    let cmpCubeTransform4: f.ComponentTransform = cubes[3].getComponent(f.ComponentTransform);
-    hierarchy.appendChild(cubes[3]);
-    cmpCubeTransform4.local.translate(new f.Vector3(0, 0.5, 0));
+    cmpCubeTransform3.local.translate(new f.Vector3(0.5, 3, 0.5));
 
     let cmpLight: f.ComponentLight = new f.ComponentLight(new f.LightDirectional(f.Color.CSS("WHITE")));
     cmpLight.pivot.lookAt(new f.Vector3(0.5, -1, -0.8));
@@ -105,7 +101,8 @@ namespace FudgePhysics_Communication {
 
     let cmpRigidbody: f.ComponentRigidbody = new f.ComponentRigidbody(_mass, _physicsType, f.COLLIDER_TYPE.BOX, _group);
     //cmpRigidbody.setFriction(1);
-    cmpRigidbody.setRestitution(0);
+    cmpRigidbody.setRestitution(0.2);
+    cmpRigidbody.setFriction(0.8);
     node.addComponent(cmpMesh);
     node.addComponent(cmpMaterial);
     node.addComponent(cmpTransform);

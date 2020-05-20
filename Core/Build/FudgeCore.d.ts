@@ -3077,6 +3077,24 @@ declare namespace FudgeCore {
 }
 declare namespace FudgeCore {
     /**
+       * Acts as the physical representation of a connection between two [[Node]]'s.
+       * The type of conncetion is defined by the subclasses like prismatic joint, cylinder joint etc.
+       * A Rigidbody on the [[Node]] that this component is added to is needed. Setting the connectedRigidbody and
+       * initializing the connection creates a physical connection between them. This differs from a connection through hierarchy
+       * in the node structure of fudge.
+       * @authors Marko Fehrenbach, HFU, 2020
+       */
+    abstract class ComponentConstraint extends Component {
+        static attachedRigidbody: ComponentRigidbody;
+        static connectedRigidbody: ComponentRigidbody;
+        constructor(_attachedRigidbody: ComponentRigidbody, _connectedRigidbody: ComponentRigidbody);
+        abstract initializeConnection(): void;
+        abstract addConstraintToWorld(): void;
+        abstract removeConstraintFromWorld(): void;
+    }
+}
+declare namespace FudgeCore {
+    /**
        * Acts as the physical representation of the [[Node]] it's attached to.
        * It's the connection between the Fudge Rendered world and the Physics world
        * @authors Marko Fehrenbach, HFU, 2020
@@ -3283,11 +3301,11 @@ declare namespace FudgeCore {
         /** broadcast to a [[Node]] and all [[Nodes]] in the branch it's the root of */
         TRIGGER_ENTER = "TriggerEnteredCollision",
         /** broadcast to a [[Node]] and all [[Nodes]] in the branch it's the root of */
-        TRIGGER_LEAVE = "TriggerLeftCollision",
+        TRIGGER_EXIT = "TriggerLeftCollision",
         /** broadcast to a [[Node]] and all [[Nodes]] in the branch it's the root of */
         COLLISION_ENTER = "ColliderEnteredCollision",
         /** broadcast to a [[Node]] and all [[Nodes]] in the branch it's the root of */
-        COLLISION_LEAVE = "ColliderLeftCollision",
+        COLLISION_EXIT = "ColliderLeftCollision",
         /** broadcast to a [[Node]] and all [[Nodes]] in the branch it's the root of */
         INITIALIZE = "Initialized"
     }
