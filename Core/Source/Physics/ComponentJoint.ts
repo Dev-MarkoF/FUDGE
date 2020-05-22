@@ -1,5 +1,3 @@
-///<reference path="../../../Physics/OIMOPhysics.d.ts"/>
-
 namespace FudgeCore {
   /**
      * Acts as the physical representation of a connection between two [[Node]]'s.
@@ -9,9 +7,9 @@ namespace FudgeCore {
      * in the node structure of fudge. 
      * @authors Marko Fehrenbach, HFU, 2020
      */
-  export abstract class ComponentConstraint extends Component {
-    public static attachedRigidbody: ComponentRigidbody;
-    public static connectedRigidbody: ComponentRigidbody;
+  export abstract class ComponentJoint extends Component {
+    public attachedRigidbody: ComponentRigidbody;
+    public connectedRigidbody: ComponentRigidbody;
 
     constructor(_attachedRigidbody: ComponentRigidbody = null, _connectedRigidbody: ComponentRigidbody) {
       super();
@@ -25,6 +23,8 @@ namespace FudgeCore {
     public abstract addConstraintToWorld(): void;
 
     public abstract removeConstraintFromWorld(): void;
+
+    public abstract getOimoJoint(): OIMO.Joint;
 
   }
 

@@ -3084,13 +3084,29 @@ declare namespace FudgeCore {
        * in the node structure of fudge.
        * @authors Marko Fehrenbach, HFU, 2020
        */
-    abstract class ComponentConstraint extends Component {
-        static attachedRigidbody: ComponentRigidbody;
-        static connectedRigidbody: ComponentRigidbody;
+    abstract class ComponentJoint extends Component {
+        attachedRigidbody: ComponentRigidbody;
+        connectedRigidbody: ComponentRigidbody;
         constructor(_attachedRigidbody: ComponentRigidbody, _connectedRigidbody: ComponentRigidbody);
         abstract initializeConnection(): void;
         abstract addConstraintToWorld(): void;
         abstract removeConstraintFromWorld(): void;
+        abstract getOimoJoint(): OIMO.Joint;
+    }
+}
+declare namespace FudgeCore {
+    /**
+       * A physical connection between two bodies with a defined axe movement.
+       * Used to create things like springs.
+       * @authors Marko Fehrenbach, HFU, 2020
+       */
+    class ComponentJointPrismatic extends ComponentJoint {
+        private oimoJoint;
+        constructor(_attachedRigidbody?: ComponentRigidbody, _connectedRigidbody?: ComponentRigidbody);
+        initializeConnection(): void;
+        addConstraintToWorld(): void;
+        removeConstraintFromWorld(): void;
+        getOimoJoint(): OIMO.Joint;
     }
 }
 declare namespace FudgeCore {
@@ -3124,6 +3140,7 @@ declare namespace FudgeCore {
         set angularDamping(_value: number);
         collisions: ComponentRigidbody[];
         triggers: ComponentRigidbody[];
+        bodiesInTrigger: ComponentRigidbody[];
         private rigidbody;
         private massData;
         private collider;
@@ -3134,6 +3151,8 @@ declare namespace FudgeCore {
         private colGroup;
         private restitution;
         private friction;
+        private linDamping;
+        private angDamping;
         constructor(_mass?: number, _type?: PHYSICS_TYPE, _colliderType?: COLLIDER_TYPE, _group?: PHYSICS_GROUP, _transform?: Matrix4x4);
         /**
         * Returns the rigidbody in the form the physics engine is using it, should not be used unless a functionality
@@ -3142,6 +3161,7 @@ declare namespace FudgeCore {
         getOimoRigidbody(): OIMO.RigidBody;
         checkCollisionEvents(): void;
         checkTriggerEvents(): void;
+        checkBodiesInTrigger(): void;
         /**
        * Removes and recreates the Rigidbody from the world matrix of the [[Node]]
        */
@@ -3281,19 +3301,27 @@ declare namespace FudgeCore {
         /**
       * Adding a new OIMO Rigidbody to the OIMO World, happens automatically when adding a FUDGE Rigidbody Component
       */
-        addRigidbody(_rigidbody: OIMO.RigidBody, _cmpRB: ComponentRigidbody): void;
+        addRigidbody(_cmpRB: ComponentRigidbody): void;
         /**
       * Removing a OIMO Rigidbody to the OIMO World, happens automatically when adding a FUDGE Rigidbody Component
       */
-        removeRigidbody(_rigidbody: OIMO.RigidBody, _cmpRB: ComponentRigidbody): void;
+        removeRigidbody(_cmpRB: ComponentRigidbody): void;
+        /**
+    * Adding a new OIMO Joint/Constraint to the OIMO World, happens automatically when adding a FUDGE Rigidbody Component
+    */
+        addJoint(_cmpJoint: ComponentJoint): void;
+        /**
+        * Removing a OIMO Joint/Constraint to the OIMO World, happens automatically when adding a FUDGE Rigidbody Component
+        */
+        removeJoint(_cmpJoint: ComponentJoint): void;
         /**
       * Simulates the physical world. _deltaTime is the amount of time between physical steps, default is 60 frames per second ~17ms
       */
         simulate(_deltaTime?: number): void;
-        checkEvents(): void;
+        registerTrigger(_rigidbody: ComponentRigidbody): void;
+        unregisterTrigger(_rigidbody: ComponentRigidbody): void;
         private updateWorldFromWorldMatrix;
         private createWorld;
-        private checkForTrigger;
     }
 }
 declare namespace FudgeCore {
@@ -3325,16 +3353,16 @@ declare namespace FudgeCore {
     * KINEMATIC is moved through transform and animation instead of physics code.
     */
     enum PHYSICS_TYPE {
-        DYNAMIC,
-        STATIC,
-        KINEMATIC
+        DYNAMIC = 0,
+        STATIC = 1,
+        KINEMATIC = 2
     }
     /**
     * Different types of collider shapes, with different options in scaling BOX = Vector3(length, height, depth),
     * SPHERE = Vector3(diameter, x, x), CAPSULE = Vector3(diameter, height, x), CYLINDEr = Vector3(diameter, height, x); x == unused.
     */
     enum COLLIDER_TYPE {
-        BOX = 0,
+        CUBE = 0,
         SPHERE = 1,
         CAPSULE = 2,
         CYLINDER = 3

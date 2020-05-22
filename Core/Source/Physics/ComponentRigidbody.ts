@@ -1,5 +1,3 @@
-///<reference path="../../../Physics/OIMOPhysics.d.ts"/>
-
 namespace FudgeCore {
   /**
      * Acts as the physical representation of the [[Node]] it's attached to.
@@ -31,6 +29,11 @@ namespace FudgeCore {
     }
 
     set collisionGroup(_value: PHYSICS_GROUP) {
+      if (_value != PHYSICS_GROUP.TRIGGER && this.colGroup == PHYSICS_GROUP.TRIGGER)
+        Physics.world.unregisterTrigger(this);
+      if (_value == PHYSICS_GROUP.TRIGGER)
+        Physics.world.registerTrigger(this);
+
       this.colGroup = _value;
       if (this.rigidbody != null)
         this.rigidbody.getShapeList().setCollisionGroup(this.colGroup);
@@ -60,6 +63,7 @@ namespace FudgeCore {
       return this.rigidbody.getLinearDamping();
     }
     set linearDamping(_value: number) {
+      this.linDamping = _value;
       this.rigidbody.setLinearDamping(_value);
     }
 
@@ -67,11 +71,13 @@ namespace FudgeCore {
       return this.rigidbody.getAngularDamping();
     }
     set angularDamping(_value: number) {
+      this.angDamping = _value;
       this.rigidbody.setAngularDamping(_value);
     }
 
     public collisions: ComponentRigidbody[] = new Array();
     public triggers: ComponentRigidbody[] = new Array();
+    public bodiesInTrigger: ComponentRigidbody[] = new Array();
 
     private rigidbody: OIMO.RigidBody;
     private massData: OIMO.MassData = new OIMO.MassData();
@@ -79,14 +85,15 @@ namespace FudgeCore {
     private colliderInfo: OIMO.ShapeConfig;
     private rigidbodyInfo: OIMO.RigidBodyConfig = new OIMO.RigidBodyConfig();
     private rbType: PHYSICS_TYPE = PHYSICS_TYPE.DYNAMIC;
-    private colType: COLLIDER_TYPE = COLLIDER_TYPE.BOX;
+    private colType: COLLIDER_TYPE = COLLIDER_TYPE.CUBE;
     private colGroup: PHYSICS_GROUP = PHYSICS_GROUP.DEFAULT;
     private restitution: number = 0.2;
     private friction: number = 0.5;
+    private linDamping: number = 0.1;
+    private angDamping: number = 0.1;
 
 
-
-    constructor(_mass: number = 1, _type: PHYSICS_TYPE = PHYSICS_TYPE.DYNAMIC, _colliderType: COLLIDER_TYPE = COLLIDER_TYPE.BOX, _group: PHYSICS_GROUP = PHYSICS_GROUP.DEFAULT, _transform: Matrix4x4 = null) {
+    constructor(_mass: number = 1, _type: PHYSICS_TYPE = PHYSICS_TYPE.DYNAMIC, _colliderType: COLLIDER_TYPE = COLLIDER_TYPE.CUBE, _group: PHYSICS_GROUP = PHYSICS_GROUP.DEFAULT, _transform: Matrix4x4 = null) {
       super();
       this.collisionGroup = _group;
       this.colliderType = _colliderType;
@@ -118,13 +125,11 @@ namespace FudgeCore {
           this.collisions.push(objHit);
           event = new CustomEvent(EVENT_PHYSICS.COLLISION_ENTER, { detail: objHit });
           this.dispatchEvent(event);
-          // Debug.log("collisionEntered " + objHit.getContainer().name);
         }
         if (objHit2 != this && this.collisions.indexOf(objHit2) == -1) {
           this.collisions.push(objHit2);
           event = new CustomEvent(EVENT_PHYSICS.COLLISION_ENTER, { detail: objHit2 });
           this.dispatchEvent(event);
-          // Debug.log("collisionEntered " + objHit2.getContainer().name);
         }
         list = list.getNext();
       }
@@ -143,12 +148,10 @@ namespace FudgeCore {
         if (isColliding == false) {
           let index: number = this.collisions.indexOf(value);
           this.collisions.splice(index);
-          // Debug.log("collisionLeft " + value.getContainer().name);
           event = new CustomEvent(EVENT_PHYSICS.COLLISION_EXIT, { detail: value });
           this.dispatchEvent(event);
         }
       });
-      //Possible to also dispatch a stay event for all that are still in the Array
     }
 
     public checkTriggerEvents(): void {
@@ -175,6 +178,34 @@ namespace FudgeCore {
           this.dispatchEvent(event);
         }
       });
+      if (this.colGroup == PHYSICS_GROUP.TRIGGER) {
+        this.checkBodiesInTrigger();
+      }
+    }
+
+    public checkBodiesInTrigger(): void {
+      let possibleBodies: ComponentRigidbody[] = Physics.world.getBodyList();
+      let event: Event;
+      //ADD
+      possibleBodies.forEach((value: ComponentRigidbody) => {
+        let overlapping: boolean = this.collidesWith(this.getOimoRigidbody(), value.getOimoRigidbody());
+        if (overlapping && this.bodiesInTrigger.indexOf(value) == -1) {
+          this.bodiesInTrigger.push(value);
+          event = new CustomEvent(EVENT_PHYSICS.TRIGGER_ENTER, { detail: value });
+          this.dispatchEvent(event);
+        }
+      });
+      //REMOVE
+      this.bodiesInTrigger.forEach((value: ComponentRigidbody) => { //Every Collider in the list is checked if the collision is still happening
+        let isTriggering: boolean = this.collidesWith(this.getOimoRigidbody(), value.getOimoRigidbody());
+        if (isTriggering == false) {
+          let index: number = this.collisions.indexOf(value);
+          this.bodiesInTrigger.splice(index);
+          // Debug.log("TriggerLeft " + value.getContainer().name);
+          event = new CustomEvent(EVENT_PHYSICS.TRIGGER_EXIT, { detail: value });
+          this.dispatchEvent(event);
+        }
+      });
     }
 
 
@@ -187,12 +218,12 @@ namespace FudgeCore {
       // let position: Vector3 = local.translation;
       // let rotation: Vector3 = local.rotation;
       // let scaling: Vector3 = local.scaling;
-      // this.rigidbody.setPosition(new OIMO.Vec3(position.x, position.y, position.z));
-      // this.rigidbody.setRotationXyz(new OIMO.Vec3(rotation.x, rotation.y, rotation.z));
-      // this.rigidbody.removeShape(this.collider);
       // this.createCollider(new OIMO.Vec3(scaling.x, scaling.y, scaling.z), this.colliderType);
       // this.collider = new OIMO.Shape(this.colliderInfo);
       // this.rigidbody.addShape(this.collider);
+      // this.rigidbody.removeShape(this.rigidbody.getShapeList());
+      // this.rigidbody.setPosition(new OIMO.Vec3(position.x, position.y, position.z));
+      // this.rigidbody.setRotationXyz(new OIMO.Vec3(rotation.x, rotation.y, rotation.z));
       this.removeRigidbodyFromWorld();
       this.createRigidbody(this.mass, this.physicsType, this.colliderType, null, this.collisionGroup);
       this.addRigidbodyToWorld();
@@ -381,14 +412,26 @@ namespace FudgeCore {
 
 
     private addRigidbodyToWorld(): void {
-      Physics.world.addRigidbody(this.rigidbody, this);
+      Physics.world.addRigidbody(this);
     }
 
     private removeRigidbodyFromWorld(): void {
-      Physics.world.removeRigidbody(this.rigidbody, this);
+      Physics.world.removeRigidbody(this);
     }
 
     private createRigidbody(_mass: number, _type: PHYSICS_TYPE, _colliderType: COLLIDER_TYPE, _transform: Matrix4x4, _collisionGroup: PHYSICS_GROUP = PHYSICS_GROUP.DEFAULT): void {
+      let oimoType: number; //Need the conversion from simple enum to oimo because if enum is defined as Oimo.RigidyBodyType you have to include Oimo to use FUDGE at all
+      switch (_type) {
+        case PHYSICS_TYPE.DYNAMIC:
+          oimoType = OIMO.RigidBodyType.DYNAMIC;
+          break;
+        case PHYSICS_TYPE.STATIC:
+          oimoType = OIMO.RigidBodyType.STATIC;
+          break;
+        case PHYSICS_TYPE.KINEMATIC:
+          oimoType = OIMO.RigidBodyType.KINEMATIC;
+          break;
+      }
       let tmpTransform: Matrix4x4 = _transform == null ? super.getContainer() != null ? super.getContainer().mtxWorld : Matrix4x4.IDENTITY() : _transform;
 
       let scale: OIMO.Vec3 = new OIMO.Vec3((tmpTransform.scaling.x * this.offsetScaling.x) / 2, (tmpTransform.scaling.y * this.offsetScaling.y) / 2, (tmpTransform.scaling.z * this.offsetScaling.z) / 2);
@@ -398,7 +441,7 @@ namespace FudgeCore {
       this.createCollider(scale, _colliderType);
 
       this.massData.mass = _type != PHYSICS_TYPE.STATIC ? _mass : 0;
-      this.rigidbodyInfo.type = _type;
+      this.rigidbodyInfo.type = oimoType;
       this.rigidbodyInfo.position = position;
       this.rigidbodyInfo.rotation.fromEulerXyz(new OIMO.Vec3(rotation.x, rotation.y, rotation.z));
       this.rigidbody = new OIMO.RigidBody(this.rigidbodyInfo);
@@ -413,6 +456,8 @@ namespace FudgeCore {
       this.rigidbody.setMassData(this.massData);
       this.rigidbody.getShapeList().setRestitution(this.restitution);
       this.rigidbody.getShapeList().setFriction(this.friction);
+      this.rigidbody.setLinearDamping(this.linDamping);
+      this.rigidbody.setAngularDamping(this.angDamping);
     }
 
     private createCollider(_scale: OIMO.Vec3, _colliderType: COLLIDER_TYPE): void {
@@ -420,7 +465,7 @@ namespace FudgeCore {
       let geometry: OIMO.Geometry;
       this.colliderType = _colliderType;
       switch (_colliderType) {
-        case COLLIDER_TYPE.BOX:
+        case COLLIDER_TYPE.CUBE:
           geometry = new OIMO.BoxGeometry(_scale);
           break;
         case COLLIDER_TYPE.SPHERE:

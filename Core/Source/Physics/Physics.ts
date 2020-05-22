@@ -1,5 +1,6 @@
-namespace FudgeCore {
+///<reference path="../../../Physics/OIMOPhysics.d.ts"/>
 
+namespace FudgeCore {
 
   /**
   * Main Physics Class to hold information about the physical representation of the scene
@@ -12,6 +13,7 @@ namespace FudgeCore {
     private oimoWorld: OIMO.World;
     private bodyList: ComponentRigidbody[] = new Array();
     private triggerBodyList: ComponentRigidbody[] = new Array();
+
 
     /**
    * Creating a physical world to represent the [[Node]] Scene Tree
@@ -131,29 +133,49 @@ namespace FudgeCore {
     /**
   * Adding a new OIMO Rigidbody to the OIMO World, happens automatically when adding a FUDGE Rigidbody Component
   */
-    public addRigidbody(_rigidbody: OIMO.RigidBody, _cmpRB: ComponentRigidbody): void {
+    public addRigidbody(_cmpRB: ComponentRigidbody): void {
       this.bodyList.push(_cmpRB);
-      Physics.world.oimoWorld.addRigidBody(_rigidbody);
+      Physics.world.oimoWorld.addRigidBody(_cmpRB.getOimoRigidbody());
     }
 
     /**
   * Removing a OIMO Rigidbody to the OIMO World, happens automatically when adding a FUDGE Rigidbody Component
   */
-    public removeRigidbody(_rigidbody: OIMO.RigidBody, _cmpRB: ComponentRigidbody): void {
+    public removeRigidbody(_cmpRB: ComponentRigidbody): void {
       let id: number = this.bodyList.indexOf(_cmpRB);
       this.bodyList.splice(id, 1);
-      Physics.world.oimoWorld.removeRigidBody(_rigidbody);
+      Physics.world.oimoWorld.removeRigidBody(_cmpRB.getOimoRigidbody());
+    }
+
+    /**
+* Adding a new OIMO Joint/Constraint to the OIMO World, happens automatically when adding a FUDGE Rigidbody Component
+*/
+    public addJoint(_cmpJoint: ComponentJoint): void {
+      Physics.world.oimoWorld.addJoint(_cmpJoint.getOimoJoint());
+    }
+
+    /**
+    * Removing a OIMO Joint/Constraint to the OIMO World, happens automatically when adding a FUDGE Rigidbody Component
+    */
+    public removeJoint(_cmpJoint: ComponentJoint): void {
+      Physics.world.oimoWorld.removeJoint(_cmpJoint.getOimoJoint());
     }
 
     /**
   * Simulates the physical world. _deltaTime is the amount of time between physical steps, default is 60 frames per second ~17ms
   */
     public simulate(_deltaTime: number = 1 / 60): void {
-      Physics.world.oimoWorld.step(_deltaTime);
+      Physics.world.oimoWorld.step(_deltaTime * Time.game.getScale());
     }
 
-    public checkEvents(): void {
-      this.checkForTrigger();
+    public registerTrigger(_rigidbody: ComponentRigidbody): void {
+      if (this.triggerBodyList.indexOf(_rigidbody) == -1)
+        this.triggerBodyList.push(_rigidbody);
+    }
+
+    public unregisterTrigger(_rigidbody: ComponentRigidbody): void {
+      let id: number = this.bodyList.indexOf(_rigidbody);
+      this.bodyList.splice(id, 1);
     }
 
     private updateWorldFromWorldMatrix(): void {
@@ -171,34 +193,6 @@ namespace FudgeCore {
     private createWorld(): void {
       Physics.world.oimoWorld = new OIMO.World();
     }
-
-    //#region EVENTS
-    //Trigger-Events - get every rb's in the trigger group, check each with every rb and if overlapping send event
-    // private collidesWith(triggerRigidbody: OIMO.RigidBody, secondRigidbody: OIMO.RigidBody): boolean {
-    //   let shape1: OIMO.Aabb = triggerRigidbody.getShapeList().getAabb();
-    //   let shape2: OIMO.Aabb = secondRigidbody.getShapeList().getAabb();
-    //   let colliding: boolean = shape1.overlap(shape2);
-    //   return colliding;
-    // }
-
-    private checkForTrigger(): void {
-      this.bodyList.forEach((value: ComponentRigidbody): void => {
-        if (value.collisionGroup == PHYSICS_GROUP.TRIGGER) {
-          this.triggerBodyList.push(value);
-        }
-      });
-      // triggerBodies.forEach((value: ComponentRigidbody): void => {
-      //   this.bodyList.forEach((_secondValue: ComponentRigidbody): void => {
-      //     let triggered: boolean = this.collidesWith(value.getOimoRigidbody(), _secondValue.getOimoRigidbody());
-      //     if (triggered) {
-      //       _secondValue.reactToEvent(EVENT_PHYSICS.TRIGGER_ENTER, value);
-      //     }
-      //   });
-      // });
-    }
-
-    //#endregion
-
 
   }
 

@@ -29,9 +29,9 @@ namespace FudgeCore {
   * KINEMATIC is moved through transform and animation instead of physics code.
   */
   export enum PHYSICS_TYPE {
-    DYNAMIC = OIMO.RigidBodyType.DYNAMIC,
-    STATIC = OIMO.RigidBodyType.STATIC,
-    KINEMATIC = OIMO.RigidBodyType.KINEMATIC
+    DYNAMIC, // = OIMO.RigidBodyType.DYNAMIC,
+    STATIC, // = OIMO.RigidBodyType.STATIC,
+    KINEMATIC // = OIMO.RigidBodyType.KINEMATIC
   }
 
   /**
@@ -39,7 +39,7 @@ namespace FudgeCore {
   * SPHERE = Vector3(diameter, x, x), CAPSULE = Vector3(diameter, height, x), CYLINDEr = Vector3(diameter, height, x); x == unused.
   */
   export enum COLLIDER_TYPE {
-    BOX,
+    CUBE,
     SPHERE,
     CAPSULE,
     CYLINDER
