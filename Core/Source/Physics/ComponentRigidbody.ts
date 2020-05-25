@@ -12,7 +12,19 @@ namespace FudgeCore {
     }
     set physicsType(_value: PHYSICS_TYPE) {
       this.rbType = _value;
-      this.rigidbody.setType(this.rbType);
+      let oimoType: number;
+      switch (this.rbType) {
+        case PHYSICS_TYPE.DYNAMIC:
+          oimoType = OIMO.RigidBodyType.DYNAMIC;
+          break;
+        case PHYSICS_TYPE.STATIC:
+          oimoType = OIMO.RigidBodyType.STATIC;
+          break;
+        case PHYSICS_TYPE.KINEMATIC:
+          oimoType = OIMO.RigidBodyType.KINEMATIC;
+          break;
+      }
+      this.rigidbody.setType(oimoType);
     }
 
     get colliderType(): COLLIDER_TYPE {
@@ -21,7 +33,7 @@ namespace FudgeCore {
 
     set colliderType(_value: COLLIDER_TYPE) {
       this.colType = _value;
-      //Should recreate collider, currently does nothing
+      this.updateFromWorld();
     }
 
     get collisionGroup(): PHYSICS_GROUP {
@@ -92,9 +104,9 @@ namespace FudgeCore {
     private linDamping: number = 0.1;
     private angDamping: number = 0.1;
 
-
     constructor(_mass: number = 1, _type: PHYSICS_TYPE = PHYSICS_TYPE.DYNAMIC, _colliderType: COLLIDER_TYPE = COLLIDER_TYPE.CUBE, _group: PHYSICS_GROUP = PHYSICS_GROUP.DEFAULT, _transform: Matrix4x4 = null) {
       super();
+      this.rbType = _type;
       this.collisionGroup = _group;
       this.colliderType = _colliderType;
       this.mass = _mass;
@@ -102,7 +114,6 @@ namespace FudgeCore {
       this.addEventListener(EVENT.COMPONENT_ADD, this.addRigidbodyToWorld);
       this.addEventListener(EVENT.COMPONENT_REMOVE, this.removeRigidbodyFromWorld);
     }
-
 
     /**
     * Returns the rigidbody in the form the physics engine is using it, should not be used unless a functionality
@@ -112,6 +123,10 @@ namespace FudgeCore {
       return this.rigidbody;
     }
 
+    /**
+   * Checking for Collision with other Colliders and dispatches a custom event with information about the collider.
+   * Automatically called in the RenderManager, no interaction needed.
+   */
     public checkCollisionEvents(): void {
       let list: OIMO.ContactLink = this.rigidbody.getContactLinkList();
       let objHit: ComponentRigidbody;
@@ -120,7 +135,11 @@ namespace FudgeCore {
       //ADD
       for (let i: number = 0; i < this.rigidbody.getNumContectLinks(); i++) {
         objHit = list.getContact().getShape1().userData;
+        if (objHit == null)
+          return;
         objHit2 = list.getContact().getShape2().userData;
+        if (objHit2 == null)
+          return;
         if (objHit.getOimoRigidbody() != this.getOimoRigidbody() && this.collisions.indexOf(objHit) == -1) {
           this.collisions.push(objHit);
           event = new CustomEvent(EVENT_PHYSICS.COLLISION_ENTER, { detail: objHit });
@@ -154,6 +173,10 @@ namespace FudgeCore {
       });
     }
 
+    /**
+      * Checking for Collision with Triggers with a overlapping test, dispatching a custom event with information about the trigger,
+      * or triggered [[Node]]. Automatically called in the RenderManager, no interaction needed.
+      */
     public checkTriggerEvents(): void {
       let possibleTriggers: ComponentRigidbody[] = Physics.world.getTriggerList();
       let event: Event;
@@ -183,52 +206,33 @@ namespace FudgeCore {
       }
     }
 
-    public checkBodiesInTrigger(): void {
-      let possibleBodies: ComponentRigidbody[] = Physics.world.getBodyList();
-      let event: Event;
-      //ADD
-      possibleBodies.forEach((value: ComponentRigidbody) => {
-        let overlapping: boolean = this.collidesWith(this.getOimoRigidbody(), value.getOimoRigidbody());
-        if (overlapping && this.bodiesInTrigger.indexOf(value) == -1) {
-          this.bodiesInTrigger.push(value);
-          event = new CustomEvent(EVENT_PHYSICS.TRIGGER_ENTER, { detail: value });
-          this.dispatchEvent(event);
-        }
-      });
-      //REMOVE
-      this.bodiesInTrigger.forEach((value: ComponentRigidbody) => { //Every Collider in the list is checked if the collision is still happening
-        let isTriggering: boolean = this.collidesWith(this.getOimoRigidbody(), value.getOimoRigidbody());
-        if (isTriggering == false) {
-          let index: number = this.collisions.indexOf(value);
-          this.bodiesInTrigger.splice(index);
-          // Debug.log("TriggerLeft " + value.getContainer().name);
-          event = new CustomEvent(EVENT_PHYSICS.TRIGGER_EXIT, { detail: value });
-          this.dispatchEvent(event);
-        }
-      });
-    }
-
-
-
     /**
-   * Removes and recreates the Rigidbody from the world matrix of the [[Node]]
+   * Checks that the Rigidbody is positioned correctly and recreates the Collider with new scale/position/rotation
    */
     public updateFromWorld(): void {
-      // let local: Matrix4x4 = super.getContainer().mtxWorld;
-      // let position: Vector3 = local.translation;
-      // let rotation: Vector3 = local.rotation;
-      // let scaling: Vector3 = local.scaling;
-      // this.createCollider(new OIMO.Vec3(scaling.x, scaling.y, scaling.z), this.colliderType);
-      // this.collider = new OIMO.Shape(this.colliderInfo);
-      // this.rigidbody.addShape(this.collider);
-      // this.rigidbody.removeShape(this.rigidbody.getShapeList());
-      // this.rigidbody.setPosition(new OIMO.Vec3(position.x, position.y, position.z));
-      // this.rigidbody.setRotationXyz(new OIMO.Vec3(rotation.x, rotation.y, rotation.z));
-      this.removeRigidbodyFromWorld();
-      this.createRigidbody(this.mass, this.physicsType, this.colliderType, null, this.collisionGroup);
-      this.addRigidbodyToWorld();
+      let worldTransform: Matrix4x4 = super.getContainer().mtxWorld;
+      let position: Vector3 = worldTransform.translation;
+      let rotation: Vector3 = worldTransform.rotation;
+      let scaling: Vector3 = worldTransform.scaling;
+      this.createCollider(new OIMO.Vec3(scaling.x / 2, scaling.y / 2, scaling.z / 2), this.colliderType);
+      this.collider = new OIMO.Shape(this.colliderInfo);
+      let oldCollider: OIMO.Shape = this.rigidbody.getShapeList();
+      this.rigidbody.addShape(this.collider);
+      this.rigidbody.removeShape(oldCollider);
+      this.collider.userData = this;
+      this.collider.setCollisionGroup(this.collisionGroup);
+      if (this.collisionGroup == PHYSICS_GROUP.TRIGGER)
+        this.collider.setCollisionMask(PHYSICS_GROUP.TRIGGER);
+      else
+        this.collider.setCollisionMask(PHYSICS_GROUP.DEFAULT | PHYSICS_GROUP.GROUP_1 | PHYSICS_GROUP.GROUP_2 | PHYSICS_GROUP.GROUP_3 | PHYSICS_GROUP.GROUP_4);
+      if (this.rigidbody.getShapeList() != null) {
+        this.rigidbody.getShapeList().setRestitution(this.restitution);
+        this.rigidbody.getShapeList().setFriction(this.friction);
+      }
+      this.rigidbody.setMassData(this.massData);
+      this.setPosition(position);
+      this.setRotation(rotation);
     }
-
 
     /**
    * Get the friction of the rigidbody, which is the factor of sliding resistance of this rigidbody on surfaces
@@ -237,13 +241,13 @@ namespace FudgeCore {
       return this.friction;
     }
 
-
     /**
    * Set the friction of the rigidbody, which is the factor of  sliding resistance of this rigidbody on surfaces
    */
     public setFriction(_friction: number): void {
       this.friction = _friction;
-      this.rigidbody.getShapeList().setFriction(this.friction);
+      if (this.rigidbody.getShapeList() != null)
+        this.rigidbody.getShapeList().setFriction(this.friction);
     }
 
     /**
@@ -258,7 +262,8 @@ namespace FudgeCore {
    */
     public setRestitution(_restitution: number): void {
       this.restitution = _restitution;
-      this.rigidbody.getShapeList().setRestitution(this.restitution);
+      if (this.rigidbody.getShapeList() != null)
+        this.rigidbody.getShapeList().setRestitution(this.restitution);
     }
 
     /**
@@ -290,8 +295,7 @@ namespace FudgeCore {
      * Sets the current ROTATION of the [[Node]] in the physical space, in degree.
      */
     public setRotation(_value: Vector3): void {
-      let radians: OIMO.Vec3 = new OIMO.Vec3(_value.x * (Math.PI / 180), _value.y * (Math.PI / 180), _value.z * (Math.PI / 180));
-      this.rigidbody.setRotationXyz(radians);
+      this.rigidbody.setRotation(new OIMO.Mat3().fromEulerXyz(new OIMO.Vec3(_value.x, _value.y, _value.z)));
     }
 
     //#region Velocity and Forces
@@ -410,15 +414,6 @@ namespace FudgeCore {
       return hitInfo;
     }
 
-
-    private addRigidbodyToWorld(): void {
-      Physics.world.addRigidbody(this);
-    }
-
-    private removeRigidbodyFromWorld(): void {
-      Physics.world.removeRigidbody(this);
-    }
-
     private createRigidbody(_mass: number, _type: PHYSICS_TYPE, _colliderType: COLLIDER_TYPE, _transform: Matrix4x4, _collisionGroup: PHYSICS_GROUP = PHYSICS_GROUP.DEFAULT): void {
       let oimoType: number; //Need the conversion from simple enum to oimo because if enum is defined as Oimo.RigidyBodyType you have to include Oimo to use FUDGE at all
       switch (_type) {
@@ -482,12 +477,48 @@ namespace FudgeCore {
       this.colliderInfo = shapeConf;
     }
 
+    private addRigidbodyToWorld(): void {
+      Physics.world.addRigidbody(this);
+    }
+
+    private removeRigidbodyFromWorld(): void {
+      Physics.world.removeRigidbody(this);
+    }
+
+
+    //#region private EVENT functions
     private collidesWith(triggerRigidbody: OIMO.RigidBody, secondRigidbody: OIMO.RigidBody): boolean {
       let shape1: OIMO.Aabb = triggerRigidbody.getShapeList().getAabb();
       let shape2: OIMO.Aabb = secondRigidbody.getShapeList().getAabb();
       let colliding: boolean = shape1.overlap(shape2);
       return colliding;
     }
+
+    private checkBodiesInTrigger(): void {
+      let possibleBodies: ComponentRigidbody[] = Physics.world.getBodyList();
+      let event: Event;
+      //ADD
+      possibleBodies.forEach((value: ComponentRigidbody) => {
+        let overlapping: boolean = this.collidesWith(this.getOimoRigidbody(), value.getOimoRigidbody());
+        if (overlapping && this.bodiesInTrigger.indexOf(value) == -1) {
+          this.bodiesInTrigger.push(value);
+          event = new CustomEvent(EVENT_PHYSICS.TRIGGER_ENTER, { detail: value });
+          this.dispatchEvent(event);
+        }
+      });
+      //REMOVE
+      this.bodiesInTrigger.forEach((value: ComponentRigidbody) => { //Every Collider in the list is checked if the collision is still happening
+        let isTriggering: boolean = this.collidesWith(this.getOimoRigidbody(), value.getOimoRigidbody());
+        if (isTriggering == false) {
+          let index: number = this.collisions.indexOf(value);
+          this.bodiesInTrigger.splice(index);
+          // Debug.log("TriggerLeft " + value.getContainer().name);
+          event = new CustomEvent(EVENT_PHYSICS.TRIGGER_EXIT, { detail: value });
+          this.dispatchEvent(event);
+        }
+      });
+    }
+    //#endregion
 
   }
 }

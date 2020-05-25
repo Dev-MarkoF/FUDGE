@@ -139,7 +139,7 @@ namespace FudgeCore {
     }
 
     /**
-  * Removing a OIMO Rigidbody to the OIMO World, happens automatically when adding a FUDGE Rigidbody Component
+  * Removing a OIMO Rigidbody to the OIMO World, happens automatically when removing a FUDGE Rigidbody Component
   */
     public removeRigidbody(_cmpRB: ComponentRigidbody): void {
       let id: number = this.bodyList.indexOf(_cmpRB);
@@ -148,14 +148,14 @@ namespace FudgeCore {
     }
 
     /**
-* Adding a new OIMO Joint/Constraint to the OIMO World, happens automatically when adding a FUDGE Rigidbody Component
+* Adding a new OIMO Joint/Constraint to the OIMO World, happens automatically when adding a FUDGE Joint Component
 */
     public addJoint(_cmpJoint: ComponentJoint): void {
       Physics.world.oimoWorld.addJoint(_cmpJoint.getOimoJoint());
     }
 
     /**
-    * Removing a OIMO Joint/Constraint to the OIMO World, happens automatically when adding a FUDGE Rigidbody Component
+    * Removing a OIMO Joint/Constraint to the OIMO World, happens automatically when removeing a FUDGE Joint Component
     */
     public removeJoint(_cmpJoint: ComponentJoint): void {
       Physics.world.oimoWorld.removeJoint(_cmpJoint.getOimoJoint());

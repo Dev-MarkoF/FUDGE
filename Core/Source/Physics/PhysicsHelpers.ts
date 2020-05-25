@@ -29,9 +29,9 @@ namespace FudgeCore {
   * KINEMATIC is moved through transform and animation instead of physics code.
   */
   export enum PHYSICS_TYPE {
-    DYNAMIC, // = OIMO.RigidBodyType.DYNAMIC,
-    STATIC, // = OIMO.RigidBodyType.STATIC,
-    KINEMATIC // = OIMO.RigidBodyType.KINEMATIC
+    DYNAMIC = 1, // = OIMO.RigidBodyType.DYNAMIC,
+    STATIC = 2, // = OIMO.RigidBodyType.STATIC,
+    KINEMATIC = 3 // = OIMO.RigidBodyType.KINEMATIC
   }
 
   /**
