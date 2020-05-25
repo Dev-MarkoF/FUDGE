@@ -3107,6 +3107,7 @@ declare namespace FudgeCore {
         addConstraintToWorld(): void;
         removeConstraintFromWorld(): void;
         getOimoJoint(): OIMO.Joint;
+        private constructJoint;
     }
 }
 declare namespace FudgeCore {
@@ -3159,11 +3160,18 @@ declare namespace FudgeCore {
         * is not provided through the FUDGE Integration.
         */
         getOimoRigidbody(): OIMO.RigidBody;
-        checkCollisionEvents(): void;
-        checkTriggerEvents(): void;
-        checkBodiesInTrigger(): void;
         /**
-       * Removes and recreates the Rigidbody from the world matrix of the [[Node]]
+       * Checking for Collision with other Colliders and dispatches a custom event with information about the collider.
+       * Automatically called in the RenderManager, no interaction needed.
+       */
+        checkCollisionEvents(): void;
+        /**
+          * Checking for Collision with Triggers with a overlapping test, dispatching a custom event with information about the trigger,
+          * or triggered [[Node]]. Automatically called in the RenderManager, no interaction needed.
+          */
+        checkTriggerEvents(): void;
+        /**
+       * Checks that the Rigidbody is positioned correctly and recreates the Collider with new scale/position/rotation
        */
         updateFromWorld(): void;
         /**
@@ -3248,11 +3256,12 @@ declare namespace FudgeCore {
          * returning info about the hit.
          */
         raycastThisBody(_origin: Vector3, _direction: Vector3, _length: number): RayHitInfo;
-        private addRigidbodyToWorld;
-        private removeRigidbodyFromWorld;
         private createRigidbody;
         private createCollider;
+        private addRigidbodyToWorld;
+        private removeRigidbodyFromWorld;
         private collidesWith;
+        private checkBodiesInTrigger;
     }
 }
 declare namespace FudgeCore {
@@ -3303,15 +3312,15 @@ declare namespace FudgeCore {
       */
         addRigidbody(_cmpRB: ComponentRigidbody): void;
         /**
-      * Removing a OIMO Rigidbody to the OIMO World, happens automatically when adding a FUDGE Rigidbody Component
+      * Removing a OIMO Rigidbody to the OIMO World, happens automatically when removing a FUDGE Rigidbody Component
       */
         removeRigidbody(_cmpRB: ComponentRigidbody): void;
         /**
-    * Adding a new OIMO Joint/Constraint to the OIMO World, happens automatically when adding a FUDGE Rigidbody Component
+    * Adding a new OIMO Joint/Constraint to the OIMO World, happens automatically when adding a FUDGE Joint Component
     */
         addJoint(_cmpJoint: ComponentJoint): void;
         /**
-        * Removing a OIMO Joint/Constraint to the OIMO World, happens automatically when adding a FUDGE Rigidbody Component
+        * Removing a OIMO Joint/Constraint to the OIMO World, happens automatically when removeing a FUDGE Joint Component
         */
         removeJoint(_cmpJoint: ComponentJoint): void;
         /**
@@ -3353,9 +3362,9 @@ declare namespace FudgeCore {
     * KINEMATIC is moved through transform and animation instead of physics code.
     */
     enum PHYSICS_TYPE {
-        DYNAMIC = 0,
-        STATIC = 1,
-        KINEMATIC = 2
+        DYNAMIC = 1,
+        STATIC = 2,
+        KINEMATIC = 3
     }
     /**
     * Different types of collider shapes, with different options in scaling BOX = Vector3(length, height, depth),

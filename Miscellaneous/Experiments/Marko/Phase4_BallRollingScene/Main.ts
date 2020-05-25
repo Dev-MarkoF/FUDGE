@@ -35,7 +35,7 @@ namespace FudgePhysics_Communication {
     cmpGroundMesh.local.translate(new f.Vector3(0, -1.5, 0));
     hierarchy.appendChild(ground);
 
-    bodies[0] = createCompleteMeshNode("Ball", new f.Material("Ball", f.ShaderFlat, new f.CoatColored(new f.Color(0.5, 0.5, 0.5, 1))), "Sphere", 1, f.PHYSICS_TYPE.KINEMATIC, f.PHYSICS_GROUP.GROUP_2);
+    bodies[0] = createCompleteMeshNode("Ball", new f.Material("Ball", f.ShaderFlat, new f.CoatColored(new f.Color(0.5, 0.5, 0.5, 1))), "Sphere", 1, f.PHYSICS_TYPE.DYNAMIC, f.PHYSICS_GROUP.GROUP_2);
     let cmpCubeTransform: f.ComponentTransform = bodies[0].getComponent(f.ComponentTransform);
     hierarchy.appendChild(bodies[0]);
     cmpCubeTransform.local.translate(new f.Vector3(7, 4, 0));
@@ -50,7 +50,7 @@ namespace FudgePhysics_Communication {
     cmpCubeTransform2.local.scale(new f.Vector3(10, 0.3, 10));
     cmpCubeTransform2.local.rotateZ(-10);
 
-    bodies[2] = createCompleteMeshNode("Cube_2", new f.Material("Cube", f.ShaderFlat, new f.CoatColored(new f.Color(1, 1, 0, 1))), "Cube", 1, f.PHYSICS_TYPE.STATIC, f.PHYSICS_GROUP.GROUP_1);
+    bodies[2] = createCompleteMeshNode("Cube_3", new f.Material("Cube", f.ShaderFlat, new f.CoatColored(new f.Color(1, 1, 0, 1))), "Cube", 1, f.PHYSICS_TYPE.STATIC, f.PHYSICS_GROUP.GROUP_1);
     cmpCubeTransform2 = bodies[2].getComponent(f.ComponentTransform);
     hierarchy.appendChild(bodies[2]);
     cmpCubeTransform2.local.translate(new f.Vector3(7, 0.1, 0));
