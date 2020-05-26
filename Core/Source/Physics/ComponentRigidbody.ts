@@ -32,8 +32,9 @@ namespace FudgeCore {
     }
 
     set colliderType(_value: COLLIDER_TYPE) {
+      if (_value != this.colType && this.rigidbody != null)
+        this.updateFromWorld();
       this.colType = _value;
-      this.updateFromWorld();
     }
 
     get collisionGroup(): PHYSICS_GROUP {
@@ -210,7 +211,7 @@ namespace FudgeCore {
    * Checks that the Rigidbody is positioned correctly and recreates the Collider with new scale/position/rotation
    */
     public updateFromWorld(): void {
-      let worldTransform: Matrix4x4 = super.getContainer().mtxWorld;
+      let worldTransform: Matrix4x4 = super.getContainer() != null ? super.getContainer().mtxWorld : Matrix4x4.IDENTITY();
       let position: Vector3 = worldTransform.translation;
       let rotation: Vector3 = worldTransform.rotation;
       let scaling: Vector3 = worldTransform.scaling;
@@ -458,7 +459,8 @@ namespace FudgeCore {
     private createCollider(_scale: OIMO.Vec3, _colliderType: COLLIDER_TYPE): void {
       let shapeConf: OIMO.ShapeConfig = new OIMO.ShapeConfig();
       let geometry: OIMO.Geometry;
-      this.colliderType = _colliderType;
+      if (this.colliderType != _colliderType)
+        this.colliderType = _colliderType;
       switch (_colliderType) {
         case COLLIDER_TYPE.CUBE:
           geometry = new OIMO.BoxGeometry(_scale);

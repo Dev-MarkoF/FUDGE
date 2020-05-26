@@ -13,6 +13,8 @@ namespace FudgeCore {
     private oimoWorld: OIMO.World;
     private bodyList: ComponentRigidbody[] = new Array();
     private triggerBodyList: ComponentRigidbody[] = new Array();
+    private jointList: ComponentJoint[] = new Array();
+
 
 
     /**
@@ -71,6 +73,7 @@ namespace FudgeCore {
     public static start(_sceneTree: Node): void {
       RenderManager.setupTransformAndLights(_sceneTree);
       this.world.updateWorldFromWorldMatrix();
+      this.world.connectJoints();
     }
 
     private static getRayEndPoint(start: OIMO.Vec3, direction: Vector3, length: number): OIMO.Vec3 {
@@ -151,14 +154,18 @@ namespace FudgeCore {
 * Adding a new OIMO Joint/Constraint to the OIMO World, happens automatically when adding a FUDGE Joint Component
 */
     public addJoint(_cmpJoint: ComponentJoint): void {
-      Physics.world.oimoWorld.addJoint(_cmpJoint.getOimoJoint());
+      //Physics.world.oimoWorld.addJoint(_cmpJoint.getOimoJoint());
+      Debug.log("Called to add");
+      this.jointList.push(_cmpJoint);
     }
 
     /**
     * Removing a OIMO Joint/Constraint to the OIMO World, happens automatically when removeing a FUDGE Joint Component
     */
     public removeJoint(_cmpJoint: ComponentJoint): void {
-      Physics.world.oimoWorld.removeJoint(_cmpJoint.getOimoJoint());
+      let index: number = this.jointList.indexOf(_cmpJoint);
+      this.jointList.splice(index);
+      //Physics.world.oimoWorld.removeJoint(_cmpJoint.getOimoJoint());
     }
 
     /**
@@ -186,6 +193,14 @@ namespace FudgeCore {
 
       bodiesToUpdate.forEach(function (value: ComponentRigidbody): void {
         value.updateFromWorld();
+      });
+    }
+
+    private connectJoints(): void {
+      this.jointList.forEach(function (value: ComponentJoint): void {
+        value.connect();
+        Debug.log("Connected");
+        Physics.world.oimoWorld.addJoint(value.getOimoJoint());
       });
     }
 

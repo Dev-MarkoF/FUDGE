@@ -11,20 +11,36 @@ namespace FudgeCore {
     public attachedRigidbody: ComponentRigidbody;
     public connectedRigidbody: ComponentRigidbody;
 
-    constructor(_attachedRigidbody: ComponentRigidbody = null, _connectedRigidbody: ComponentRigidbody) {
+    get selfCollision(): boolean {
+      return this.collisionBetweenConnectedBodies;
+    }
+    set selfCollision(_value: boolean) {
+      this.collisionBetweenConnectedBodies = _value;
+    }
+
+    private collisionBetweenConnectedBodies: boolean;
+
+    constructor(_attachedRigidbody: ComponentRigidbody = null, _connectedRigidbody: ComponentRigidbody = null) {
       super();
+      this.attachedRigidbody = _attachedRigidbody;
+      this.connectedRigidbody = _connectedRigidbody;
       //The node either already has a attachedRigidbody or these components will create own. Or they will notify that a rigidbody is needed 
     }
 
     //needs to be called when the two necessary main variables are set. Can't create a connection with only 1 RB. But could possibly be done by
     //the connection itself on gamestart? And changes are saved seperatly and then used for the connection creation at the gamestart?
-    public abstract initializeConnection(): void;
-
-    public abstract addConstraintToWorld(): void;
-
-    public abstract removeConstraintFromWorld(): void;
+    public abstract connect(): void;
 
     public abstract getOimoJoint(): OIMO.Joint;
+
+    protected addConstraintToWorld(cmpJoint: ComponentJoint): void {
+      Debug.log("SuperCalled");
+      Physics.world.addJoint(cmpJoint);
+    }
+
+    protected removeConstraintFromWorld(cmpJoint: ComponentJoint): void {
+      Physics.world.removeJoint(cmpJoint);
+    }
 
   }
 

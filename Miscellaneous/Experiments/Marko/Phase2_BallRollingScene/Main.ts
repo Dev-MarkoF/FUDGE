@@ -56,6 +56,7 @@ namespace FudgePhysics_Communication {
     cmpCubeTransform2.local.translate(new f.Vector3(7, 0.1, 0));
     cmpCubeTransform2.local.scale(new f.Vector3(10, 0.3, 10));
     cmpCubeTransform2.local.rotateZ(20);
+    //bodies[2].removeComponent(bodies[2].getComponent(f.ComponentRigidbody)); //shearing test
 
     bodies[3] = createCompleteMeshNode("ResetTrigger", new f.Material("Cube", f.ShaderFlat, new f.CoatColored(new f.Color(1, 1, 0, 1))), "Cube", 1, f.PHYSICS_TYPE.STATIC, f.PHYSICS_GROUP.TRIGGER);
     cmpCubeTransform2 = bodies[3].getComponent(f.ComponentTransform);

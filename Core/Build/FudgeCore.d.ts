@@ -3087,27 +3087,41 @@ declare namespace FudgeCore {
     abstract class ComponentJoint extends Component {
         attachedRigidbody: ComponentRigidbody;
         connectedRigidbody: ComponentRigidbody;
-        constructor(_attachedRigidbody: ComponentRigidbody, _connectedRigidbody: ComponentRigidbody);
-        abstract initializeConnection(): void;
-        abstract addConstraintToWorld(): void;
-        abstract removeConstraintFromWorld(): void;
+        get selfCollision(): boolean;
+        set selfCollision(_value: boolean);
+        private collisionBetweenConnectedBodies;
+        constructor(_attachedRigidbody?: ComponentRigidbody, _connectedRigidbody?: ComponentRigidbody);
+        abstract connect(): void;
         abstract getOimoJoint(): OIMO.Joint;
+        protected addConstraintToWorld(cmpJoint: ComponentJoint): void;
+        protected removeConstraintFromWorld(cmpJoint: ComponentJoint): void;
     }
 }
 declare namespace FudgeCore {
     /**
        * A physical connection between two bodies with a defined axe movement.
-       * Used to create things like springs.
+       * Used to create a sliding joint along one axis. Two RigidBodies need to be defined to use it.
        * @authors Marko Fehrenbach, HFU, 2020
        */
     class ComponentJointPrismatic extends ComponentJoint {
+        static readonly iSubclass: number;
+        get axis(): Vector3;
+        private config;
+        private translationalMotor;
+        private springDamper;
+        private jointAnchor;
+        private jointAxis;
         private oimoJoint;
-        constructor(_attachedRigidbody?: ComponentRigidbody, _connectedRigidbody?: ComponentRigidbody);
-        initializeConnection(): void;
-        addConstraintToWorld(): void;
-        removeConstraintFromWorld(): void;
+        constructor(_attachedRigidbody?: ComponentRigidbody, _connectedRigidbody?: ComponentRigidbody, _axis?: Vector3, _anchor?: Vector3);
+        /**
+         * Initializing and connecting the two rigidbodies with the configured joint properties
+         * is automatically called by the physics system. No user interaction needed.
+         */
+        connect(): void;
         getOimoJoint(): OIMO.Joint;
         private constructJoint;
+        private superAdd;
+        private superRemove;
     }
 }
 declare namespace FudgeCore {
@@ -3274,6 +3288,7 @@ declare namespace FudgeCore {
         private oimoWorld;
         private bodyList;
         private triggerBodyList;
+        private jointList;
         /**
        * Creating a physical world to represent the [[Node]] Scene Tree
        */
@@ -3330,6 +3345,7 @@ declare namespace FudgeCore {
         registerTrigger(_rigidbody: ComponentRigidbody): void;
         unregisterTrigger(_rigidbody: ComponentRigidbody): void;
         private updateWorldFromWorldMatrix;
+        private connectJoints;
         private createWorld;
     }
 }

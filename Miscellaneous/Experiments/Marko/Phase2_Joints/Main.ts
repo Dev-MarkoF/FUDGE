@@ -14,14 +14,13 @@ namespace FudgePhysics_Communication {
   let fpsDisplay: HTMLElement = document.querySelector("h2#FPS");
 
   let cubes: f.Node[] = new Array();
-  let origin: f.Vector3 = new f.Vector3(-5, 0.25, 0);
-  let direction: f.Vector3 = new f.Vector3(1, 0, 0);
-  let hitInfo: f.RayHitInfo = new f.RayHitInfo();
   let ground: f.Node;
 
   let stepWidth: number = 0.1;
-
   let moveableTransform: f.ComponentTransform;
+
+  //Joints
+  let prismaticJoint: f.ComponentJointPrismatic;
 
 
 
@@ -40,23 +39,26 @@ namespace FudgePhysics_Communication {
     cmpGroundMesh.local.translate(new f.Vector3(0, -1.5, 0));
     hierarchy.appendChild(ground);
 
-    cubes[0] = createCompleteMeshNode("Cube_1", new f.Material("Cube", f.ShaderFlat, new f.CoatColored(new f.Color(1, 0, 0, 1))), new f.MeshCube(), 1, f.PHYSICS_TYPE.DYNAMIC, f.PHYSICS_GROUP.GROUP_2);
+    cubes[0] = createCompleteMeshNode("Spring_Floor", new f.Material("Cube", f.ShaderFlat, new f.CoatColored(new f.Color(0.4, 0.4, 0.4, 1))), new f.MeshCube(), 1, f.PHYSICS_TYPE.DYNAMIC, f.PHYSICS_GROUP.GROUP_2);
     let cmpCubeTransform: f.ComponentTransform = cubes[0].getComponent(f.ComponentTransform);
     hierarchy.appendChild(cubes[0]);
-    cmpCubeTransform.local.translate(new f.Vector3(0, 7, 0));
+    cmpCubeTransform.local.translate(new f.Vector3(0, 1, 0));
+    cmpCubeTransform.local.scaleY(0.2);
+    prismaticJoint = new f.ComponentJointPrismatic(cubes[0].getComponent(f.ComponentRigidbody), ground.getComponent(f.ComponentRigidbody));
+    cubes[0].addComponent(prismaticJoint);
+
 
     cubes[1] = createCompleteMeshNode("Cube_2", new f.Material("Cube", f.ShaderFlat, new f.CoatColored(new f.Color(1, 1, 0, 1))), new f.MeshCube(), 1, f.PHYSICS_TYPE.DYNAMIC, f.PHYSICS_GROUP.GROUP_1);
     let cmpCubeTransform2: f.ComponentTransform = cubes[1].getComponent(f.ComponentTransform);
-    cubes[0].appendChild(cubes[1]);
-    cubes[1].removeComponent(cubes[1].getComponent(f.ComponentRigidbody));
-    cmpCubeTransform2.local.translate(new f.Vector3(0, 1, 0));
+    hierarchy.appendChild(cubes[1]);
+    cmpCubeTransform2.local.translate(new f.Vector3(0, 2, 0));
 
     cubes[2] = createCompleteMeshNode("Cube_3", new f.Material("Cube", f.ShaderFlat, new f.CoatColored(new f.Color(1, 0, 0, 1))), new f.MeshCube(), 1, f.PHYSICS_TYPE.DYNAMIC);
     let cmpCubeTransform3: f.ComponentTransform = cubes[2].getComponent(f.ComponentTransform);
     hierarchy.appendChild(cubes[2]);
     cmpCubeTransform3.local.translate(new f.Vector3(0.5, 3, 0.5));
 
-    cubes[3] = createCompleteMeshNode("Cube_3", new f.Material("Cube", f.ShaderFlat, new f.CoatColored(new f.Color(0, 0, 1, 1))), new f.MeshCube(), 1, f.PHYSICS_TYPE.KINEMATIC);
+    cubes[3] = createCompleteMeshNode("PlayerControlledCube", new f.Material("Cube", f.ShaderFlat, new f.CoatColored(new f.Color(0, 0, 1, 1))), new f.MeshCube(), 1, f.PHYSICS_TYPE.KINEMATIC);
     moveableTransform = cubes[3].getComponent(f.ComponentTransform);
     hierarchy.appendChild(cubes[3]);
     moveableTransform.local.translate(new f.Vector3(-4, 1, 0));
@@ -82,10 +84,6 @@ namespace FudgePhysics_Communication {
 
   function update(): void {
     f.Physics.world.simulate();
-    hitInfo = f.Physics.raycast(origin, direction, 10);
-    if (hitInfo.hit == true && hitInfo.rigidbodyComponent.getContainer().name == "Cube_1") {
-      f.Debug.log(hitInfo);
-    }
     viewPort.draw();
     measureFPS();
   }
@@ -117,9 +115,6 @@ namespace FudgePhysics_Communication {
     node.addComponent(cmpMaterial);
     node.addComponent(cmpTransform);
     node.addComponent(cmpRigidbody);
-    //f.Debug.log(cmpRigidbody.collisionGroup);
-    //f.Debug.log("Mask" + cmpRigidbody.getOimoRigidbody().getShapeList().getCollisionMask());
-
     return node;
   }
 
