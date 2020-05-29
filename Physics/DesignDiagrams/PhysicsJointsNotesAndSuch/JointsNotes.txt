@@ -20,3 +20,22 @@ OIMO Classes/Helpers maybe as properties of the BASE-or-CHILD-JOINT class
 Spring Damper = dampingRatio, frequency (*optional useSymplecticEuler:Bool)
 RotationalLimitMotor
 TranslationalLimitMotor  
+
+
+When and how to create joints, and when not: -> refining
+> When Create: 
+- The JointComponent has it's attachedRigidbody set(the componentRigidbody) that is on the first object of the connection
+- The JointComponent has it's connectedRigidbody set (the componentRigidbody( that is the second object of the connection
+
+> When Destroy:
+- When any of the Rigidbodies is deleted -> property is null/undefined/changed -> dirty -> remove joint from world
+
+
+> Don't:
+- When a property is changed that is not any of the RB's itself, that means for change of the anchor/axis the config needs to be recalculated and reapplied to the joint,
+not be recreated
+
+> How:
+- Create config with all properties from the wrapper class
+- add new joint to world
+-> have every frame checked for any dirty jointComponent that it can be reconnected?

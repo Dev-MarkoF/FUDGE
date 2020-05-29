@@ -149,8 +149,7 @@ namespace FudgeCore {
           let childNode: Node = _node.getChildren()[name];
           RenderManager.setupPhysicalTransform(childNode);
           let cmpRigidbody: ComponentRigidbody = childNode.getComponent(ComponentRigidbody);
-          let cmpTransform: ComponentTransform = childNode.getComponent(ComponentTransform);
-          if (cmpTransform != null && cmpRigidbody != null) {
+          if (childNode.mtxLocal != null && cmpRigidbody != null) {
             if (cmpRigidbody.physicsType != PHYSICS_TYPE.KINEMATIC) { //Case of Dynamic/Static Rigidbody
               let mutator: Mutator = {};   //Override any position/rotation, Physical Objects do not know hierachy unless it's established through physics
               mutator["rotation"] = cmpRigidbody.getRotation();

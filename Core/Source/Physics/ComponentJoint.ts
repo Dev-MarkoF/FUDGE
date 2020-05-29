@@ -8,6 +8,8 @@ namespace FudgeCore {
      * @authors Marko Fehrenbach, HFU, 2020
      */
   export abstract class ComponentJoint extends Component {
+    public static readonly iSubclass: number = Component.registerSubclass(ComponentJoint);
+
     get attachedRigidbody(): ComponentRigidbody {
       return this.attachedRB;
     }

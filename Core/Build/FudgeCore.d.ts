@@ -3085,6 +3085,7 @@ declare namespace FudgeCore {
        * @authors Marko Fehrenbach, HFU, 2020
        */
     abstract class ComponentJoint extends Component {
+        static readonly iSubclass: number;
         get attachedRigidbody(): ComponentRigidbody;
         set attachedRigidbody(_cmpRB: ComponentRigidbody);
         get connectedRigidbody(): ComponentRigidbody;

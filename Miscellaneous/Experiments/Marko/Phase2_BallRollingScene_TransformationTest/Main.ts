@@ -46,7 +46,7 @@ namespace FudgePhysics_Communication {
     hierarchy.appendChild(bodies[1]);
     bodies[1].mtxLocal.translate(new f.Vector3(-7, 0.1, 0));
     bodies[1].mtxLocal.scale(new f.Vector3(10, 0.3, 10));
-    bodies[1].mtxLocal.rotateZ(-10);
+    bodies[1].mtxLocal.rotateZ(-10, true);
 
     bodies[2] = createCompleteMeshNode("Cube_-20GradZ", new f.Material("Cube", f.ShaderFlat, new f.CoatColored(new f.Color(1, 1, 0, 1))), "Cube", 1, f.PHYSICS_TYPE.STATIC, f.PHYSICS_GROUP.GROUP_1);
     hierarchy.appendChild(bodies[2]);
