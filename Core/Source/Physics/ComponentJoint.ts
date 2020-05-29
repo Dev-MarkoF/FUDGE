@@ -8,8 +8,20 @@ namespace FudgeCore {
      * @authors Marko Fehrenbach, HFU, 2020
      */
   export abstract class ComponentJoint extends Component {
-    public attachedRigidbody: ComponentRigidbody;
-    public connectedRigidbody: ComponentRigidbody;
+    get attachedRigidbody(): ComponentRigidbody {
+      return this.attachedRB;
+    }
+    set attachedRigidbody(_cmpRB: ComponentRigidbody) {
+      this.connected = false;
+      this.attachedRB = _cmpRB;
+    }
+    get connectedRigidbody(): ComponentRigidbody {
+      return this.connectedRB;
+    }
+    set connectedRigidbody(_cmpRB: ComponentRigidbody) {
+      this.connected = false;
+      this.connectedRB = _cmpRB;
+    }
 
     get selfCollision(): boolean {
       return this.collisionBetweenConnectedBodies;
@@ -17,6 +29,11 @@ namespace FudgeCore {
     set selfCollision(_value: boolean) {
       this.collisionBetweenConnectedBodies = _value;
     }
+
+    protected attachedRB: ComponentRigidbody;
+    protected connectedRB: ComponentRigidbody;
+
+    protected connected: boolean = false;
 
     private collisionBetweenConnectedBodies: boolean;
 
@@ -27,6 +44,10 @@ namespace FudgeCore {
       //The node either already has a attachedRigidbody or these components will create own. Or they will notify that a rigidbody is needed 
     }
 
+    public checkConnection(): boolean {
+      return this.connected; //check if connection is dirty, so when either rb is changed disconnect and reconnect
+    }
+
     //needs to be called when the two necessary main variables are set. Can't create a connection with only 1 RB. But could possibly be done by
     //the connection itself on gamestart? And changes are saved seperatly and then used for the connection creation at the gamestart?
     public abstract connect(): void;
@@ -34,7 +55,6 @@ namespace FudgeCore {
     public abstract getOimoJoint(): OIMO.Joint;
 
     protected addConstraintToWorld(cmpJoint: ComponentJoint): void {
-      Debug.log("SuperCalled");
       Physics.world.addJoint(cmpJoint);
     }
 

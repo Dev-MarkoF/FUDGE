@@ -3085,12 +3085,18 @@ declare namespace FudgeCore {
        * @authors Marko Fehrenbach, HFU, 2020
        */
     abstract class ComponentJoint extends Component {
-        attachedRigidbody: ComponentRigidbody;
-        connectedRigidbody: ComponentRigidbody;
+        get attachedRigidbody(): ComponentRigidbody;
+        set attachedRigidbody(_cmpRB: ComponentRigidbody);
+        get connectedRigidbody(): ComponentRigidbody;
+        set connectedRigidbody(_cmpRB: ComponentRigidbody);
         get selfCollision(): boolean;
         set selfCollision(_value: boolean);
+        protected attachedRB: ComponentRigidbody;
+        protected connectedRB: ComponentRigidbody;
+        protected connected: boolean;
         private collisionBetweenConnectedBodies;
         constructor(_attachedRigidbody?: ComponentRigidbody, _connectedRigidbody?: ComponentRigidbody);
+        checkConnection(): boolean;
         abstract connect(): void;
         abstract getOimoJoint(): OIMO.Joint;
         protected addConstraintToWorld(cmpJoint: ComponentJoint): void;
@@ -3105,12 +3111,76 @@ declare namespace FudgeCore {
        */
     class ComponentJointPrismatic extends ComponentJoint {
         static readonly iSubclass: number;
+        /**
+         * The axis connecting the the two [[Node]]s e.g. Vector3(0,1,0) to have a upward connection.
+         *  When changed after initialization the joint needs to be reconnected.
+         */
         get axis(): Vector3;
+        set axis(_value: Vector3);
+        /**
+         * The exact position where the two [[Node]]s are connected. When changed after initialization the joint needs to be reconnected.
+         */
+        get anchor(): Vector3;
+        set anchor(_value: Vector3);
+        /**
+         * The damping of the spring. 1 equals completly damped.
+         */
+        get springDamping(): number;
+        set springDamping(_value: number);
+        /**
+         * The frequency of the spring in Hz. At 0 the spring is rigid, equals no spring.
+        */
+        get springFrequency(): number;
+        set springFrequency(_value: number);
+        /**
+         * The amount of force needed to break the JOINT, in Newton. 0 equals unbreakable (default)
+        */
+        get breakForce(): number;
+        set breakForce(_value: number);
+        /**
+           * The amount of force needed to break the JOINT, while rotating, in Newton. 0 equals unbreakable (default)
+          */
+        get breakTorque(): number;
+        set breakTorque(_value: number);
+        /**
+          * The Upper Limit of movement along the axis of this joint. The limiter is disable if lowerLimit > upperLimit.
+         */
+        get motorLimitUpper(): number;
+        set motorLimitUpper(_value: number);
+        /**
+          * The Lower Limit of movement along the axis of this joint. The limiter is disable if lowerLimit > upperLimit.
+         */
+        get motorLimitLower(): number;
+        set motorLimitLower(_value: number);
+        /**
+          * The target speed of the motor in m/s.
+         */
+        get motorSpeed(): number;
+        set motorSpeed(_value: number);
+        /**
+          * The maximum motor force in Newton. force <= 0 equals disabled.
+         */
+        get motorForce(): number;
+        set motorForce(_value: number);
+        /**
+          * If the two connected RigidBodies collide with eath other. (Default = false)
+         */
+        get internalCollision(): boolean;
+        set internalCollision(_value: boolean);
+        private jointSpringDampingRatio;
+        private jointSpringFrequency;
+        private jointMotorLimitUpper;
+        private jointMotorLimitLower;
+        private jointMotorForce;
+        private jointMotorSpeed;
+        private jointBreakForce;
+        private jointBreakTorque;
         private config;
         private translationalMotor;
         private springDamper;
         private jointAnchor;
         private jointAxis;
+        private jointInternalCollision;
         private oimoJoint;
         constructor(_attachedRigidbody?: ComponentRigidbody, _connectedRigidbody?: ComponentRigidbody, _axis?: Vector3, _anchor?: Vector3);
         /**
@@ -3153,6 +3223,8 @@ declare namespace FudgeCore {
         set linearDamping(_value: number);
         get angularDamping(): number;
         set angularDamping(_value: number);
+        get rotationInfluenceFactor(): Vector3;
+        set rotationInfluenceFactor(_influence: Vector3);
         collisions: ComponentRigidbody[];
         triggers: ComponentRigidbody[];
         bodiesInTrigger: ComponentRigidbody[];
@@ -3168,6 +3240,7 @@ declare namespace FudgeCore {
         private friction;
         private linDamping;
         private angDamping;
+        private rotationalInfluenceFactor;
         constructor(_mass?: number, _type?: PHYSICS_TYPE, _colliderType?: COLLIDER_TYPE, _group?: PHYSICS_GROUP, _transform?: Matrix4x4);
         /**
         * Returns the rigidbody in the form the physics engine is using it, should not be used unless a functionality
@@ -3264,7 +3337,6 @@ declare namespace FudgeCore {
        * Changing the VELOCITY of the RIGIDBODY. Only influencing the angular speed not the linear
        */
         addAngularVelocity(_value: Vector3): void;
-        reactToEvent(_eventType: EVENT_PHYSICS, _other: ComponentRigidbody): void;
         /**
          * Sends a ray through this specific body ignoring the rest of the world and checks if this body was hit by the ray,
          * returning info about the hit.
@@ -3290,7 +3362,8 @@ declare namespace FudgeCore {
         private triggerBodyList;
         private jointList;
         /**
-       * Creating a physical world to represent the [[Node]] Scene Tree
+       * Creating a physical world to represent the [[Node]] Scene Tree. Call once before using any physics functions or
+       * rigidbodies.
        */
         static initializePhysics(): void;
         /**
@@ -3299,7 +3372,7 @@ declare namespace FudgeCore {
       */
         static raycast(_origin: Vector3, _direction: Vector3, _length?: number, _group?: PHYSICS_GROUP): RayHitInfo;
         /**
-      * Starts the physical world by checking that each body has the correct values from transform
+      * Starts the physical world by checking that each body has the correct values from the Scene Tree
       */
         static start(_sceneTree: Node): void;
         private static getRayEndPoint;
@@ -3345,7 +3418,7 @@ declare namespace FudgeCore {
         registerTrigger(_rigidbody: ComponentRigidbody): void;
         unregisterTrigger(_rigidbody: ComponentRigidbody): void;
         private updateWorldFromWorldMatrix;
-        private connectJoints;
+        connectJoints(): void;
         private createWorld;
     }
 }
@@ -3499,8 +3572,8 @@ declare namespace FudgeCore {
          */
         static setupTransformAndLights(_node: Node, _world?: Matrix4x4, _lights?: MapLightTypeToLightList, _shadersUsed?: (typeof Shader)[]): void;
         /**
-         * Physics Part -> Take all nodes with cmpRigidbody, and overwrite their world position/rotation with the one coming from
-         * the rb component.
+         * Physics Part -> Take all nodes with cmpRigidbody, and overwrite their local position/rotation with the one coming from
+         * the rb component, which is the new "local" WORLD position.
          */
         private static setupPhysicalTransform;
         /**

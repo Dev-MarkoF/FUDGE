@@ -46,6 +46,9 @@ namespace FudgePhysics_Communication {
     cmpCubeTransform.local.scaleY(0.2);
     prismaticJoint = new f.ComponentJointPrismatic(cubes[0].getComponent(f.ComponentRigidbody), ground.getComponent(f.ComponentRigidbody));
     cubes[0].addComponent(prismaticJoint);
+    prismaticJoint.springDamping = 0;
+    prismaticJoint.springFrequency = 1;
+    prismaticJoint.internalCollision = true;
 
 
     cubes[1] = createCompleteMeshNode("Cube_2", new f.Material("Cube", f.ShaderFlat, new f.CoatColored(new f.Color(1, 1, 0, 1))), new f.MeshCube(), 1, f.PHYSICS_TYPE.DYNAMIC, f.PHYSICS_GROUP.GROUP_1);

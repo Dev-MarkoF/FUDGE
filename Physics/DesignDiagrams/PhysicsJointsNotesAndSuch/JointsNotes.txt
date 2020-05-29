@@ -1,10 +1,11 @@
 //Joint Types that need to be added: 
 Prismatic Joint
 Cylindrical Joint
-Ragdoll Joint
+Ragdoll Joint (*optional)
 Universal Joint
-Generic Joint
+Generic Joint (*specialType optional?)
 Revolute Joint
+Spherical Joint
 
 //Things to think about
 - Rotational Motor - Limit Rotational -> Every Joint?
@@ -15,6 +16,7 @@ Revolute Joint
 
 
 OIMO Classes/Helpers maybe as properties of the BASE-or-CHILD-JOINT class
+> All joints seem to consist out of 2 or 3 of these components:
 Spring Damper = dampingRatio, frequency (*optional useSymplecticEuler:Bool)
 RotationalLimitMotor
 TranslationalLimitMotor  

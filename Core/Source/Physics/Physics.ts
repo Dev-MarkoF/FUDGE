@@ -18,7 +18,8 @@ namespace FudgeCore {
 
 
     /**
-   * Creating a physical world to represent the [[Node]] Scene Tree
+   * Creating a physical world to represent the [[Node]] Scene Tree. Call once before using any physics functions or
+   * rigidbodies.
    */
     public static initializePhysics(): void {
       if (this.world == null) {
@@ -68,12 +69,12 @@ namespace FudgeCore {
 
 
     /**
-  * Starts the physical world by checking that each body has the correct values from transform
+  * Starts the physical world by checking that each body has the correct values from the Scene Tree
   */
     public static start(_sceneTree: Node): void {
       RenderManager.setupTransformAndLights(_sceneTree);
       this.world.updateWorldFromWorldMatrix();
-      this.world.connectJoints();
+      //this.world.connectJoints();
     }
 
     private static getRayEndPoint(start: OIMO.Vec3, direction: Vector3, length: number): OIMO.Vec3 {
@@ -155,7 +156,6 @@ namespace FudgeCore {
 */
     public addJoint(_cmpJoint: ComponentJoint): void {
       //Physics.world.oimoWorld.addJoint(_cmpJoint.getOimoJoint());
-      Debug.log("Called to add");
       this.jointList.push(_cmpJoint);
     }
 
@@ -192,15 +192,17 @@ namespace FudgeCore {
       });
 
       bodiesToUpdate.forEach(function (value: ComponentRigidbody): void {
+        Debug.log("WorldScaling?: " + value.getContainer().mtxWorld.scaling);
         value.updateFromWorld();
       });
     }
 
-    private connectJoints(): void {
+    public connectJoints(): void { //Maybe don't go through all joints, just have a list of joints that are dirty
       this.jointList.forEach(function (value: ComponentJoint): void {
-        value.connect();
-        Debug.log("Connected");
-        Physics.world.oimoWorld.addJoint(value.getOimoJoint());
+        if (value.checkConnection() == false) {
+          value.connect();
+          Physics.world.oimoWorld.addJoint(value.getOimoJoint());
+        }
       });
     }
 

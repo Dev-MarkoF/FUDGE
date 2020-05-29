@@ -88,6 +88,14 @@ namespace FudgeCore {
       this.rigidbody.setAngularDamping(_value);
     }
 
+    get rotationInfluenceFactor(): Vector3 {
+      return this.rotationalInfluenceFactor;
+    }
+    set rotationInfluenceFactor(_influence: Vector3) {
+      this.rotationalInfluenceFactor = _influence;
+      this.rigidbody.setRotationFactor(new OIMO.Vec3(this.rotationalInfluenceFactor.x, this.rotationalInfluenceFactor.y, this.rotationalInfluenceFactor.z));
+    }
+
     public collisions: ComponentRigidbody[] = new Array();
     public triggers: ComponentRigidbody[] = new Array();
     public bodiesInTrigger: ComponentRigidbody[] = new Array();
@@ -104,6 +112,7 @@ namespace FudgeCore {
     private friction: number = 0.5;
     private linDamping: number = 0.1;
     private angDamping: number = 0.1;
+    private rotationalInfluenceFactor: Vector3 = Vector3.ONE();
 
     constructor(_mass: number = 1, _type: PHYSICS_TYPE = PHYSICS_TYPE.DYNAMIC, _colliderType: COLLIDER_TYPE = COLLIDER_TYPE.CUBE, _group: PHYSICS_GROUP = PHYSICS_GROUP.DEFAULT, _transform: Matrix4x4 = null) {
       super();
@@ -186,7 +195,6 @@ namespace FudgeCore {
         let overlapping: boolean = this.collidesWith(this.getOimoRigidbody(), value.getOimoRigidbody());
         if (overlapping && this.triggers.indexOf(value) == -1) {
           this.triggers.push(value);
-          // Debug.log("TriggerEntered" + value.getContainer().name);
           event = new CustomEvent(EVENT_PHYSICS.TRIGGER_ENTER, { detail: value });
           this.dispatchEvent(event);
         }
@@ -197,7 +205,6 @@ namespace FudgeCore {
         if (isTriggering == false) {
           let index: number = this.collisions.indexOf(value);
           this.triggers.splice(index);
-          // Debug.log("TriggerLeft " + value.getContainer().name);
           event = new CustomEvent(EVENT_PHYSICS.TRIGGER_EXIT, { detail: value });
           this.dispatchEvent(event);
         }
@@ -214,6 +221,8 @@ namespace FudgeCore {
       let worldTransform: Matrix4x4 = super.getContainer() != null ? super.getContainer().mtxWorld : Matrix4x4.IDENTITY();
       let position: Vector3 = worldTransform.translation;
       let rotation: Vector3 = worldTransform.rotation;
+      // Debug.log("Obj: " + super.getContainer().name + " rot: " + rotation);
+      // Debug.log("Obj: " + super.getContainer().name + " rotMatrix: " + worldTransform.getEulerAngles());
       let scaling: Vector3 = worldTransform.scaling;
       this.createCollider(new OIMO.Vec3(scaling.x / 2, scaling.y / 2, scaling.z / 2), this.colliderType);
       this.collider = new OIMO.Shape(this.colliderInfo);
@@ -383,9 +392,6 @@ namespace FudgeCore {
     //#endregion
 
     //#events
-    public reactToEvent(_eventType: EVENT_PHYSICS, _other: ComponentRigidbody): void {
-      // Debug.log(_eventType + " / " + this.getContainer().name);
-    }
 
     /**
      * Sends a ray through this specific body ignoring the rest of the world and checks if this body was hit by the ray,
@@ -433,7 +439,6 @@ namespace FudgeCore {
       let scale: OIMO.Vec3 = new OIMO.Vec3((tmpTransform.scaling.x * this.offsetScaling.x) / 2, (tmpTransform.scaling.y * this.offsetScaling.y) / 2, (tmpTransform.scaling.z * this.offsetScaling.z) / 2);
       let position: OIMO.Vec3 = new OIMO.Vec3(tmpTransform.translation.x + this.offsetPosition.x, tmpTransform.translation.y + this.offsetPosition.y, tmpTransform.translation.z + this.offsetPosition.z);
       let rotation: OIMO.Vec3 = new OIMO.Vec3(tmpTransform.rotation.x + this.offsetRotation.x, tmpTransform.rotation.y + this.offsetRotation.y, tmpTransform.rotation.z + this.offsetRotation.z);
-
       this.createCollider(scale, _colliderType);
 
       this.massData.mass = _type != PHYSICS_TYPE.STATIC ? _mass : 0;
@@ -454,6 +459,7 @@ namespace FudgeCore {
       this.rigidbody.getShapeList().setFriction(this.friction);
       this.rigidbody.setLinearDamping(this.linDamping);
       this.rigidbody.setAngularDamping(this.angDamping);
+      this.rigidbody.setRotationFactor(new OIMO.Vec3(this.rotationalInfluenceFactor.x, this.rotationalInfluenceFactor.y, this.rotationalInfluenceFactor.z));
     }
 
     private createCollider(_scale: OIMO.Vec3, _colliderType: COLLIDER_TYPE): void {
@@ -514,7 +520,6 @@ namespace FudgeCore {
         if (isTriggering == false) {
           let index: number = this.collisions.indexOf(value);
           this.bodiesInTrigger.splice(index);
-          // Debug.log("TriggerLeft " + value.getContainer().name);
           event = new CustomEvent(EVENT_PHYSICS.TRIGGER_EXIT, { detail: value });
           this.dispatchEvent(event);
         }

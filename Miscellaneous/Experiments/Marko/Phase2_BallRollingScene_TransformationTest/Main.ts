@@ -25,7 +25,7 @@ namespace FudgePhysics_Communication {
     f.Physics.initializePhysics();
     hierarchy = new f.Node("Scene");
 
-    document.addEventListener("keypress", hndKey);
+    // document.addEventListener("keypress", hndKey);
 
     let ground: f.Node = createCompleteMeshNode("Ground", new f.Material("Ground", f.ShaderFlat, new f.CoatColored(new f.Color(0.2, 0.2, 0.2, 1))), "Cube", 0, f.PHYSICS_TYPE.STATIC, f.PHYSICS_GROUP.GROUP_1);
     let cmpGroundMesh: f.ComponentTransform = ground.getComponent(f.ComponentTransform);
@@ -38,9 +38,9 @@ namespace FudgePhysics_Communication {
     let cmpCubeTransform: f.ComponentTransform = bodies[0].getComponent(f.ComponentTransform);
     hierarchy.appendChild(bodies[0]);
     cmpCubeTransform.local.translate(new f.Vector3(7, 4, 0));
-    ballRB = bodies[0].getComponent(f.ComponentRigidbody);
-    ballRB.linearDamping = 0.1;
-    ballRB.angularDamping = 0.1;
+    // ballRB = bodies[0].getComponent(f.ComponentRigidbody);
+    // ballRB.linearDamping = 0.1;
+    // ballRB.angularDamping = 0.1;
 
     bodies[1] = createCompleteMeshNode("Cube_-10GradZ", new f.Material("Cube", f.ShaderFlat, new f.CoatColored(new f.Color(1, 1, 0, 1))), "Cube", 1, f.PHYSICS_TYPE.STATIC, f.PHYSICS_GROUP.GROUP_1);
     hierarchy.appendChild(bodies[1]);
@@ -69,7 +69,7 @@ namespace FudgePhysics_Communication {
     hierarchy.appendChild(bodies[3]);
     bodies[3].mtxLocal.translate(new f.Vector3(0, -3, 0));
     bodies[3].mtxLocal.scale(new f.Vector3(40, 0.3, 40));
-    bodies[3].getComponent(f.ComponentRigidbody).addEventListener(f.EVENT_PHYSICS.TRIGGER_ENTER, resetBall as EventListener);
+    // bodies[3].getComponent(f.ComponentRigidbody).addEventListener(f.EVENT_PHYSICS.TRIGGER_ENTER, resetBall as EventListener);
 
     let cmpLight: f.ComponentLight = new f.ComponentLight(new f.LightDirectional(f.Color.CSS("WHITE")));
     cmpLight.pivot.lookAt(new f.Vector3(0.5, -1, -0.8));
@@ -86,7 +86,7 @@ namespace FudgePhysics_Communication {
 
     viewPort.showSceneGraph();
     f.Loop.addEventListener(f.EVENT.LOOP_FRAME, update);
-    f.Physics.start(hierarchy);
+    //f.Physics.start(hierarchy);
     f.Loop.start();
   }
 
@@ -141,7 +141,7 @@ namespace FudgePhysics_Communication {
     node.addComponent(cmpMesh);
     node.addComponent(cmpMaterial);
     node.addComponent(cmpTransform);
-    node.addComponent(cmpRigidbody);
+    //node.addComponent(cmpRigidbody);
 
     return node;
   }

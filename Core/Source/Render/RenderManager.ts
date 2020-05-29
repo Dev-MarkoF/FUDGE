@@ -139,18 +139,19 @@ namespace FudgeCore {
     }
 
     /**
-     * Physics Part -> Take all nodes with cmpRigidbody, and overwrite their world position/rotation with the one coming from 
-     * the rb component. 
+     * Physics Part -> Take all nodes with cmpRigidbody, and overwrite their local position/rotation with the one coming from 
+     * the rb component, which is the new "local" WORLD position.
      */
     private static setupPhysicalTransform(_node: Node): void {
       if (Physics.world != null) {
+        Physics.world.connectJoints(); //check every frame for new joints that need to be connected? 
         for (let name in _node.getChildren()) {
           let childNode: Node = _node.getChildren()[name];
           RenderManager.setupPhysicalTransform(childNode);
           let cmpRigidbody: ComponentRigidbody = childNode.getComponent(ComponentRigidbody);
           let cmpTransform: ComponentTransform = childNode.getComponent(ComponentTransform);
           if (cmpTransform != null && cmpRigidbody != null) {
-            if (cmpRigidbody.physicsType != PHYSICS_TYPE.KINEMATIC) { //Case of Dynamic Rigidbody
+            if (cmpRigidbody.physicsType != PHYSICS_TYPE.KINEMATIC) { //Case of Dynamic/Static Rigidbody
               let mutator: Mutator = {};   //Override any position/rotation, Physical Objects do not know hierachy unless it's established through physics
               mutator["rotation"] = cmpRigidbody.getRotation();
               mutator["translation"] = cmpRigidbody.getPosition();
