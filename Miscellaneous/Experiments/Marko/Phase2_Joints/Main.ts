@@ -31,6 +31,7 @@ namespace FudgePhysics_Communication {
     hierarchy = new f.Node("Scene");
 
     document.addEventListener("keypress", hndKey);
+    document.addEventListener("keydown", hndKeyDown);
 
     ground = createCompleteMeshNode("Ground", new f.Material("Ground", f.ShaderFlat, new f.CoatColored(new f.Color(0.2, 0.2, 0.2, 1))), new f.MeshCube(), 0, f.PHYSICS_TYPE.STATIC, f.PHYSICS_GROUP.GROUP_1);
     let cmpGroundMesh: f.ComponentTransform = ground.getComponent(f.ComponentTransform);
@@ -150,6 +151,12 @@ namespace FudgePhysics_Communication {
     let pos: f.Vector3 = moveableTransform.local.translation;
     pos.add(new f.Vector3(horizontal, height, vertical));
     moveableTransform.local.translation = pos;
+  }
+
+  function hndKeyDown(_event: KeyboardEvent): void { //Test for joint changes
+    if (_event.code == f.KEYBOARD_CODE.Z) {
+      prismaticJoint.anchor = new f.Vector3(0, 0, 3);
+    }
   }
 
 }

@@ -1,7 +1,9 @@
 namespace FudgeCore {
   /**
      * Acts as the physical representation of the [[Node]] it's attached to.
-     * It's the connection between the Fudge Rendered world and the Physics world
+     * It's the connection between the Fudge Rendered world and the Physics world.
+     * For the physics to correctly get the transformations rotations need to be applied with from left = true.
+     * Or rotations need to happen before scaling.
      * @authors Marko Fehrenbach, HFU, 2020
      */
   export class ComponentRigidbody extends Component {
@@ -53,9 +55,9 @@ namespace FudgeCore {
     }
 
 
-    public offsetPosition: Vector3 = Vector3.ZERO();
-    public offsetRotation: Vector3 = Vector3.ZERO();
-    public offsetScaling: Vector3 = Vector3.ONE();
+    public localPivotPosition: Vector3 = Vector3.ZERO();
+    public localPivotRotation: Vector3 = Vector3.ZERO();
+    public localPivotScaling: Vector3 = Vector3.ONE();
 
     /**
    * Returns the physical weight of the [[Node]]
@@ -220,9 +222,7 @@ namespace FudgeCore {
     public updateFromWorld(): void {
       let worldTransform: Matrix4x4 = super.getContainer() != null ? super.getContainer().mtxWorld : Matrix4x4.IDENTITY();
       let position: Vector3 = worldTransform.translation;
-      let rotation: Vector3 = worldTransform.rotation;
-      // Debug.log("Obj: " + super.getContainer().name + " rot: " + rotation);
-      // Debug.log("Obj: " + super.getContainer().name + " rotMatrix: " + worldTransform.getEulerAngles());
+      let rotation: Vector3 = worldTransform.getEulerAngles();
       let scaling: Vector3 = worldTransform.scaling;
       this.createCollider(new OIMO.Vec3(scaling.x / 2, scaling.y / 2, scaling.z / 2), this.colliderType);
       this.collider = new OIMO.Shape(this.colliderInfo);
@@ -305,7 +305,7 @@ namespace FudgeCore {
      * Sets the current ROTATION of the [[Node]] in the physical space, in degree.
      */
     public setRotation(_value: Vector3): void {
-      this.rigidbody.setRotation(new OIMO.Mat3().fromEulerXyz(new OIMO.Vec3(_value.x, _value.y, _value.z)));
+      this.rigidbody.setRotation(new OIMO.Mat3().fromEulerXyz(new OIMO.Vec3(_value.x * Math.PI / 180, _value.y * Math.PI / 180, _value.z * Math.PI / 180)));
     }
 
     //#region Velocity and Forces
@@ -436,9 +436,9 @@ namespace FudgeCore {
       }
       let tmpTransform: Matrix4x4 = _transform == null ? super.getContainer() != null ? super.getContainer().mtxWorld : Matrix4x4.IDENTITY() : _transform;
 
-      let scale: OIMO.Vec3 = new OIMO.Vec3((tmpTransform.scaling.x * this.offsetScaling.x) / 2, (tmpTransform.scaling.y * this.offsetScaling.y) / 2, (tmpTransform.scaling.z * this.offsetScaling.z) / 2);
-      let position: OIMO.Vec3 = new OIMO.Vec3(tmpTransform.translation.x + this.offsetPosition.x, tmpTransform.translation.y + this.offsetPosition.y, tmpTransform.translation.z + this.offsetPosition.z);
-      let rotation: OIMO.Vec3 = new OIMO.Vec3(tmpTransform.rotation.x + this.offsetRotation.x, tmpTransform.rotation.y + this.offsetRotation.y, tmpTransform.rotation.z + this.offsetRotation.z);
+      let scale: OIMO.Vec3 = new OIMO.Vec3((tmpTransform.scaling.x * this.localPivotScaling.x) / 2, (tmpTransform.scaling.y * this.localPivotScaling.y) / 2, (tmpTransform.scaling.z * this.localPivotScaling.z) / 2);
+      let position: OIMO.Vec3 = new OIMO.Vec3(tmpTransform.translation.x + this.localPivotPosition.x, tmpTransform.translation.y + this.localPivotPosition.y, tmpTransform.translation.z + this.localPivotPosition.z);
+      let rotation: OIMO.Vec3 = new OIMO.Vec3(tmpTransform.rotation.x + this.localPivotRotation.x, tmpTransform.rotation.y + this.localPivotRotation.y, tmpTransform.rotation.z + this.localPivotRotation.z);
       this.createCollider(scale, _colliderType);
 
       this.massData.mass = _type != PHYSICS_TYPE.STATIC ? _mass : 0;
@@ -479,6 +479,9 @@ namespace FudgeCore {
           break;
         case COLLIDER_TYPE.CYLINDER:
           geometry = new OIMO.CylinderGeometry(_scale.x, _scale.y);
+          break;
+        case COLLIDER_TYPE.CYLINDER:
+          geometry = new OIMO.ConeGeometry(_scale.x, _scale.y);
           break;
       }
       shapeConf.geometry = geometry;

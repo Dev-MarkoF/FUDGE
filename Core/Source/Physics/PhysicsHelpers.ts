@@ -7,9 +7,7 @@ namespace FudgeCore {
     /** broadcast to a [[Node]] and all [[Nodes]] in the branch it's the root of */
     COLLISION_ENTER = "ColliderEnteredCollision",
     /** broadcast to a [[Node]] and all [[Nodes]] in the branch it's the root of */
-    COLLISION_EXIT = "ColliderLeftCollision",
-    /** broadcast to a [[Node]] and all [[Nodes]] in the branch it's the root of */
-    INITIALIZE = "Initialized"
+    COLLISION_EXIT = "ColliderLeftCollision"
   }
 
   /**
@@ -36,13 +34,16 @@ namespace FudgeCore {
 
   /**
   * Different types of collider shapes, with different options in scaling BOX = Vector3(length, height, depth),
-  * SPHERE = Vector3(diameter, x, x), CAPSULE = Vector3(diameter, height, x), CYLINDEr = Vector3(diameter, height, x); x == unused.
+  * SPHERE = Vector3(diameter, x, x), CAPSULE = Vector3(diameter, height, x), CYLINDER = Vector3(diameter, height, x),
+  * CONE = Vector(diameter, height, x); x == unused.
   */
   export enum COLLIDER_TYPE {
     CUBE,
     SPHERE,
     CAPSULE,
-    CYLINDER
+    CYLINDER,
+    CONE
+    //Note: Convex Hull could be added but that would need to have the vertices of a object and created differently. But Oimo supports it
   }
 
   export class RayHitInfo {

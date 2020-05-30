@@ -38,7 +38,8 @@ namespace FudgePhysics_Communication {
     cubes[0] = createCompleteMeshNode("Cube_1", new f.Material("Cube", f.ShaderFlat, new f.CoatColored(new f.Color(1, 0, 0, 1))), new f.MeshCube());
     let cmpCubeTransform: f.ComponentTransform = cubes[0].getComponent(f.ComponentTransform);
     cmpCubeTransform.local.translate(new f.Vector3(0, 2, 0));
-    //cubes[0].mtxLocal.rotateX(45);
+    cubes[0].mtxLocal.rotateZ(90);
+    f.Debug.log("90DegreeZCube: " + cubes[0].mtxLocal.rotation);
     hierarchy.appendChild(cubes[0]);
 
     cubes[1] = createCompleteMeshNode("Cube_2", new f.Material("Cube", f.ShaderFlat, new f.CoatColored(new f.Color(1, 0, 0, 1))), new f.MeshCube());
@@ -120,7 +121,7 @@ namespace FudgePhysics_Communication {
     let bodyc: oimo.RigidBodyConfig = new oimo.RigidBodyConfig();
     bodyc.type = dynamic ? oimo.RigidBodyType.DYNAMIC : oimo.RigidBodyType.STATIC;
     bodyc.position = new oimo.Vec3(node.mtxLocal.translation.x, node.mtxLocal.translation.y, node.mtxLocal.translation.z);
-    bodyc.rotation.fromEulerXyz(new oimo.Vec3(node.mtxLocal.rotation.x, node.mtxLocal.rotation.y, node.mtxLocal.rotation.z));
+    bodyc.rotation.fromEulerXyz(new oimo.Vec3(node.mtxLocal.rotation.x * Math.PI * 180, node.mtxLocal.rotation.y * Math.PI * 180, node.mtxLocal.rotation.z * Math.PI * 180));
     let rb: oimo.RigidBody = new oimo.RigidBody(bodyc);
     rb.addShape(new oimo.Shape(shapec));
     rb.setMassData(massData);

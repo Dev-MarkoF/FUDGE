@@ -144,7 +144,7 @@ namespace FudgeCore {
      */
     private static setupPhysicalTransform(_node: Node): void {
       if (Physics.world != null) {
-        Physics.world.connectJoints(); //check every frame for new joints that need to be connected? 
+        Physics.world.connectJoints(); //check every frame for new joints that need to be connected 
         for (let name in _node.getChildren()) {
           let childNode: Node = _node.getChildren()[name];
           RenderManager.setupPhysicalTransform(childNode);

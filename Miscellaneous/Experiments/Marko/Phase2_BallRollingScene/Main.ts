@@ -44,24 +44,20 @@ namespace FudgePhysics_Communication {
 
     bodies[1] = createCompleteMeshNode("Cube_-10GradZ", new f.Material("Cube", f.ShaderFlat, new f.CoatColored(new f.Color(1, 1, 0, 1))), "Cube", 1, f.PHYSICS_TYPE.STATIC, f.PHYSICS_GROUP.GROUP_1);
     hierarchy.appendChild(bodies[1]);
-    bodies[1].mtxLocal.translate(new f.Vector3(-7, 0.1, 0));
+    bodies[1].mtxLocal.translate(new f.Vector3(-7, -1.5, 0));
     bodies[1].mtxLocal.scale(new f.Vector3(10, 0.3, 10));
-    bodies[1].mtxLocal.rotateZ(90);
+    bodies[1].mtxLocal.rotateZ(-10, true);
 
     bodies[2] = createCompleteMeshNode("Cube_-20GradZ", new f.Material("Cube", f.ShaderFlat, new f.CoatColored(new f.Color(1, 1, 0, 1))), "Cube", 1, f.PHYSICS_TYPE.STATIC, f.PHYSICS_GROUP.GROUP_1);
     hierarchy.appendChild(bodies[2]);
-    // bodies[2].removeComponent(bodies[2].getComponent(f.ComponentRigidbody)); //shearing test
-    bodies[2].mtxLocal.translate(new f.Vector3(7, 0.1, 0));
-    bodies[2].mtxLocal.scale(new f.Vector3(10, 0.3, 10));
-    bodies[2].mtxLocal.rotateZ(20);
+    bodies[2].mtxLocal.translate(new f.Vector3(8, -1, 0));
+    bodies[2].mtxLocal.scale(new f.Vector3(10, 0.1, 10));
+    bodies[2].mtxLocal.rotateZ(20, true);
 
     bodies[4] = createCompleteMeshNode("Cube_15,0,10Grad", new f.Material("Cube", f.ShaderFlat, new f.CoatColored(new f.Color(1, 1, 0, 1))), "Cube", 1, f.PHYSICS_TYPE.STATIC, f.PHYSICS_GROUP.GROUP_1);
-    bodies[4].mtxLocal.translate(new f.Vector3(-6, 5, 0));
+    bodies[4].mtxLocal.translate(new f.Vector3(0, -1.3, -9.5));
     bodies[4].mtxLocal.scale(new f.Vector3(10, 0.3, 10));
-    //  bodies[4].mtxLocal.rotateX(10);
-    //  bodies[4].mtxLocal.rotateY(10);
-    //bodies[4].mtxLocal.rotateZ(5);
-    bodies[4].mtxLocal.rotate(new f.Vector3(15, 0, 10));
+    bodies[4].mtxLocal.rotate(new f.Vector3(15, 0, 10), true);
     hierarchy.appendChild(bodies[4]);
 
     bodies[3] = createCompleteMeshNode("ResetTrigger", new f.Material("Cube", f.ShaderFlat, new f.CoatColored(new f.Color(1, 1, 0, 1))), "Cube", 1, f.PHYSICS_TYPE.STATIC, f.PHYSICS_GROUP.TRIGGER);

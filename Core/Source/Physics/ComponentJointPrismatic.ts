@@ -17,6 +17,8 @@ namespace FudgeCore {
     }
     set axis(_value: Vector3) {
       this.jointAxis = new OIMO.Vec3(_value.x, _value.y, _value.z);
+      this.disconnect();
+      this.dirtyStatus();
     }
 
     /**
@@ -27,6 +29,8 @@ namespace FudgeCore {
     }
     set anchor(_value: Vector3) {
       this.jointAnchor = new OIMO.Vec3(_value.x, _value.y, _value.z);
+      this.disconnect();
+      this.dirtyStatus();
     }
 
     /**
@@ -156,7 +160,7 @@ namespace FudgeCore {
       /*Tell the physics that there is a new joint? and on the physics start the actual joint is first created? Values can be set but the
         actual constraint ain't existent until the game starts?
       */
-      this.addEventListener(EVENT.COMPONENT_ADD, this.superAdd);
+      this.addEventListener(EVENT.COMPONENT_ADD, this.dirtyStatus);
       this.addEventListener(EVENT.COMPONENT_REMOVE, this.superRemove);
     }
 
@@ -168,6 +172,18 @@ namespace FudgeCore {
       if (this.connected == false) {
         this.constructJoint();
         this.connected = true;
+        this.superAdd();
+      }
+    }
+
+    /**
+     * Disconnecting the two rigidbodies and removing them from the physics system,
+     * is automatically called by the physics system. No user interaction needed.
+     */
+    public disconnect(): void {
+      if (this.connected == true) {
+        this.superRemove();
+        this.connected = false;
       }
     }
 
@@ -196,6 +212,10 @@ namespace FudgeCore {
 
     private superRemove(): void {
       this.removeConstraintFromWorld(this);
+    }
+
+    private dirtyStatus(): void {
+      Physics.world.changeJointStatus(this);
     }
 
   }

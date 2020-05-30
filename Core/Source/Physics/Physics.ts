@@ -155,17 +155,14 @@ namespace FudgeCore {
 * Adding a new OIMO Joint/Constraint to the OIMO World, happens automatically when adding a FUDGE Joint Component
 */
     public addJoint(_cmpJoint: ComponentJoint): void {
-      //Physics.world.oimoWorld.addJoint(_cmpJoint.getOimoJoint());
-      this.jointList.push(_cmpJoint);
+      Physics.world.oimoWorld.addJoint(_cmpJoint.getOimoJoint());
     }
 
     /**
     * Removing a OIMO Joint/Constraint to the OIMO World, happens automatically when removeing a FUDGE Joint Component
     */
     public removeJoint(_cmpJoint: ComponentJoint): void {
-      let index: number = this.jointList.indexOf(_cmpJoint);
-      this.jointList.splice(index);
-      //Physics.world.oimoWorld.removeJoint(_cmpJoint.getOimoJoint());
+      Physics.world.oimoWorld.removeJoint(_cmpJoint.getOimoJoint());
     }
 
     /**
@@ -185,6 +182,24 @@ namespace FudgeCore {
       this.bodyList.splice(id, 1);
     }
 
+    public connectJoints(): void { //Try to connect dirty joints until they are connected
+      this.jointList.forEach((value: ComponentJoint): void => {
+        if (value.checkConnection() == false) {
+          value.connect();
+          let index: number = this.jointList.indexOf(value);
+          this.jointList.splice(index);
+        }
+      });
+    }
+
+    /**
+    * Called internally to inform the physics system that a joint has a change of core properties like ComponentRigidbody and needs to
+    * be recreated.
+    */
+    public changeJointStatus(_cmpJoint: ComponentJoint): void {
+      this.jointList.push(_cmpJoint);
+    }
+
     private updateWorldFromWorldMatrix(): void {
       let bodiesToUpdate: ComponentRigidbody[] = new Array(); //Copy Array because removing/readding in the updateFromworld
       this.bodyList.forEach(function (value: ComponentRigidbody): void {
@@ -192,20 +207,9 @@ namespace FudgeCore {
       });
 
       bodiesToUpdate.forEach(function (value: ComponentRigidbody): void {
-        Debug.log("WorldScaling?: " + value.getContainer().mtxWorld.scaling);
         value.updateFromWorld();
       });
     }
-
-    public connectJoints(): void { //Maybe don't go through all joints, just have a list of joints that are dirty
-      this.jointList.forEach(function (value: ComponentJoint): void {
-        if (value.checkConnection() == false) {
-          value.connect();
-          Physics.world.oimoWorld.addJoint(value.getOimoJoint());
-        }
-      });
-    }
-
 
     private createWorld(): void {
       Physics.world.oimoWorld = new OIMO.World();
