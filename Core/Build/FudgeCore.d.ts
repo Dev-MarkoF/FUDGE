@@ -3099,6 +3099,7 @@ declare namespace FudgeCore {
         constructor(_attachedRigidbody?: ComponentRigidbody, _connectedRigidbody?: ComponentRigidbody);
         checkConnection(): boolean;
         abstract connect(): void;
+        abstract disconnect(): void;
         abstract getOimoJoint(): OIMO.Joint;
         protected addConstraintToWorld(cmpJoint: ComponentJoint): void;
         protected removeConstraintFromWorld(cmpJoint: ComponentJoint): void;
@@ -3189,16 +3190,24 @@ declare namespace FudgeCore {
          * is automatically called by the physics system. No user interaction needed.
          */
         connect(): void;
+        /**
+         * Disconnecting the two rigidbodies and removing them from the physics system,
+         * is automatically called by the physics system. No user interaction needed.
+         */
+        disconnect(): void;
         getOimoJoint(): OIMO.Joint;
         private constructJoint;
         private superAdd;
         private superRemove;
+        private dirtyStatus;
     }
 }
 declare namespace FudgeCore {
     /**
        * Acts as the physical representation of the [[Node]] it's attached to.
-       * It's the connection between the Fudge Rendered world and the Physics world
+       * It's the connection between the Fudge Rendered world and the Physics world.
+       * For the physics to correctly get the transformations rotations need to be applied with from left = true.
+       * Or rotations need to happen before scaling.
        * @authors Marko Fehrenbach, HFU, 2020
        */
     class ComponentRigidbody extends Component {
@@ -3209,9 +3218,9 @@ declare namespace FudgeCore {
         set colliderType(_value: COLLIDER_TYPE);
         get collisionGroup(): PHYSICS_GROUP;
         set collisionGroup(_value: PHYSICS_GROUP);
-        offsetPosition: Vector3;
-        offsetRotation: Vector3;
-        offsetScaling: Vector3;
+        localPivotPosition: Vector3;
+        localPivotRotation: Vector3;
+        localPivotScaling: Vector3;
         /**
        * Returns the physical weight of the [[Node]]
        */
@@ -3418,8 +3427,13 @@ declare namespace FudgeCore {
         simulate(_deltaTime?: number): void;
         registerTrigger(_rigidbody: ComponentRigidbody): void;
         unregisterTrigger(_rigidbody: ComponentRigidbody): void;
-        private updateWorldFromWorldMatrix;
         connectJoints(): void;
+        /**
+        * Called internally to inform the physics system that a joint has a change of core properties like ComponentRigidbody and needs to
+        * be recreated.
+        */
+        changeJointStatus(_cmpJoint: ComponentJoint): void;
+        private updateWorldFromWorldMatrix;
         private createWorld;
     }
 }
@@ -3432,9 +3446,7 @@ declare namespace FudgeCore {
         /** broadcast to a [[Node]] and all [[Nodes]] in the branch it's the root of */
         COLLISION_ENTER = "ColliderEnteredCollision",
         /** broadcast to a [[Node]] and all [[Nodes]] in the branch it's the root of */
-        COLLISION_EXIT = "ColliderLeftCollision",
-        /** broadcast to a [[Node]] and all [[Nodes]] in the branch it's the root of */
-        INITIALIZE = "Initialized"
+        COLLISION_EXIT = "ColliderLeftCollision"
     }
     /**
   * Groups to place a node in, not every group should collide with every group. Use a Mask in to exclude collisions
@@ -3458,13 +3470,15 @@ declare namespace FudgeCore {
     }
     /**
     * Different types of collider shapes, with different options in scaling BOX = Vector3(length, height, depth),
-    * SPHERE = Vector3(diameter, x, x), CAPSULE = Vector3(diameter, height, x), CYLINDEr = Vector3(diameter, height, x); x == unused.
+    * SPHERE = Vector3(diameter, x, x), CAPSULE = Vector3(diameter, height, x), CYLINDER = Vector3(diameter, height, x),
+    * CONE = Vector(diameter, height, x); x == unused.
     */
     enum COLLIDER_TYPE {
         CUBE = 0,
         SPHERE = 1,
         CAPSULE = 2,
-        CYLINDER = 3
+        CYLINDER = 3,
+        CONE = 4
     }
     class RayHitInfo {
         hit: boolean;

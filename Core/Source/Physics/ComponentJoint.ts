@@ -43,16 +43,15 @@ namespace FudgeCore {
       super();
       this.attachedRigidbody = _attachedRigidbody;
       this.connectedRigidbody = _connectedRigidbody;
-      //The node either already has a attachedRigidbody or these components will create own. Or they will notify that a rigidbody is needed 
     }
 
     public checkConnection(): boolean {
       return this.connected; //check if connection is dirty, so when either rb is changed disconnect and reconnect
     }
 
-    //needs to be called when the two necessary main variables are set. Can't create a connection with only 1 RB. But could possibly be done by
-    //the connection itself on gamestart? And changes are saved seperatly and then used for the connection creation at the gamestart?
-    public abstract connect(): void;
+    public abstract connect(): void; //Connect when both bodies are set, and it was not connected yet, or if any of the bodies is changed
+
+    public abstract disconnect(): void; //When the ComponentJoint is removed, or before every connection, if connected
 
     public abstract getOimoJoint(): OIMO.Joint;
 
