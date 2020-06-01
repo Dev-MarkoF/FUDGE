@@ -169,6 +169,8 @@ namespace FudgeCore {
   * Simulates the physical world. _deltaTime is the amount of time between physical steps, default is 60 frames per second ~17ms
   */
     public simulate(_deltaTime: number = 1 / 60): void {
+      if (this.jointList.length > 0)
+        this.connectJoints();
       Physics.world.oimoWorld.step(_deltaTime * Time.game.getScale());
     }
 
@@ -183,11 +185,14 @@ namespace FudgeCore {
     }
 
     public connectJoints(): void { //Try to connect dirty joints until they are connected
-      this.jointList.forEach((value: ComponentJoint): void => {
+      let jointsToConnect: ComponentJoint[] = new Array(); //Copy Array because removing/readding in the connecting
+      this.jointList.forEach(function (value: ComponentJoint): void {
+        jointsToConnect.push(value);
+      });
+      this.jointList.splice(0, this.jointList.length);
+      jointsToConnect.forEach((value: ComponentJoint): void => {
         if (value.checkConnection() == false) {
           value.connect();
-          let index: number = this.jointList.indexOf(value);
-          this.jointList.splice(index);
         }
       });
     }

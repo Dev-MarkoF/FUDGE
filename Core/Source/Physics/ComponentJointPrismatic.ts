@@ -2,6 +2,8 @@ namespace FudgeCore {
   /**
      * A physical connection between two bodies with a defined axe movement.
      * Used to create a sliding joint along one axis. Two RigidBodies need to be defined to use it.
+     * For actual sliding a upper/lower limit need to be set otherwise it's just a holding connection.
+     * A motor can be defined to move the connected along the defined axis.
      * @authors Marko Fehrenbach, HFU, 2020
      */
   export class ComponentJointPrismatic extends ComponentJoint {
