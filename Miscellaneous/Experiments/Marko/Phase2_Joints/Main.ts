@@ -13,7 +13,7 @@ namespace FudgePhysics_Communication {
   const times: number[] = [];
   let fpsDisplay: HTMLElement = document.querySelector("h2#FPS");
 
-  let cubes: f.Node[] = new Array();
+  let bodies: f.Node[] = new Array();
   let ground: f.Node;
   let cmpCamera: f.ComponentCamera;
 
@@ -23,6 +23,7 @@ namespace FudgePhysics_Communication {
   //Joints
   let prismaticJoint: f.ComponentJointPrismatic;
   let prismaticJointSlide: f.ComponentJointPrismatic;
+  let revoluteJointSwingDoor: f.ComponentJointRevolute;
 
 
 
@@ -37,54 +38,69 @@ namespace FudgePhysics_Communication {
 
     ground = createCompleteMeshNode("Ground", new f.Material("Ground", f.ShaderFlat, new f.CoatColored(new f.Color(0.2, 0.2, 0.2, 1))), new f.MeshCube(), 0, f.PHYSICS_TYPE.STATIC, f.PHYSICS_GROUP.GROUP_1);
     let cmpGroundMesh: f.ComponentTransform = ground.getComponent(f.ComponentTransform);
-    cmpGroundMesh.local.scale(new f.Vector3(10, 0.3, 10));
+    cmpGroundMesh.local.scale(new f.Vector3(12, 0.3, 12));
 
     cmpGroundMesh.local.translate(new f.Vector3(0, -1.5, 0));
     hierarchy.appendChild(ground);
 
     //Prismatic Joints
-    cubes[0] = createCompleteMeshNode("Spring_Floor", new f.Material("Cube", f.ShaderFlat, new f.CoatColored(new f.Color(0.4, 0.4, 0.4, 1))), new f.MeshCube(), 1, f.PHYSICS_TYPE.DYNAMIC, f.PHYSICS_GROUP.GROUP_2);
-    let cmpCubeTransform: f.ComponentTransform = cubes[0].getComponent(f.ComponentTransform);
-    hierarchy.appendChild(cubes[0]);
+    bodies[0] = createCompleteMeshNode("Spring_Floor", new f.Material("Cube", f.ShaderFlat, new f.CoatColored(new f.Color(0.4, 0.4, 0.4, 1))), new f.MeshCube(), 1, f.PHYSICS_TYPE.DYNAMIC, f.PHYSICS_GROUP.GROUP_2);
+    let cmpCubeTransform: f.ComponentTransform = bodies[0].getComponent(f.ComponentTransform);
+    hierarchy.appendChild(bodies[0]);
     cmpCubeTransform.local.translate(new f.Vector3(0, 1, 0));
     cmpCubeTransform.local.scaleY(0.2);
-    prismaticJoint = new f.ComponentJointPrismatic(cubes[0].getComponent(f.ComponentRigidbody), ground.getComponent(f.ComponentRigidbody));
-    cubes[0].addComponent(prismaticJoint);
+    prismaticJoint = new f.ComponentJointPrismatic(bodies[0].getComponent(f.ComponentRigidbody), ground.getComponent(f.ComponentRigidbody));
+    bodies[0].addComponent(prismaticJoint);
     prismaticJoint.springDamping = 0;
     prismaticJoint.springFrequency = 1;
     prismaticJoint.internalCollision = true;
 
-    cubes[3] = createCompleteMeshNode("CubeJointBase", new f.Material("Cube", f.ShaderFlat, new f.CoatColored(new f.Color(0.4, 0.4, 0.4, 1))), new f.MeshCube(), 1, f.PHYSICS_TYPE.STATIC, f.PHYSICS_GROUP.GROUP_1);
-    hierarchy.appendChild(cubes[3]);
-    cubes[3].mtxLocal.translate(new f.Vector3(-4, 2, -2));
-    cubes[3].mtxLocal.scale(new f.Vector3(2, 0.5, 0.5));
+    bodies[3] = createCompleteMeshNode("CubeJointBase", new f.Material("Cube", f.ShaderFlat, new f.CoatColored(new f.Color(0.4, 0.4, 0.4, 1))), new f.MeshCube(), 1, f.PHYSICS_TYPE.STATIC, f.PHYSICS_GROUP.GROUP_1);
+    hierarchy.appendChild(bodies[3]);
+    bodies[3].mtxLocal.translate(new f.Vector3(-4, 2, -2));
+    bodies[3].mtxLocal.scale(new f.Vector3(2, 0.5, 0.5));
 
-    cubes[4] = createCompleteMeshNode("CubeJointSlide", new f.Material("Cube", f.ShaderFlat, new f.CoatColored(new f.Color(1, 1, 0, 1))), new f.MeshCube(), 1, f.PHYSICS_TYPE.DYNAMIC, f.PHYSICS_GROUP.GROUP_1);
-    hierarchy.appendChild(cubes[4]);
-    cubes[4].mtxLocal.translate(new f.Vector3(-4, 2, -2));
-    prismaticJointSlide = new f.ComponentJointPrismatic(cubes[3].getComponent(f.ComponentRigidbody), cubes[4].getComponent(f.ComponentRigidbody), new f.Vector3(1, 0, 0));
-    cubes[3].addComponent(prismaticJointSlide);
-    prismaticJointSlide.internalCollision = false;
-    prismaticJointSlide.motorForce = 10;
+    bodies[4] = createCompleteMeshNode("CubeJointSlide", new f.Material("Cube", f.ShaderFlat, new f.CoatColored(new f.Color(1, 1, 0, 1))), new f.MeshCube(), 1, f.PHYSICS_TYPE.DYNAMIC, f.PHYSICS_GROUP.GROUP_1);
+    hierarchy.appendChild(bodies[4]);
+    bodies[4].mtxLocal.translate(new f.Vector3(-4, 2, -2));
+    prismaticJointSlide = new f.ComponentJointPrismatic(bodies[3].getComponent(f.ComponentRigidbody), bodies[4].getComponent(f.ComponentRigidbody), new f.Vector3(1, 0, 0));
+    bodies[3].addComponent(prismaticJointSlide);
+    prismaticJointSlide.motorForce = 10; //so it does not slide too much on it's own.
     prismaticJointSlide.motorLimitLower = -1;
     prismaticJointSlide.motorLimitUpper = 1;
 
+    //Revolute Joint
+    bodies[5] = createCompleteMeshNode("Handle", new f.Material("Cube", f.ShaderFlat, new f.CoatColored(new f.Color(0.4, 0.4, 0.4, 1))), new f.MeshCube(), 1, f.PHYSICS_TYPE.STATIC, f.PHYSICS_GROUP.GROUP_1);
+    hierarchy.appendChild(bodies[5]);
+    bodies[5].mtxLocal.translate(new f.Vector3(3.5, 2, -2));
+    bodies[5].mtxLocal.scale(new f.Vector3(0.5, 2, 0.5));
+
+    bodies[6] = createCompleteMeshNode("SwingDoor", new f.Material("Cube", f.ShaderFlat, new f.CoatColored(new f.Color(1, 1, 0, 1))), new f.MeshCube(), 1, f.PHYSICS_TYPE.DYNAMIC, f.PHYSICS_GROUP.GROUP_1);
+    hierarchy.appendChild(bodies[6]);
+    bodies[6].mtxLocal.translate(new f.Vector3(4.25, 2, -2));
+    bodies[6].mtxLocal.scale(new f.Vector3(1.5, 2, 0.2));
+
+    revoluteJointSwingDoor = new f.ComponentJointRevolute(bodies[5].getComponent(f.ComponentRigidbody), bodies[6].getComponent(f.ComponentRigidbody), new f.Vector3(0, 1, 0), new f.Vector3(3.5, 2, -2));
+    bodies[5].addComponent(revoluteJointSwingDoor);
+    revoluteJointSwingDoor.motorLimitLower = -60;
+    revoluteJointSwingDoor.motorLimitUpper = 60;
+
 
     //Miscellaneous
-    cubes[1] = createCompleteMeshNode("Cube_2", new f.Material("Cube", f.ShaderFlat, new f.CoatColored(new f.Color(1, 1, 0, 1))), new f.MeshCube(), 1, f.PHYSICS_TYPE.DYNAMIC, f.PHYSICS_GROUP.GROUP_1);
-    let cmpCubeTransform2: f.ComponentTransform = cubes[1].getComponent(f.ComponentTransform);
-    hierarchy.appendChild(cubes[1]);
+    bodies[1] = createCompleteMeshNode("Cube_2", new f.Material("Cube", f.ShaderFlat, new f.CoatColored(new f.Color(1, 1, 0, 1))), new f.MeshCube(), 1, f.PHYSICS_TYPE.DYNAMIC, f.PHYSICS_GROUP.GROUP_1);
+    let cmpCubeTransform2: f.ComponentTransform = bodies[1].getComponent(f.ComponentTransform);
+    hierarchy.appendChild(bodies[1]);
     cmpCubeTransform2.local.translate(new f.Vector3(0, 2, 0));
 
-    cubes[2] = createCompleteMeshNode("Cube_3", new f.Material("Cube", f.ShaderFlat, new f.CoatColored(new f.Color(1, 0, 0, 1))), new f.MeshCube(), 1, f.PHYSICS_TYPE.DYNAMIC);
-    let cmpCubeTransform3: f.ComponentTransform = cubes[2].getComponent(f.ComponentTransform);
-    hierarchy.appendChild(cubes[2]);
+    bodies[2] = createCompleteMeshNode("Cube_3", new f.Material("Cube", f.ShaderFlat, new f.CoatColored(new f.Color(1, 0, 0, 1))), new f.MeshCube(), 1, f.PHYSICS_TYPE.DYNAMIC);
+    let cmpCubeTransform3: f.ComponentTransform = bodies[2].getComponent(f.ComponentTransform);
+    hierarchy.appendChild(bodies[2]);
     cmpCubeTransform3.local.translate(new f.Vector3(0.5, 3, 0.5));
 
     //Kinematic
-    cubes[3] = createCompleteMeshNode("PlayerControlledCube", new f.Material("Cube", f.ShaderFlat, new f.CoatColored(new f.Color(0, 0, 1, 1))), new f.MeshCube(), 1, f.PHYSICS_TYPE.KINEMATIC);
-    moveableTransform = cubes[3].getComponent(f.ComponentTransform);
-    hierarchy.appendChild(cubes[3]);
+    bodies[3] = createCompleteMeshNode("PlayerControlledCube", new f.Material("Cube", f.ShaderFlat, new f.CoatColored(new f.Color(0, 0, 1, 1))), new f.MeshCube(), 1, f.PHYSICS_TYPE.KINEMATIC);
+    moveableTransform = bodies[3].getComponent(f.ComponentTransform);
+    hierarchy.appendChild(bodies[3]);
     moveableTransform.local.translate(new f.Vector3(-4, 1, 0));
 
     let cmpLight: f.ComponentLight = new f.ComponentLight(new f.LightDirectional(f.Color.CSS("WHITE")));
@@ -93,7 +109,7 @@ namespace FudgePhysics_Communication {
 
     cmpCamera = new f.ComponentCamera();
     cmpCamera.backgroundColor = f.Color.CSS("GREY");
-    cmpCamera.pivot.translate(new f.Vector3(2, 2, 10));
+    cmpCamera.pivot.translate(new f.Vector3(2, 2, 13));
     cmpCamera.pivot.lookAt(f.Vector3.ZERO());
 
 
@@ -188,6 +204,12 @@ namespace FudgePhysics_Communication {
     }
     if (_event.code == f.KEYBOARD_CODE.I) {
       prismaticJointSlide.connectedRigidbody.applyForce(new f.Vector3(1 * 100, 0, 0));
+    }
+    if (_event.code == f.KEYBOARD_CODE.O) {
+      revoluteJointSwingDoor.connectedRigidbody.applyForce(new f.Vector3(0, 0, 1 * 100));
+    }
+    if (_event.code == f.KEYBOARD_CODE.P) {
+      revoluteJointSwingDoor.connectedRigidbody.applyForce(new f.Vector3(0, 0, 1 * -100));
     }
   }
 

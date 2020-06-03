@@ -4,7 +4,7 @@ namespace FudgeCore {
      * The type of conncetion is defined by the subclasses like prismatic joint, cylinder joint etc.
      * A Rigidbody on the [[Node]] that this component is added to is needed. Setting the connectedRigidbody and
      * initializing the connection creates a physical connection between them. This differs from a connection through hierarchy
-     * in the node structure of fudge. 
+     * in the node structure of fudge. Joints can have different DOF's (Degrees Of Freedom), 1 Axis = 1 Degree. 
      * @authors Marko Fehrenbach, HFU, 2020
      */
   export abstract class ComponentJoint extends Component {

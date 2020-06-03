@@ -1,13 +1,12 @@
 namespace FudgeCore {
   /**
-     * A physical connection between two bodies with a defined axe movement.
-     * Used to create a sliding joint along one axis. Two RigidBodies need to be defined to use it.
-     * For actual sliding a upper/lower limit need to be set otherwise it's just a holding connection.
-     * A motor can be defined to move the connected along the defined axis.
+     * A physical connection between two bodies with a defined axe of rotation. Also known as HINGE joint.
+     * Two RigidBodies need to be defined to use it. For actual rotating a upper/lower limit need to be set otherwise it's just a holding connection.
+     * A motor can be defined to rotate the connected along the defined axis.
      * @authors Marko Fehrenbach, HFU, 2020
      */
-  export class ComponentJointPrismatic extends ComponentJoint {
-    public static readonly iSubclass: number = Component.registerSubclass(ComponentJointPrismatic);
+  export class ComponentJointRevolute extends ComponentJoint {
+    public static readonly iSubclass: number = Component.registerSubclass(ComponentJointRevolute);
 
     //#region Get/Set transfor of fudge properties to the physics engine
     /**
@@ -80,23 +79,23 @@ namespace FudgeCore {
     }
 
     /**
-      * The Upper Limit of movement along the axis of this joint. The limiter is disable if lowerLimit > upperLimit.
+      * The Upper Limit of movement along the axis of this joint. The limiter is disable if lowerLimit > upperLimit. Axis-Angle measured in Degree.
      */
     get motorLimitUpper(): number {
-      return this.jointMotorLimitUpper;
+      return this.jointMotorLimitUpper * 180 / Math.PI;
     }
     set motorLimitUpper(_value: number) {
-      this.jointMotorLimitUpper = _value;
+      this.jointMotorLimitUpper = _value * Math.PI / 180;
       if (this.oimoJoint != null) this.oimoJoint.getLimitMotor().upperLimit = this.jointMotorLimitUpper;
     }
     /**
-      * The Lower Limit of movement along the axis of this joint. The limiter is disable if lowerLimit > upperLimit.
+      * The Lower Limit of movement along the axis of this joint. The limiter is disable if lowerLimit > upperLimit. Axis Angle measured in Degree.
      */
     get motorLimitLower(): number {
-      return this.jointMotorLimitUpper;
+      return this.jointMotorLimitUpper * 180 / Math.PI;
     }
     set motorLimitLower(_value: number) {
-      this.jointMotorLimitLower = _value;
+      this.jointMotorLimitLower = _value * Math.PI / 180;
       if (this.oimoJoint != null) this.oimoJoint.getLimitMotor().lowerLimit = this.jointMotorLimitLower;
     }
     /**
@@ -112,12 +111,12 @@ namespace FudgeCore {
     /**
       * The maximum motor force in Newton. force <= 0 equals disabled. 
      */
-    get motorForce(): number {
-      return this.jointMotorForce;
+    get motorTorque(): number {
+      return this.jointmotorTorque;
     }
-    set motorForce(_value: number) {
-      this.jointMotorForce = _value;
-      if (this.oimoJoint != null) this.oimoJoint.getLimitMotor().motorForce = this.jointMotorForce;
+    set motorTorque(_value: number) {
+      this.jointmotorTorque = _value;
+      if (this.oimoJoint != null) this.oimoJoint.getLimitMotor().motorTorque = this.jointmotorTorque;
     }
 
     /**
@@ -137,21 +136,21 @@ namespace FudgeCore {
 
     private jointMotorLimitUpper: number = 0;
     private jointMotorLimitLower: number = 0;
-    private jointMotorForce: number = 0;
+    private jointmotorTorque: number = 0;
     private jointMotorSpeed: number = 0;
 
     private jointBreakForce: number = 0;
     private jointBreakTorque: number = 0;
 
-    private config: OIMO.PrismaticJointConfig = new OIMO.PrismaticJointConfig();
-    private translationalMotor: OIMO.TranslationalLimitMotor;
+    private config: OIMO.RevoluteJointConfig = new OIMO.RevoluteJointConfig();
+    private rotationalMotor: OIMO.RotationalLimitMotor;
     private springDamper: OIMO.SpringDamper;
     private jointAnchor: OIMO.Vec3;
     private jointAxis: OIMO.Vec3;
 
     private jointInternalCollision: boolean;
 
-    private oimoJoint: OIMO.PrismaticJoint;
+    private oimoJoint: OIMO.RevoluteJoint;
 
 
     constructor(_attachedRigidbody: ComponentRigidbody = null, _connectedRigidbody: ComponentRigidbody = null, _axis: Vector3 = new Vector3(0, 1, 0), _anchor: Vector3 = new Vector3(0, 0, 0)) {
@@ -195,13 +194,13 @@ namespace FudgeCore {
 
     private constructJoint(): void {
       this.springDamper = new OIMO.SpringDamper().setSpring(this.jointSpringFrequency, this.jointSpringDampingRatio);
-      this.translationalMotor = new OIMO.TranslationalLimitMotor().setLimits(this.jointMotorLimitLower, this.jointMotorLimitUpper);
-      this.translationalMotor.setMotor(this.jointMotorSpeed, this.jointMotorForce);
-      this.config = new OIMO.PrismaticJointConfig();
+      this.rotationalMotor = new OIMO.RotationalLimitMotor().setLimits(this.jointMotorLimitLower, this.jointMotorLimitUpper);
+      this.rotationalMotor.setMotor(this.jointMotorSpeed, this.jointmotorTorque);
+      this.config = new OIMO.RevoluteJointConfig();
       this.config.init(this.attachedRB.getOimoRigidbody(), this.connectedRB.getOimoRigidbody(), this.jointAnchor, this.jointAxis);
       this.config.springDamper = this.springDamper;
-      this.config.limitMotor = this.translationalMotor;
-      var j: OIMO.PrismaticJoint = new OIMO.PrismaticJoint(this.config);
+      this.config.limitMotor = this.rotationalMotor;
+      var j: OIMO.RevoluteJoint = new OIMO.RevoluteJoint(this.config);
       j.setBreakForce(this.breakForce);
       j.setBreakTorque(this.breakTorque);
       j.setAllowCollision(this.jointInternalCollision);

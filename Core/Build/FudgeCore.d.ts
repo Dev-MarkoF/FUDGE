@@ -3081,7 +3081,7 @@ declare namespace FudgeCore {
        * The type of conncetion is defined by the subclasses like prismatic joint, cylinder joint etc.
        * A Rigidbody on the [[Node]] that this component is added to is needed. Setting the connectedRigidbody and
        * initializing the connection creates a physical connection between them. This differs from a connection through hierarchy
-       * in the node structure of fudge.
+       * in the node structure of fudge. Joints can have different DOF's (Degrees Of Freedom), 1 Axis = 1 Degree.
        * @authors Marko Fehrenbach, HFU, 2020
        */
     abstract class ComponentJoint extends Component {
@@ -3181,6 +3181,104 @@ declare namespace FudgeCore {
         private jointBreakTorque;
         private config;
         private translationalMotor;
+        private springDamper;
+        private jointAnchor;
+        private jointAxis;
+        private jointInternalCollision;
+        private oimoJoint;
+        constructor(_attachedRigidbody?: ComponentRigidbody, _connectedRigidbody?: ComponentRigidbody, _axis?: Vector3, _anchor?: Vector3);
+        /**
+         * Initializing and connecting the two rigidbodies with the configured joint properties
+         * is automatically called by the physics system. No user interaction needed.
+         */
+        connect(): void;
+        /**
+         * Disconnecting the two rigidbodies and removing them from the physics system,
+         * is automatically called by the physics system. No user interaction needed.
+         */
+        disconnect(): void;
+        getOimoJoint(): OIMO.Joint;
+        private constructJoint;
+        private superAdd;
+        private superRemove;
+        private dirtyStatus;
+    }
+}
+declare namespace FudgeCore {
+    /**
+       * A physical connection between two bodies with a defined axe of rotation. Also known as HINGE joint.
+       * Two RigidBodies need to be defined to use it. For actual rotating a upper/lower limit need to be set otherwise it's just a holding connection.
+       * A motor can be defined to rotate the connected along the defined axis.
+       * @authors Marko Fehrenbach, HFU, 2020
+       */
+    class ComponentJointRevolute extends ComponentJoint {
+        static readonly iSubclass: number;
+        /**
+         * The axis connecting the the two [[Node]]s e.g. Vector3(0,1,0) to have a upward connection.
+         *  When changed after initialization the joint needs to be reconnected.
+         */
+        get axis(): Vector3;
+        set axis(_value: Vector3);
+        /**
+         * The exact position where the two [[Node]]s are connected. When changed after initialization the joint needs to be reconnected.
+         */
+        get anchor(): Vector3;
+        set anchor(_value: Vector3);
+        /**
+         * The damping of the spring. 1 equals completly damped.
+         */
+        get springDamping(): number;
+        set springDamping(_value: number);
+        /**
+         * The frequency of the spring in Hz. At 0 the spring is rigid, equals no spring.
+        */
+        get springFrequency(): number;
+        set springFrequency(_value: number);
+        /**
+         * The amount of force needed to break the JOINT, in Newton. 0 equals unbreakable (default)
+        */
+        get breakForce(): number;
+        set breakForce(_value: number);
+        /**
+           * The amount of force needed to break the JOINT, while rotating, in Newton. 0 equals unbreakable (default)
+          */
+        get breakTorque(): number;
+        set breakTorque(_value: number);
+        /**
+          * The Upper Limit of movement along the axis of this joint. The limiter is disable if lowerLimit > upperLimit. Axis-Angle measured in Degree.
+         */
+        get motorLimitUpper(): number;
+        set motorLimitUpper(_value: number);
+        /**
+          * The Lower Limit of movement along the axis of this joint. The limiter is disable if lowerLimit > upperLimit. Axis Angle measured in Degree.
+         */
+        get motorLimitLower(): number;
+        set motorLimitLower(_value: number);
+        /**
+          * The target speed of the motor in m/s.
+         */
+        get motorSpeed(): number;
+        set motorSpeed(_value: number);
+        /**
+          * The maximum motor force in Newton. force <= 0 equals disabled.
+         */
+        get motorTorque(): number;
+        set motorTorque(_value: number);
+        /**
+          * If the two connected RigidBodies collide with eath other. (Default = false)
+         */
+        get internalCollision(): boolean;
+        set internalCollision(_value: boolean);
+        private jointSpringDampingRatio;
+        private jointSpringFrequency;
+        private jointMotorLimitUpper;
+        private jointMotorLimitLower;
+        private jointmotorTorque;
+        private jointMotorSpeed;
+        private jointBreakForce;
+        private jointBreakTorque;
+        private config;
+        private rotationalMotor;
         private springDamper;
         private jointAnchor;
         private jointAxis;
