@@ -1,12 +1,12 @@
 namespace FudgeCore {
   /**
-     * A physical connection between two bodies with a defined axe of rotation. Also known as HINGE joint.
-     * Two RigidBodies need to be defined to use it. For actual rotating a upper/lower limit need to be set otherwise it's just a holding connection.
-     * A motor can be defined to rotate the connected along the defined axis.
+     * A physical connection between two bodies with three Degrees of Freedom, also known as ball and socket joint. Used for things
+     * like the connection of bones in the human shoulder. Two RigidBodies need to be defined to use it. For actual rotating a upper/lower limit need to be set otherwise it's just a holding connection.
+     * A motor can be defined for rotation and translation, along with spring settings.
      * @authors Marko Fehrenbach, HFU, 2020
      */
-  export class ComponentJointRevolute extends ComponentJoint {
-    public static readonly iSubclass: number = Component.registerSubclass(ComponentJointRevolute);
+  export class ComponentJointSpherical extends ComponentJoint {
+    public static readonly iSubclass: number = Component.registerSubclass(ComponentJointSpherical);
 
     //#region Get/Set transfor of fudge properties to the physics engine
     /**
@@ -42,7 +42,7 @@ namespace FudgeCore {
     }
     set springDamping(_value: number) {
       this.jointSpringDampingRatio = _value;
-      if (this.oimoJoint != null) this.oimoJoint.getSpringDamper().dampingRatio = this.jointSpringDampingRatio;
+      if (this.oimoJoint != null) this.oimoJoint.getTranslationalSpringDamper().dampingRatio = this.jointSpringDampingRatio;
     }
 
     /**
@@ -53,7 +53,29 @@ namespace FudgeCore {
     }
     set springFrequency(_value: number) {
       this.jointSpringFrequency = _value;
-      if (this.oimoJoint != null) this.oimoJoint.getSpringDamper().frequency = this.jointSpringFrequency;
+      if (this.oimoJoint != null) this.oimoJoint.getTranslationalSpringDamper().frequency = this.jointSpringFrequency;
+    }
+
+    /**
+    * The damping of the spring. 1 equals completly damped. Influencing TORQUE / ROTATION
+    */
+    get rotationSpringDamping(): number {
+      return this.jointRotationSpringDampingRatio;
+    }
+    set rotationSpringDamping(_value: number) {
+      this.jointRotationSpringDampingRatio = _value;
+      if (this.oimoJoint != null) this.oimoJoint.getRotationalSpringDamper().dampingRatio = this.jointRotationSpringDampingRatio;
+    }
+
+    /**
+     * The frequency of the spring in Hz. At 0 the spring is rigid, equals no spring. Influencing TORQUE / ROTATION
+    */
+    get rotationSpringFrequency(): number {
+      return this.jointRotationSpringFrequency;
+    }
+    set rotationSpringFrequency(_value: number) {
+      this.jointRotationSpringFrequency = _value;
+      if (this.oimoJoint != null) this.oimoJoint.getRotationalSpringDamper().frequency = this.jointRotationSpringFrequency;
     }
 
     /**
@@ -81,42 +103,83 @@ namespace FudgeCore {
     /**
       * The Upper Limit of movement along the axis of this joint. The limiter is disable if lowerLimit > upperLimit. Axis-Angle measured in Degree.
      */
-    get motorLimitUpper(): number {
-      return this.jointMotorLimitUpper * 180 / Math.PI;
+    get rotationalMotorLimitUpper(): number {
+      return this.jointRotationMotorLimitUpper * 180 / Math.PI;
     }
-    set motorLimitUpper(_value: number) {
-      this.jointMotorLimitUpper = _value * Math.PI / 180;
-      if (this.oimoJoint != null) this.oimoJoint.getLimitMotor().upperLimit = this.jointMotorLimitUpper;
+    set rotationalMotorLimitUpper(_value: number) {
+      this.jointRotationMotorLimitUpper = _value * Math.PI / 180;
+      if (this.oimoJoint != null) this.oimoJoint.getRotationalLimitMotor().upperLimit = this.jointRotationMotorLimitUpper;
     }
     /**
       * The Lower Limit of movement along the axis of this joint. The limiter is disable if lowerLimit > upperLimit. Axis Angle measured in Degree.
      */
-    get motorLimitLower(): number {
-      return this.jointMotorLimitLower * 180 / Math.PI;
+    get rotationalMotorLimitLower(): number {
+      return this.jointRotationMotorLimitLower * 180 / Math.PI;
     }
-    set motorLimitLower(_value: number) {
-      this.jointMotorLimitLower = _value * Math.PI / 180;
-      if (this.oimoJoint != null) this.oimoJoint.getLimitMotor().lowerLimit = this.jointMotorLimitLower;
+    set rotationalMotorLimitLower(_value: number) {
+      this.jointRotationMotorLimitLower = _value * Math.PI / 180;
+      if (this.oimoJoint != null) this.oimoJoint.getRotationalLimitMotor().lowerLimit = this.jointRotationMotorLimitLower;
+    }
+    /**
+      * The target rotational speed of the motor in m/s. 
+     */
+    get rotationalMotorSpeed(): number {
+      return this.jointRotationMotorSpeed;
+    }
+    set rotationalMotorSpeed(_value: number) {
+      this.jointRotationMotorSpeed = _value;
+      if (this.oimoJoint != null) this.oimoJoint.getRotationalLimitMotor().motorSpeed = this.jointRotationMotorSpeed;
+    }
+    /**
+      * The maximum motor torque in Newton. force <= 0 equals disabled. 
+     */
+    get rotationalMotorTorque(): number {
+      return this.jointRotationMotorTorque;
+    }
+    set rotationalMotorTorque(_value: number) {
+      this.jointRotationMotorTorque = _value;
+      if (this.oimoJoint != null) this.oimoJoint.getRotationalLimitMotor().motorTorque = this.jointRotationMotorTorque;
+    }
+
+    /**
+      * The Upper Limit of movement along the axis of this joint. The limiter is disable if lowerLimit > upperLimit. 
+     */
+    get translationMotorLimitUpper(): number {
+      return this.jointMotorLimitUpper;
+    }
+    set translationMotorLimitUpper(_value: number) {
+      this.jointMotorLimitUpper = _value;
+      if (this.oimoJoint != null) this.oimoJoint.getTranslationalLimitMotor().upperLimit = this.jointMotorLimitUpper;
+    }
+    /**
+      * The Lower Limit of movement along the axis of this joint. The limiter is disable if lowerLimit > upperLimit. 
+     */
+    get translationMotorLimitLower(): number {
+      return this.jointMotorLimitUpper;
+    }
+    set translationMotorLimitLower(_value: number) {
+      this.jointMotorLimitLower = _value;
+      if (this.oimoJoint != null) this.oimoJoint.getTranslationalLimitMotor().lowerLimit = this.jointMotorLimitLower;
     }
     /**
       * The target speed of the motor in m/s.
      */
-    get motorSpeed(): number {
+    get translationMotorSpeed(): number {
       return this.jointMotorSpeed;
     }
-    set motorSpeed(_value: number) {
+    set translationMotorSpeed(_value: number) {
       this.jointMotorSpeed = _value;
-      if (this.oimoJoint != null) this.oimoJoint.getLimitMotor().motorSpeed = this.jointMotorSpeed;
+      if (this.oimoJoint != null) this.oimoJoint.getTranslationalLimitMotor().motorSpeed = this.jointMotorSpeed;
     }
     /**
       * The maximum motor force in Newton. force <= 0 equals disabled. 
      */
-    get motorTorque(): number {
-      return this.jointmotorTorque;
+    get translationMotorForce(): number {
+      return this.jointmotorForce;
     }
-    set motorTorque(_value: number) {
-      this.jointmotorTorque = _value;
-      if (this.oimoJoint != null) this.oimoJoint.getLimitMotor().motorTorque = this.jointmotorTorque;
+    set translationMotorForce(_value: number) {
+      this.jointmotorForce = _value;
+      if (this.oimoJoint != null) this.oimoJoint.getTranslationalLimitMotor().motorForce = this.jointmotorForce;
     }
 
     /**
@@ -134,23 +197,33 @@ namespace FudgeCore {
     private jointSpringDampingRatio: number = 0;
     private jointSpringFrequency: number = 0;
 
+    private jointRotationSpringDampingRatio: number = 0;
+    private jointRotationSpringFrequency: number = 0;
+
     private jointMotorLimitUpper: number = 0;
     private jointMotorLimitLower: number = 0;
-    private jointmotorTorque: number = 0;
+    private jointmotorForce: number = 0;
     private jointMotorSpeed: number = 0;
+
+    private jointRotationMotorLimitUpper: number = 0;
+    private jointRotationMotorLimitLower: number = 0;
+    private jointRotationMotorTorque: number = 0;
+    private jointRotationMotorSpeed: number = 0;
 
     private jointBreakForce: number = 0;
     private jointBreakTorque: number = 0;
 
-    private config: OIMO.RevoluteJointConfig = new OIMO.RevoluteJointConfig();
+    private config: OIMO.CylindricalJointConfig = new OIMO.CylindricalJointConfig();
     private rotationalMotor: OIMO.RotationalLimitMotor;
+    private translationMotor: OIMO.TranslationalLimitMotor;
     private springDamper: OIMO.SpringDamper;
+    private rotationSpringDamper: OIMO.SpringDamper;
     private jointAnchor: OIMO.Vec3;
     private jointAxis: OIMO.Vec3;
 
     private jointInternalCollision: boolean;
 
-    private oimoJoint: OIMO.RevoluteJoint;
+    private oimoJoint: OIMO.CylindricalJoint;
 
 
     constructor(_attachedRigidbody: ComponentRigidbody = null, _connectedRigidbody: ComponentRigidbody = null, _axis: Vector3 = new Vector3(0, 1, 0), _anchor: Vector3 = new Vector3(0, 0, 0)) {
@@ -198,16 +271,25 @@ namespace FudgeCore {
 
     private constructJoint(): void {
       this.springDamper = new OIMO.SpringDamper().setSpring(this.jointSpringFrequency, this.jointSpringDampingRatio);
-      this.rotationalMotor = new OIMO.RotationalLimitMotor().setLimits(this.jointMotorLimitLower, this.jointMotorLimitUpper);
-      this.rotationalMotor.setMotor(this.jointMotorSpeed, this.jointmotorTorque);
-      this.config = new OIMO.RevoluteJointConfig();
+      this.rotationSpringDamper = new OIMO.SpringDamper().setSpring(this.jointRotationSpringFrequency, this.rotationSpringDamping);
+
+      this.translationMotor = new OIMO.TranslationalLimitMotor().setLimits(this.jointMotorLimitLower, this.jointMotorLimitUpper);
+      this.translationMotor.setMotor(this.jointMotorSpeed, this.jointmotorForce);
+      this.rotationalMotor = new OIMO.RotationalLimitMotor().setLimits(this.jointRotationMotorLimitLower, this.jointRotationMotorLimitUpper);
+      this.rotationalMotor.setMotor(this.jointRotationMotorSpeed, this.jointRotationMotorTorque);
+
+      this.config = new OIMO.CylindricalJointConfig();
       this.config.init(this.attachedRB.getOimoRigidbody(), this.connectedRB.getOimoRigidbody(), this.jointAnchor, this.jointAxis);
-      this.config.springDamper = this.springDamper;
-      this.config.limitMotor = this.rotationalMotor;
-      var j: OIMO.RevoluteJoint = new OIMO.RevoluteJoint(this.config);
+      this.config.translationalSpringDamper = this.springDamper;
+      this.config.translationalLimitMotor = this.translationMotor;
+      this.config.rotationalLimitMotor = this.rotationalMotor;
+      this.config.rotationalSpringDamper = this.rotationSpringDamper;
+
+      var j: OIMO.CylindricalJoint = new OIMO.CylindricalJoint(this.config);
       j.setBreakForce(this.breakForce);
       j.setBreakTorque(this.breakTorque);
       j.setAllowCollision(this.jointInternalCollision);
+
       this.oimoJoint = j;
     }
 

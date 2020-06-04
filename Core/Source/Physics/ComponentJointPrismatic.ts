@@ -93,7 +93,7 @@ namespace FudgeCore {
       * The Lower Limit of movement along the axis of this joint. The limiter is disable if lowerLimit > upperLimit.
      */
     get motorLimitLower(): number {
-      return this.jointMotorLimitUpper;
+      return this.jointMotorLimitLower;
     }
     set motorLimitLower(_value: number) {
       this.jointMotorLimitLower = _value;
@@ -189,6 +189,10 @@ namespace FudgeCore {
       }
     }
 
+    /**
+     * Returns the original Joint used by the physics engine. Used internally no user interaction needed.
+     * Only to be used when functionality that is not added within Fudge is needed.
+    */
     public getOimoJoint(): OIMO.Joint {
       return this.oimoJoint;
     }

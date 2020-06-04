@@ -1,4 +1,5 @@
 package demo.core;
+
 import demo.common.*;
 import oimo.collision.geometry.*;
 import oimo.common.*;
@@ -10,7 +11,6 @@ import oimo.dynamics.rigidbody.*;
  * Joints demo
  */
 class JointsDemo extends DemoBase {
-
 	public function new() {
 		super("Joints");
 	}
@@ -36,19 +36,19 @@ class JointsDemo extends DemoBase {
 			var z:Float = 1;
 			var b1:RigidBody = OimoUtil.addSphere(world, new Vec3(x, y, z), 0.1, true);
 			var b2:RigidBody = OimoUtil.addBox(world, new Vec3(x, y, z), new Vec3(0.3, 0.5, 0.5), false);
-			OimoUtil.addPrismaticJoint(world, b1, b2, new Vec3(x, y, z), new Vec3(1, 1, 0), new SpringDamper(), new TranslationalLimitMotor().setLimits(-1, 1));
-		}
+			OimoUtil.addPrismaticJoint(world, b1, b2, new Vec3(x, y, z), new Vec3(1, 1, 0), new SpringDamper(),
+				new TranslationalLimitMotor().setLimits(-1, 1));
+		} {
 
-		{
 			var x:Float = -2;
 			var y:Float = 5;
 			var z:Float = 1;
 			var b1:RigidBody = OimoUtil.addSphere(world, new Vec3(x, y, z), 0.1, true);
 			var b2:RigidBody = OimoUtil.addBox(world, new Vec3(x - 0.31, y, z), new Vec3(0.3, 0.5, 0.5), false);
-			OimoUtil.addCylindricalJoint(world, b1, b2, new Vec3(x, y, z), new Vec3(1, 0, 0), new SpringDamper(), new RotationalLimitMotor().setLimits(-2, 2), new SpringDamper().setSpring(4, 0.7), new TranslationalLimitMotor().setLimits(-1, 1));
-		}
+			OimoUtil.addCylindricalJoint(world, b1, b2, new Vec3(x, y, z), new Vec3(1, 0, 0), new SpringDamper(), new RotationalLimitMotor().setLimits(-2, 2),
+				new SpringDamper().setSpring(4, 0.7), new TranslationalLimitMotor().setLimits(-1, 1));
+		} {
 
-		{
 			var x:Float = -2;
 			var y:Float = 3;
 			var z:Float = 3;
@@ -58,10 +58,10 @@ class JointsDemo extends DemoBase {
 			b1.setType(RigidBodyType.KINEMATIC);
 			b1.setAngularVelocity(new Vec3(0, 1.5, 0));
 			var b2:RigidBody = OimoUtil.addBox(world, new Vec3(x, y - length, z), new Vec3(0.2, 0.5, 0.2), false);
-			OimoUtil.addRagdollJoint(world, b1, b2, new Vec3(x, y, z), new Vec3(0, 1, 0), new Vec3(0, 0, 1), new SpringDamper(), 40, 80, new SpringDamper(), new RotationalLimitMotor().setLimits(-MathUtil.HALF_PI, MathUtil.HALF_PI));
-		}
+			OimoUtil.addRagdollJoint(world, b1, b2, new Vec3(x, y, z), new Vec3(0, 1, 0), new Vec3(0, 0, 1), new SpringDamper(), 40, 80, new SpringDamper(),
+				new RotationalLimitMotor().setLimits(-MathUtil.HALF_PI, MathUtil.HALF_PI));
+		} {
 
-		{
 			var x:Float = 2;
 			var y:Float = 3;
 			var z:Float = 3;
@@ -73,10 +73,10 @@ class JointsDemo extends DemoBase {
 			b1.setType(RigidBodyType.KINEMATIC);
 			b1.setAngularVelocity(new Vec3(0, 1.5, 0));
 			var b2:RigidBody = OimoUtil.addBox(world, new Vec3(x, y - length, z), new Vec3(0.2, 0.5, 0.2), false);
-			OimoUtil.addUniversalJoint(world, b1, b2, new Vec3(x, y, z), new Vec3(1, 0, 0), new Vec3(0, 0, 1), new SpringDamper(), hingeLimit1, new SpringDamper(), hingeLimit2);
-		}
+			OimoUtil.addUniversalJoint(world, b1, b2, new Vec3(x, y, z), new Vec3(1, 0, 0), new Vec3(0, 0, 1), new SpringDamper(), hingeLimit1,
+				new SpringDamper(), hingeLimit2);
+		} {
 
-		{
 			var x:Float = 0;
 			var y:Float = 3;
 			var z:Float = 3;
@@ -92,7 +92,8 @@ class JointsDemo extends DemoBase {
 			b1.setType(RigidBodyType.KINEMATIC);
 			b1.setAngularVelocity(new Vec3(0, 1.5, 0));
 			var b2:RigidBody = OimoUtil.addBox(world, new Vec3(x, y - length, z), new Vec3(0.2, 0.5, 0.2), false);
-			OimoUtil.addGenericJoint(world, b1, b2, new Vec3(x, y, z), new Mat3(), new Mat3(), null, [translXLimit, translYLimit, translZLimit], null, [rotXLimit, rotYLimit, rotZLimit]);
+			OimoUtil.addGenericJoint(world, b1, b2, new Vec3(x, y, z), new Mat3(), new Mat3(), null, [translXLimit, translYLimit, translZLimit], null,
+				[rotXLimit, rotYLimit, rotZLimit]);
 		}
 	}
 

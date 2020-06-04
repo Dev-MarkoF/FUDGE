@@ -24,6 +24,7 @@ namespace FudgePhysics_Communication {
   let prismaticJoint: f.ComponentJointPrismatic;
   let prismaticJointSlide: f.ComponentJointPrismatic;
   let revoluteJointSwingDoor: f.ComponentJointRevolute;
+  let cylindricalJoint: f.ComponentJointCylindrical;
 
 
 
@@ -85,6 +86,24 @@ namespace FudgePhysics_Communication {
     revoluteJointSwingDoor.motorLimitLower = -60;
     revoluteJointSwingDoor.motorLimitUpper = 60;
 
+    //Cylindrical Joint
+    bodies[7] = createCompleteMeshNode("Holder", new f.Material("Cube", f.ShaderFlat, new f.CoatColored(new f.Color(0.4, 0.4, 0.4, 1))), new f.MeshCube(), 1, f.PHYSICS_TYPE.STATIC, f.PHYSICS_GROUP.GROUP_1);
+    hierarchy.appendChild(bodies[7]);
+    bodies[7].mtxLocal.translate(new f.Vector3(1.5, 3, -2));
+    bodies[7].mtxLocal.scale(new f.Vector3(0.5, 1, 0.5));
+
+    bodies[8] = createCompleteMeshNode("MovingDrill", new f.Material("Cube", f.ShaderFlat, new f.CoatColored(new f.Color(1, 1, 0, 1))), new f.MeshCube(), 1, f.PHYSICS_TYPE.DYNAMIC, f.PHYSICS_GROUP.GROUP_1);
+    hierarchy.appendChild(bodies[8]);
+    bodies[8].mtxLocal.translate(new f.Vector3(1.5, 2.5, -2));
+    bodies[8].mtxLocal.scale(new f.Vector3(0.3, 2, 0.3));
+    cylindricalJoint = new f.ComponentJointCylindrical(bodies[7].getComponent(f.ComponentRigidbody), bodies[8].getComponent(f.ComponentRigidbody), new f.Vector3(0, 1, 0), bodies[7].mtxLocal.translation);
+    bodies[7].addComponent(cylindricalJoint);
+    cylindricalJoint.translationMotorLimitLower = -1.25;
+    cylindricalJoint.translationMotorLimitUpper = 0;
+    cylindricalJoint.rotationalMotorLimitLower = 0;
+    cylindricalJoint.rotationalMotorLimitUpper = 360;
+    cylindricalJoint.rotationalMotorSpeed = 1;
+    cylindricalJoint.rotationalMotorTorque = 10;
 
     //Miscellaneous
     bodies[1] = createCompleteMeshNode("Cube_2", new f.Material("Cube", f.ShaderFlat, new f.CoatColored(new f.Color(1, 1, 0, 1))), new f.MeshCube(), 1, f.PHYSICS_TYPE.DYNAMIC, f.PHYSICS_GROUP.GROUP_1);
@@ -109,7 +128,7 @@ namespace FudgePhysics_Communication {
 
     cmpCamera = new f.ComponentCamera();
     cmpCamera.backgroundColor = f.Color.CSS("GREY");
-    cmpCamera.pivot.translate(new f.Vector3(2, 2, 13));
+    cmpCamera.pivot.translate(new f.Vector3(2, 2, 15));
     cmpCamera.pivot.lookAt(f.Vector3.ZERO());
 
 
@@ -210,6 +229,12 @@ namespace FudgePhysics_Communication {
     }
     if (_event.code == f.KEYBOARD_CODE.P) {
       revoluteJointSwingDoor.connectedRigidbody.applyForce(new f.Vector3(0, 0, 1 * -100));
+    }
+    if (_event.code == f.KEYBOARD_CODE.F) {
+      cylindricalJoint.connectedRigidbody.applyForce(new f.Vector3(0, 1 * 300, 0));
+    }
+    if (_event.code == f.KEYBOARD_CODE.G) {
+      //SphereJoint
     }
   }
 
