@@ -25,6 +25,7 @@ namespace FudgePhysics_Communication {
   let prismaticJointSlide: f.ComponentJointPrismatic;
   let revoluteJointSwingDoor: f.ComponentJointRevolute;
   let cylindricalJoint: f.ComponentJointCylindrical;
+  let sphericalJoint: f.ComponentJointSpherical;
 
 
 
@@ -104,6 +105,19 @@ namespace FudgePhysics_Communication {
     cylindricalJoint.rotationalMotorLimitUpper = 360;
     cylindricalJoint.rotationalMotorSpeed = 1;
     cylindricalJoint.rotationalMotorTorque = 10;
+
+    //Spherical Joint
+    bodies[9] = createCompleteMeshNode("Socket", new f.Material("Cube", f.ShaderFlat, new f.CoatColored(new f.Color(0.4, 0.4, 0.4, 1))), new f.MeshCube(), 1, f.PHYSICS_TYPE.STATIC, f.PHYSICS_GROUP.GROUP_1);
+    hierarchy.appendChild(bodies[9]);
+    bodies[9].mtxLocal.translate(new f.Vector3(-1.5, 3, 2.5));
+    bodies[9].mtxLocal.scale(new f.Vector3(0.5, 0.5, 0.5));
+
+    bodies[10] = createCompleteMeshNode("BallJoint", new f.Material("Cube", f.ShaderFlat, new f.CoatColored(new f.Color(1, 1, 0, 1))), new f.MeshCube(), 1, f.PHYSICS_TYPE.DYNAMIC, f.PHYSICS_GROUP.GROUP_1);
+    hierarchy.appendChild(bodies[10]);
+    bodies[10].mtxLocal.translate(new f.Vector3(-1.5, 2, 2.5));
+    bodies[10].mtxLocal.scale(new f.Vector3(0.3, 2, 0.3));
+    sphericalJoint = new f.ComponentJointSpherical(bodies[9].getComponent(f.ComponentRigidbody), bodies[10].getComponent(f.ComponentRigidbody), new f.Vector3(-1.5, 3, 2.5));
+    bodies[9].addComponent(sphericalJoint);
 
     //Miscellaneous
     bodies[1] = createCompleteMeshNode("Cube_2", new f.Material("Cube", f.ShaderFlat, new f.CoatColored(new f.Color(1, 1, 0, 1))), new f.MeshCube(), 1, f.PHYSICS_TYPE.DYNAMIC, f.PHYSICS_GROUP.GROUP_1);
@@ -234,7 +248,7 @@ namespace FudgePhysics_Communication {
       cylindricalJoint.connectedRigidbody.applyForce(new f.Vector3(0, 1 * 300, 0));
     }
     if (_event.code == f.KEYBOARD_CODE.G) {
-      //SphereJoint
+      sphericalJoint.connectedRigidbody.applyTorque(new f.Vector3(0, 1 * 100, 0));
     }
   }
 

@@ -3131,7 +3131,7 @@ declare namespace FudgeCore {
         get springDamping(): number;
         set springDamping(_value: number);
         /**
-         * The frequency of the spring in Hz. At 0 the spring is rigid, equals no spring.
+         * The frequency of the spring in Hz. At 0 the spring is rigid, equals no spring. The smaller the value the less restrictive is the spring.
         */
         get springFrequency(): number;
         set springFrequency(_value: number);
@@ -3272,7 +3272,7 @@ declare namespace FudgeCore {
         get springDamping(): number;
         set springDamping(_value: number);
         /**
-         * The frequency of the spring in Hz. At 0 the spring is rigid, equals no spring.
+         * The frequency of the spring in Hz. At 0 the spring is rigid, equals no spring. The smaller the value the less restrictive is the spring.
         */
         get springFrequency(): number;
         set springFrequency(_value: number);
@@ -3374,7 +3374,7 @@ declare namespace FudgeCore {
         get springDamping(): number;
         set springDamping(_value: number);
         /**
-         * The frequency of the spring in Hz. At 0 the spring is rigid, equals no spring.
+         * The frequency of the spring in Hz. At 0 the spring is rigid, equals no spring. The smaller the value the less restrictive is the spring.
         */
         get springFrequency(): number;
         set springFrequency(_value: number);
@@ -3452,19 +3452,15 @@ declare namespace FudgeCore {
 }
 declare namespace FudgeCore {
     /**
-       * A physical connection between two bodies with three Degrees of Freedom, also known as ball and socket joint. Used for things
-       * like the connection of bones in the human shoulder. Two RigidBodies need to be defined to use it. For actual rotating a upper/lower limit need to be set otherwise it's just a holding connection.
-       * A motor can be defined for rotation and translation, along with spring settings.
+       * A physical connection between two bodies with three Degrees of Freedom, also known as ball and socket joint. Two bodies connected at their anchor but free to rotate.
+       * Used for things like the connection of bones in the human shoulder (if simplified, else better use JointRagdoll). Two RigidBodies need to be defined to use it. Only spring settings can be defined.
+       * 3 Degrees are swing horizontal, swing vertical and twist.
        * @authors Marko Fehrenbach, HFU, 2020
        */
     class ComponentJointSpherical extends ComponentJoint {
         static readonly iSubclass: number;
         /**
-         * The axis connecting the the two [[Node]]s e.g. Vector3(0,1,0) to have a upward connection.
-         *  When changed after initialization the joint needs to be reconnected.
-         */
-        get axis(): Vector3;
-        set axis(_value: Vector3);
+    
         /**
          * The exact position where the two [[Node]]s are connected. When changed after initialization the joint needs to be reconnected.
          */
@@ -3476,20 +3472,10 @@ declare namespace FudgeCore {
         get springDamping(): number;
         set springDamping(_value: number);
         /**
-         * The frequency of the spring in Hz. At 0 the spring is rigid, equals no spring.
+         * The frequency of the spring in Hz. At 0 the spring is rigid, equals no spring. The smaller the value the less restrictive is the spring.
         */
         get springFrequency(): number;
         set springFrequency(_value: number);
-        /**
-        * The damping of the spring. 1 equals completly damped. Influencing TORQUE / ROTATION
-        */
-        get rotationSpringDamping(): number;
-        set rotationSpringDamping(_value: number);
-        /**
-         * The frequency of the spring in Hz. At 0 the spring is rigid, equals no spring. Influencing TORQUE / ROTATION
-        */
-        get rotationSpringFrequency(): number;
-        set rotationSpringFrequency(_value: number);
         /**
          * The amount of force needed to break the JOINT, in Newton. 0 equals unbreakable (default)
         */
@@ -3501,74 +3487,20 @@ declare namespace FudgeCore {
         get breakTorque(): number;
         set breakTorque(_value: number);
         /**
-          * The Upper Limit of movement along the axis of this joint. The limiter is disable if lowerLimit > upperLimit. Axis-Angle measured in Degree.
-         */
-        get rotationalMotorLimitUpper(): number;
-        set rotationalMotorLimitUpper(_value: number);
-        /**
-          * The Lower Limit of movement along the axis of this joint. The limiter is disable if lowerLimit > upperLimit. Axis Angle measured in Degree.
-         */
-        get rotationalMotorLimitLower(): number;
-        set rotationalMotorLimitLower(_value: number);
-        /**
-          * The target rotational speed of the motor in m/s.
-         */
-        get rotationalMotorSpeed(): number;
-        set rotationalMotorSpeed(_value: number);
-        /**
-          * The maximum motor torque in Newton. force <= 0 equals disabled.
-         */
-        get rotationalMotorTorque(): number;
-        set rotationalMotorTorque(_value: number);
-        /**
-          * The Upper Limit of movement along the axis of this joint. The limiter is disable if lowerLimit > upperLimit.
-         */
-        get translationMotorLimitUpper(): number;
-        set translationMotorLimitUpper(_value: number);
-        /**
-          * The Lower Limit of movement along the axis of this joint. The limiter is disable if lowerLimit > upperLimit.
-         */
-        get translationMotorLimitLower(): number;
-        set translationMotorLimitLower(_value: number);
-        /**
-          * The target speed of the motor in m/s.
-         */
-        get translationMotorSpeed(): number;
-        set translationMotorSpeed(_value: number);
-        /**
-          * The maximum motor force in Newton. force <= 0 equals disabled.
-         */
-        get translationMotorForce(): number;
-        set translationMotorForce(_value: number);
-        /**
           * If the two connected RigidBodies collide with eath other. (Default = false)
          */
         get internalCollision(): boolean;
         set internalCollision(_value: boolean);
         private jointSpringDampingRatio;
         private jointSpringFrequency;
-        private jointRotationSpringDampingRatio;
-        private jointRotationSpringFrequency;
-        private jointMotorLimitUpper;
-        private jointMotorLimitLower;
-        private jointmotorForce;
-        private jointMotorSpeed;
-        private jointRotationMotorLimitUpper;
-        private jointRotationMotorLimitLower;
-        private jointRotationMotorTorque;
-        private jointRotationMotorSpeed;
         private jointBreakForce;
         private jointBreakTorque;
         private config;
-        private rotationalMotor;
-        private translationMotor;
         private springDamper;
-        private rotationSpringDamper;
         private jointAnchor;
-        private jointAxis;
         private jointInternalCollision;
         private oimoJoint;
-        constructor(_attachedRigidbody?: ComponentRigidbody, _connectedRigidbody?: ComponentRigidbody, _axis?: Vector3, _anchor?: Vector3);
+        constructor(_attachedRigidbody?: ComponentRigidbody, _connectedRigidbody?: ComponentRigidbody, _anchor?: Vector3);
         /**
          * Initializing and connecting the two rigidbodies with the configured joint properties
          * is automatically called by the physics system. No user interaction needed.

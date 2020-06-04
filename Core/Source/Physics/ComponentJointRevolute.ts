@@ -46,7 +46,7 @@ namespace FudgeCore {
     }
 
     /**
-     * The frequency of the spring in Hz. At 0 the spring is rigid, equals no spring.
+     * The frequency of the spring in Hz. At 0 the spring is rigid, equals no spring. The smaller the value the less restrictive is the spring.
     */
     get springFrequency(): number {
       return this.jointSpringFrequency;
