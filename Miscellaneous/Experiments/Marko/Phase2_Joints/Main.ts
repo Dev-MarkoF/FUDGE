@@ -26,7 +26,8 @@ namespace FudgePhysics_Communication {
   let revoluteJointSwingDoor: f.ComponentJointRevolute;
   let cylindricalJoint: f.ComponentJointCylindrical;
   let sphericalJoint: f.ComponentJointSpherical;
-
+  let universalJoint: f.ComponentJointUniversal;
+  let secondUniversalJoint: f.ComponentJointUniversal;
 
 
   function init(_event: Event): void {
@@ -40,7 +41,7 @@ namespace FudgePhysics_Communication {
 
     ground = createCompleteMeshNode("Ground", new f.Material("Ground", f.ShaderFlat, new f.CoatColored(new f.Color(0.2, 0.2, 0.2, 1))), new f.MeshCube(), 0, f.PHYSICS_TYPE.STATIC, f.PHYSICS_GROUP.GROUP_1);
     let cmpGroundMesh: f.ComponentTransform = ground.getComponent(f.ComponentTransform);
-    cmpGroundMesh.local.scale(new f.Vector3(12, 0.3, 12));
+    cmpGroundMesh.local.scale(new f.Vector3(14, 0.3, 14));
 
     cmpGroundMesh.local.translate(new f.Vector3(0, -1.5, 0));
     hierarchy.appendChild(ground);
@@ -119,6 +120,34 @@ namespace FudgePhysics_Communication {
     sphericalJoint = new f.ComponentJointSpherical(bodies[9].getComponent(f.ComponentRigidbody), bodies[10].getComponent(f.ComponentRigidbody), new f.Vector3(-1.5, 3, 2.5));
     bodies[9].addComponent(sphericalJoint);
 
+    //Universal Joint
+    bodies[11] = createCompleteMeshNode("Holder", new f.Material("Cube", f.ShaderFlat, new f.CoatColored(new f.Color(0.4, 0.4, 0.4, 1))), new f.MeshCube(), 1, f.PHYSICS_TYPE.STATIC, f.PHYSICS_GROUP.GROUP_1);
+    hierarchy.appendChild(bodies[11]);
+    bodies[11].mtxLocal.translate(new f.Vector3(-5.5, 5, 2.5));
+    bodies[11].mtxLocal.scale(new f.Vector3(0.5, 0.5, 0.5));
+
+    bodies[12] = createCompleteMeshNode("Universal1", new f.Material("Cube", f.ShaderFlat, new f.CoatColored(new f.Color(1, 1, 0, 1))), new f.MeshCube(), 1, f.PHYSICS_TYPE.DYNAMIC, f.PHYSICS_GROUP.GROUP_1);
+    hierarchy.appendChild(bodies[12]);
+    bodies[12].mtxLocal.translate(new f.Vector3(-5.5, 3.75, 2.5));
+    bodies[12].mtxLocal.scale(new f.Vector3(0.3, 2, 0.3));
+    universalJoint = new f.ComponentJointUniversal(bodies[11].getComponent(f.ComponentRigidbody), bodies[12].getComponent(f.ComponentRigidbody), new f.Vector3(0, 1, 0), new f.Vector3(1, 0, 0), new f.Vector3(-5.5, 5, 2.5));
+    bodies[11].addComponent(universalJoint);
+    universalJoint.motorLimitLowerFirstAxis = 0;
+    universalJoint.motorLimitUpperFirstAxis = 360;
+    universalJoint.motorLimitLowerSecondAxis = 0;
+    universalJoint.motorLimitUpperSecondAxis = 360;
+
+    bodies[13] = createCompleteMeshNode("Universal2", new f.Material("Cube", f.ShaderFlat, new f.CoatColored(new f.Color(1, 1, 0, 1))), new f.MeshCube(), 1, f.PHYSICS_TYPE.DYNAMIC, f.PHYSICS_GROUP.GROUP_1);
+    hierarchy.appendChild(bodies[13]);
+    bodies[13].mtxLocal.translate(new f.Vector3(-5.5, 1.75, 2.5));
+    bodies[13].mtxLocal.scale(new f.Vector3(0.3, 2, 0.3));
+    secondUniversalJoint = new f.ComponentJointUniversal(bodies[12].getComponent(f.ComponentRigidbody), bodies[13].getComponent(f.ComponentRigidbody), new f.Vector3(0, 1, 0), new f.Vector3(1, 0, 0), new f.Vector3(-5.5, 3, 2.5))
+    bodies[12].addComponent(secondUniversalJoint);
+    secondUniversalJoint.motorLimitLowerFirstAxis = 0;
+    secondUniversalJoint.motorLimitUpperFirstAxis = 360;
+    secondUniversalJoint.motorLimitLowerSecondAxis = 0;
+    secondUniversalJoint.motorLimitUpperSecondAxis = 360;
+
     //Miscellaneous
     bodies[1] = createCompleteMeshNode("Cube_2", new f.Material("Cube", f.ShaderFlat, new f.CoatColored(new f.Color(1, 1, 0, 1))), new f.MeshCube(), 1, f.PHYSICS_TYPE.DYNAMIC, f.PHYSICS_GROUP.GROUP_1);
     let cmpCubeTransform2: f.ComponentTransform = bodies[1].getComponent(f.ComponentTransform);
@@ -142,7 +171,7 @@ namespace FudgePhysics_Communication {
 
     cmpCamera = new f.ComponentCamera();
     cmpCamera.backgroundColor = f.Color.CSS("GREY");
-    cmpCamera.pivot.translate(new f.Vector3(2, 2, 15));
+    cmpCamera.pivot.translate(new f.Vector3(2, 2, 17));
     cmpCamera.pivot.lookAt(f.Vector3.ZERO());
 
 
@@ -249,6 +278,9 @@ namespace FudgePhysics_Communication {
     }
     if (_event.code == f.KEYBOARD_CODE.G) {
       sphericalJoint.connectedRigidbody.applyTorque(new f.Vector3(0, 1 * 100, 0));
+    }
+    if (_event.code == f.KEYBOARD_CODE.H) {
+      secondUniversalJoint.connectedRigidbody.applyForce(new f.Vector3(0, 0, 1 * 100));
     }
   }
 

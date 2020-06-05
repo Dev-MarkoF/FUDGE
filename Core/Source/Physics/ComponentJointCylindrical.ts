@@ -175,11 +175,11 @@ namespace FudgeCore {
       * The maximum motor force in Newton. force <= 0 equals disabled. 
      */
     get translationMotorForce(): number {
-      return this.jointmotorForce;
+      return this.jointMotorForce;
     }
     set translationMotorForce(_value: number) {
-      this.jointmotorForce = _value;
-      if (this.oimoJoint != null) this.oimoJoint.getTranslationalLimitMotor().motorForce = this.jointmotorForce;
+      this.jointMotorForce = _value;
+      if (this.oimoJoint != null) this.oimoJoint.getTranslationalLimitMotor().motorForce = this.jointMotorForce;
     }
 
     /**
@@ -202,7 +202,7 @@ namespace FudgeCore {
 
     private jointMotorLimitUpper: number = 0;
     private jointMotorLimitLower: number = 0;
-    private jointmotorForce: number = 0;
+    private jointMotorForce: number = 0;
     private jointMotorSpeed: number = 0;
 
     private jointRotationMotorLimitUpper: number = 0;
@@ -274,7 +274,7 @@ namespace FudgeCore {
       this.rotationSpringDamper = new OIMO.SpringDamper().setSpring(this.jointRotationSpringFrequency, this.rotationSpringDamping);
 
       this.translationMotor = new OIMO.TranslationalLimitMotor().setLimits(this.jointMotorLimitLower, this.jointMotorLimitUpper);
-      this.translationMotor.setMotor(this.jointMotorSpeed, this.jointmotorForce);
+      this.translationMotor.setMotor(this.jointMotorSpeed, this.jointMotorForce);
       this.rotationalMotor = new OIMO.RotationalLimitMotor().setLimits(this.jointRotationMotorLimitLower, this.jointRotationMotorLimitUpper);
       this.rotationalMotor.setMotor(this.jointRotationMotorSpeed, this.jointRotationMotorTorque);
 

@@ -3206,7 +3206,7 @@ declare namespace FudgeCore {
         private jointRotationSpringFrequency;
         private jointMotorLimitUpper;
         private jointMotorLimitLower;
-        private jointmotorForce;
+        private jointMotorForce;
         private jointMotorSpeed;
         private jointRotationMotorLimitUpper;
         private jointRotationMotorLimitLower;
@@ -3501,6 +3501,154 @@ declare namespace FudgeCore {
         private jointInternalCollision;
         private oimoJoint;
         constructor(_attachedRigidbody?: ComponentRigidbody, _connectedRigidbody?: ComponentRigidbody, _anchor?: Vector3);
+        /**
+         * Initializing and connecting the two rigidbodies with the configured joint properties
+         * is automatically called by the physics system. No user interaction needed.
+         */
+        connect(): void;
+        /**
+         * Disconnecting the two rigidbodies and removing them from the physics system,
+         * is automatically called by the physics system. No user interaction needed.
+         */
+        disconnect(): void;
+        /**
+         * Returns the original Joint used by the physics engine. Used internally no user interaction needed.
+         * Only to be used when functionality that is not added within Fudge is needed.
+        */
+        getOimoJoint(): OIMO.Joint;
+        private constructJoint;
+        private superAdd;
+        private superRemove;
+        private dirtyStatus;
+    }
+}
+declare namespace FudgeCore {
+    /**
+       * A physical connection between two bodies with two defined axis (normally e.g. twist (0,1,0) and rotation(1,0,0)), they share the same anchor but transfer the twist.
+       * In reality used in cars to transfer the more stable stationary force on the velocity axis to the bumping, damped moving wheel.
+       * Two RigidBodies need to be defined to use it. For actual rotating a upper/lower limit need to be set otherwise it's just a holding connection.
+       * A motor can be defined for rotation and translation, along with spring settings.
+       * @authors Marko Fehrenbach, HFU, 2020
+       */
+    class ComponentJointUniversal extends ComponentJoint {
+        static readonly iSubclass: number;
+        /**
+         * The axis connecting the the two [[Node]]s e.g. Vector3(0,1,0) to have a upward connection.
+         *  When changed after initialization the joint needs to be reconnected.
+         */
+        get firstAxis(): Vector3;
+        set firstAxis(_value: Vector3);
+        /**
+        * The axis connecting the the two [[Node]]s e.g. Vector3(0,1,0) to have a upward connection.
+        *  When changed after initialization the joint needs to be reconnected.
+        */
+        get secondAxis(): Vector3;
+        set secondAxis(_value: Vector3);
+        /**
+         * The exact position where the two [[Node]]s are connected. When changed after initialization the joint needs to be reconnected.
+         */
+        get anchor(): Vector3;
+        set anchor(_value: Vector3);
+        /**
+         * The damping of the spring. 1 equals completly damped.
+         */
+        get springDampingFirstAxis(): number;
+        set springDampingFirstAxis(_value: number);
+        /**
+         * The frequency of the spring in Hz. At 0 the spring is rigid, equals no spring. The smaller the value the less restrictive is the spring.
+        */
+        get springFrequencyFirstAxis(): number;
+        set springFrequencyFirstAxis(_value: number);
+        /**
+         * The damping of the spring. 1 equals completly damped.
+         */
+        get springDampingSecondAxis(): number;
+        set springDampingSecondAxis(_value: number);
+        /**
+         * The frequency of the spring in Hz. At 0 the spring is rigid, equals no spring. The smaller the value the less restrictive is the spring.
+        */
+        get springFrequencySecondAxis(): number;
+        set springFrequencySecondAxis(_value: number);
+        /**
+         * The amount of force needed to break the JOINT, in Newton. 0 equals unbreakable (default)
+        */
+        get breakForce(): number;
+        set breakForce(_value: number);
+        /**
+           * The amount of force needed to break the JOINT, while rotating, in Newton. 0 equals unbreakable (default)
+          */
+        get breakTorque(): number;
+        set breakTorque(_value: number);
+        /**
+          * The Upper Limit of movement along the axis of this joint. The limiter is disable if lowerLimit > upperLimit. Axis-Angle measured in Degree.
+         */
+        get motorLimitUpperFirstAxis(): number;
+        set motorLimitUpperFirstAxis(_value: number);
+        /**
+          * The Lower Limit of movement along the axis of this joint. The limiter is disable if lowerLimit > upperLimit. Axis Angle measured in Degree.
+         */
+        get motorLimitLowerFirstAxis(): number;
+        set motorLimitLowerFirstAxis(_value: number);
+        /**
+          * The target rotational speed of the motor in m/s.
+         */
+        get motorSpeedFirstAxis(): number;
+        set motorSpeedFirstAxis(_value: number);
+        /**
+          * The maximum motor torque in Newton. force <= 0 equals disabled.
+         */
+        get motorTorqueFirstAxis(): number;
+        set motorTorqueFirstAxis(_value: number);
+        /**
+        * The Upper Limit of movement along the axis of this joint. The limiter is disable if lowerLimit > upperLimit. Axis-Angle measured in Degree.
+       */
+        get motorLimitUpperSecondAxis(): number;
+        set motorLimitUpperSecondAxis(_value: number);
+        /**
+          * The Lower Limit of movement along the axis of this joint. The limiter is disable if lowerLimit > upperLimit. Axis Angle measured in Degree.
+         */
+        get motorLimitLowerSecondAxis(): number;
+        set motorLimitLowerSecondAxis(_value: number);
+        /**
+          * The target rotational speed of the motor in m/s.
+         */
+        get motorSpeedSecondAxis(): number;
+        set motorSpeedSecondAxis(_value: number);
+        /**
+          * The maximum motor torque in Newton. force <= 0 equals disabled.
+         */
+        get motorTorqueSecondAxis(): number;
+        set motorTorqueSecondAxis(_value: number);
+        /**
+          * If the two connected RigidBodies collide with eath other. (Default = false)
+         */
+        get internalCollision(): boolean;
+        set internalCollision(_value: boolean);
+        private jointFirstSpringDampingRatio;
+        private jointFirstSpringFrequency;
+        private jointSecondSpringDampingRatio;
+        private jointSecondSpringFrequency;
+        private jointFirstMotorLimitUpper;
+        private jointFirstMotorLimitLower;
+        private jointFirstMotorTorque;
+        private jointFirstMotorSpeed;
+        private jointSecondMotorLimitUpper;
+        private jointSecondMotorLimitLower;
+        private jointSecondMotorTorque;
+        private jointSecondMotorSpeed;
+        private jointBreakForce;
+        private jointBreakTorque;
+        private config;
+        private firstAxisMotor;
+        private secondAxisMotor;
+        private firstAxisSpringDamper;
+        private secondAxisSpringDamper;
+        private jointAnchor;
+        private jointFirstAxis;
+        private jointSecondAxis;
+        private jointInternalCollision;
+        private oimoJoint;
+        constructor(_attachedRigidbody?: ComponentRigidbody, _connectedRigidbody?: ComponentRigidbody, _firstAxis?: Vector3, _secondAxis?: Vector3, _anchor?: Vector3);
         /**
          * Initializing and connecting the two rigidbodies with the configured joint properties
          * is automatically called by the physics system. No user interaction needed.
