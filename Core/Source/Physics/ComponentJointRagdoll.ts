@@ -1,13 +1,11 @@
 namespace FudgeCore {
   /**
-     * A physical connection between two bodies with two defined axis (normally e.g. (0,0,1) and rotation(1,0,0)), they share the same anchor and have free rotation, but transfer the twist.
-     * In reality used in cars to transfer the more stable stationary force on the velocity axis to the bumping, damped moving wheel.
-     * Two RigidBodies need to be defined to use it. For actual rotating a upper/lower limit need to be set otherwise it's just a holding connection.
-     * The two motors can be defined for rotation and translation, along with spring settings for each axis.
+     * A physical connection between two bodies, designed to simulate behaviour within a real body. It has two axis, a swing and twist axis, similar to a universal joint,
+     * but more restrictive in it's angles. Two RigidBodies need to be defined to use it. For actual rotating a upper/lower limit need to be set otherwise it's just a holding connection.
      * @authors Marko Fehrenbach, HFU, 2020
      */
-  export class ComponentJointUniversal extends ComponentJoint {
-    public static readonly iSubclass: number = Component.registerSubclass(ComponentJointUniversal);
+  export class ComponentJointRagdoll extends ComponentJoint {
+    public static readonly iSubclass: number = Component.registerSubclass(ComponentJointRagdoll);
 
     //#region Get/Set transfor of fudge properties to the physics engine
     /**

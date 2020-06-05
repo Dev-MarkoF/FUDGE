@@ -63,6 +63,8 @@ namespace FudgeCore {
         hitInfo.hitNormal = new Vector3(ray.normal.x, ray.normal.y, ray.normal.z);
         hitInfo.hitDistance = this.getRayDistance(_origin, hitInfo.hitPoint);
         hitInfo.rigidbodyComponent = ray.shape.userData;
+      } else {
+        hitInfo.hitPoint = new Vector3(end.x, end.y, end.z);
       }
       return hitInfo;
     }

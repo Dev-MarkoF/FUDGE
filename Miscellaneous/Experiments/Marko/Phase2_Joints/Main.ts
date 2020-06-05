@@ -141,7 +141,7 @@ namespace FudgePhysics_Communication {
     hierarchy.appendChild(bodies[13]);
     bodies[13].mtxLocal.translate(new f.Vector3(-5.5, 1.75, 2.5));
     bodies[13].mtxLocal.scale(new f.Vector3(0.3, 2, 0.3));
-    secondUniversalJoint = new f.ComponentJointUniversal(bodies[12].getComponent(f.ComponentRigidbody), bodies[13].getComponent(f.ComponentRigidbody), new f.Vector3(0, 1, 0), new f.Vector3(1, 0, 0), new f.Vector3(-5.5, 3, 2.5))
+    secondUniversalJoint = new f.ComponentJointUniversal(bodies[12].getComponent(f.ComponentRigidbody), bodies[13].getComponent(f.ComponentRigidbody), new f.Vector3(0, 0, 1), new f.Vector3(1, 0, 0), new f.Vector3(-5.5, 3, 2.5))
     bodies[12].addComponent(secondUniversalJoint);
     secondUniversalJoint.motorLimitLowerFirstAxis = 0;
     secondUniversalJoint.motorLimitUpperFirstAxis = 360;
@@ -282,61 +282,42 @@ namespace FudgePhysics_Communication {
     if (_event.code == f.KEYBOARD_CODE.H) {
       secondUniversalJoint.connectedRigidbody.applyForce(new f.Vector3(0, 0, 1 * 100));
     }
+    if (_event.code == f.KEYBOARD_CODE.J) {
+      secondUniversalJoint.connectedRigidbody.applyTorque(new f.Vector3(0, 1 * 100, 0));
+    }
   }
 
   function hndPointerDown(_event: f.EventPointer): void {
     let mouse: f.Vector2 = new f.Vector2(_event.pointerX, _event.pointerY);
-    mouse.x = mouse.x / viewPort.getCanvasRectangle().width - 0.5;
-    mouse.y = 0.5 - mouse.y / viewPort.getCanvasRectangle().height;
-    let screenPos: f.Vector3 = new f.Vector3(mouse.x * viewPort.getCanvasRectangle().width, mouse.y * viewPort.getCanvasRectangle().height, 0);
-    // f.Debug.log("ScreenPos: " + screenPos);
-    let ingamePos: f.Vector3 = f.Vector3.TRANSFORMATION(screenPos, cmpCamera.ViewProjectionMatrix, false);
-    ingamePos.normalize();
 
-    // f.Debug.log("posIngame: " + ingamePos);
 
     let posProjection: f.Vector2 = viewPort.pointClientToProjection(mouse);
+    let rectProjection: f.Rectangle = cmpCamera.getProjectionRectangle();
+
     let projection: f.Vector3 = cmpCamera.project(cmpCamera.pivot.translation);
     let posClient: f.Vector2 = viewPort.pointClipToClient(projection.toVector2());
     let posScreen: f.Vector2 = viewPort.pointClientToScreen(posClient);
 
-    // f.Debug.log("posProj: " + posProjection);
-    // f.Debug.log("camProj: " + projection);
-    // f.Debug.log("posClient: " + posClient);
-    // f.Debug.log("posScreen: " + posScreen);
+    f.Debug.log("posProj: " + posProjection);
+    f.Debug.log("camProj: " + projection);
+    f.Debug.log("posClient: " + posClient);
+    f.Debug.log("posScreen: " + posScreen);
 
 
     //Ray
-    let origin: f.Vector3 = ingamePos; //cmpCamera.pivot.translation; //new f.Vector3(-posProjection.x * 2, posProjection.y * 2, 1.5);
-    // origin.transform(cmpCamera.pivot, true);
-    // f.Debug.log("Origin: " + origin);
-    let end: f.Vector3 = new f.Vector3(posProjection.x, posProjection.y, 1);
-    end.scale(200);
-    let heading: f.Vector3 = origin.copy;
-    heading.subtract(end);
-    heading.x /= heading.magnitude;
-    heading.y /= heading.magnitude;
-    heading.z /= heading.magnitude;
-    heading.z *= -1;
-    // f.Debug.log("DirHead: " + heading);
+    let origin: f.Vector3 = new f.Vector3(rectProjection.x, rectProjection.y, 1);
+    let direction: f.Vector3 = new f.Vector3(-posProjection.x, posProjection.y, 1);
+    origin.transform(cmpCamera.pivot);
+    direction.transform(cmpCamera.pivot, false);
 
-    let endpoint: f.Vector3 = f.Vector3.ZERO();
-    endpoint.add(origin);
-    let endDirection: f.Vector3 = heading.copy;
-    endDirection.scale(15);
-    endpoint.add(endDirection);
-    // f.Debug.log("Endpoint: " + endpoint);
-
-    let dir: f.Vector3 = new f.Vector3(0, 0, 1);
-    dir.transform(cmpCamera.pivot, false); //cmpCamera.ViewProjectionMatrix, false);
-    dir.normalize();
-    let hitInfo: f.RayHitInfo = f.Physics.raycast(origin, heading, 15);
+    let hitInfo: f.RayHitInfo = f.Physics.raycast(origin, direction, 15);
     if (hitInfo.hit)
       f.Debug.log(hitInfo.rigidbodyComponent.getContainer().name);
     else
       f.Debug.log("miss");
     let pos: f.Vector3 = moveableTransform.local.translation;
     pos = hitInfo.hitPoint;
+
     moveableTransform.local.translation = pos;
   }
 
