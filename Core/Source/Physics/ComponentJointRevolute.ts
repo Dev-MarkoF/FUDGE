@@ -134,7 +134,7 @@ namespace FudgeCore {
     private jointSpringDampingRatio: number = 0;
     private jointSpringFrequency: number = 0;
 
-    private jointMotorLimitUpper: number = 0;
+    private jointMotorLimitUpper: number = 360;
     private jointMotorLimitLower: number = 0;
     private jointmotorTorque: number = 0;
     private jointMotorSpeed: number = 0;
@@ -153,10 +153,10 @@ namespace FudgeCore {
     private oimoJoint: OIMO.RevoluteJoint;
 
 
-    constructor(_attachedRigidbody: ComponentRigidbody = null, _connectedRigidbody: ComponentRigidbody = null, _axis: Vector3 = new Vector3(0, 1, 0), _anchor: Vector3 = new Vector3(0, 0, 0)) {
+    constructor(_attachedRigidbody: ComponentRigidbody = null, _connectedRigidbody: ComponentRigidbody = null, _axis: Vector3 = new Vector3(0, 1, 0), _localAnchor: Vector3 = new Vector3(0, 0, 0)) {
       super(_attachedRigidbody, _connectedRigidbody);
       this.jointAxis = new OIMO.Vec3(_axis.x, _axis.y, _axis.z);
-      this.jointAnchor = new OIMO.Vec3(_anchor.x, _anchor.y, _anchor.z);
+      this.jointAnchor = new OIMO.Vec3(_localAnchor.x, _localAnchor.y, _localAnchor.z);
 
       /*Tell the physics that there is a new joint? and on the physics start the actual joint is first created? Values can be set but the
         actual constraint ain't existent until the game starts?
@@ -201,7 +201,9 @@ namespace FudgeCore {
       this.rotationalMotor = new OIMO.RotationalLimitMotor().setLimits(this.jointMotorLimitLower, this.jointMotorLimitUpper);
       this.rotationalMotor.setMotor(this.jointMotorSpeed, this.jointmotorTorque);
       this.config = new OIMO.RevoluteJointConfig();
-      this.config.init(this.attachedRB.getOimoRigidbody(), this.connectedRB.getOimoRigidbody(), this.jointAnchor, this.jointAxis);
+      let attachedRBPos: Vector3 = this.attachedRigidbody.getContainer().mtxWorld.translation;
+      let worldAnchor: OIMO.Vec3 = new OIMO.Vec3(attachedRBPos.x + this.jointAnchor.x, attachedRBPos.y + this.jointAnchor.y, attachedRBPos.z + this.jointAnchor.z);
+      this.config.init(this.attachedRB.getOimoRigidbody(), this.connectedRB.getOimoRigidbody(), worldAnchor, this.jointAxis);
       this.config.springDamper = this.springDamper;
       this.config.limitMotor = this.rotationalMotor;
       var j: OIMO.RevoluteJoint = new OIMO.RevoluteJoint(this.config);

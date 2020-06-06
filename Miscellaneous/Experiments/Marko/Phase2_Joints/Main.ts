@@ -29,6 +29,22 @@ namespace FudgePhysics_Communication {
   let universalJoint: f.ComponentJointUniversal;
   let secondUniversalJoint: f.ComponentJointUniversal;
 
+  //Ragdoll
+  let head: f.Node;
+  let body1: f.Node;
+  let body2: f.Node;
+  let armL: f.Node;
+  let armR: f.Node;
+  let legL: f.Node;
+  let legR: f.Node;
+  let jointHeadBody: f.ComponentJointRagdoll;
+  let jointUpperLowerBody: f.ComponentJointRagdoll;
+  let jointBodyArmL: f.ComponentJointRagdoll;
+  let jointBodyArmR: f.ComponentJointRagdoll;
+  let jointBodyLegL: f.ComponentJointRagdoll;
+  let jointBodyLegR: f.ComponentJointRagdoll;
+  let holder: f.ComponentJointSpherical;
+
 
   function init(_event: Event): void {
     f.Debug.log(app);
@@ -52,10 +68,12 @@ namespace FudgePhysics_Communication {
     hierarchy.appendChild(bodies[0]);
     cmpCubeTransform.local.translate(new f.Vector3(0, 1, 0));
     cmpCubeTransform.local.scaleY(0.2);
-    prismaticJoint = new f.ComponentJointPrismatic(bodies[0].getComponent(f.ComponentRigidbody), ground.getComponent(f.ComponentRigidbody));
+    prismaticJoint = new f.ComponentJointPrismatic(bodies[0].getComponent(f.ComponentRigidbody), ground.getComponent(f.ComponentRigidbody), new f.Vector3(0, 1, 0));
     bodies[0].addComponent(prismaticJoint);
     prismaticJoint.springDamping = 0;
     prismaticJoint.springFrequency = 1;
+    prismaticJoint.motorLimitUpper = 0;
+    prismaticJoint.motorLimitLower = 0;
     prismaticJoint.internalCollision = true;
 
     bodies[3] = createCompleteMeshNode("CubeJointBase", new f.Material("Cube", f.ShaderFlat, new f.CoatColored(new f.Color(0.4, 0.4, 0.4, 1))), new f.MeshCube(), 1, f.PHYSICS_TYPE.STATIC, f.PHYSICS_GROUP.GROUP_1);
@@ -83,7 +101,7 @@ namespace FudgePhysics_Communication {
     bodies[6].mtxLocal.translate(new f.Vector3(4.25, 2, -2));
     bodies[6].mtxLocal.scale(new f.Vector3(1.5, 2, 0.2));
 
-    revoluteJointSwingDoor = new f.ComponentJointRevolute(bodies[5].getComponent(f.ComponentRigidbody), bodies[6].getComponent(f.ComponentRigidbody), new f.Vector3(0, 1, 0), new f.Vector3(3.5, 2, -2));
+    revoluteJointSwingDoor = new f.ComponentJointRevolute(bodies[5].getComponent(f.ComponentRigidbody), bodies[6].getComponent(f.ComponentRigidbody), new f.Vector3(0, 1, 0));
     bodies[5].addComponent(revoluteJointSwingDoor);
     revoluteJointSwingDoor.motorLimitLower = -60;
     revoluteJointSwingDoor.motorLimitUpper = 60;
@@ -98,12 +116,10 @@ namespace FudgePhysics_Communication {
     hierarchy.appendChild(bodies[8]);
     bodies[8].mtxLocal.translate(new f.Vector3(1.5, 2.5, -2));
     bodies[8].mtxLocal.scale(new f.Vector3(0.3, 2, 0.3));
-    cylindricalJoint = new f.ComponentJointCylindrical(bodies[7].getComponent(f.ComponentRigidbody), bodies[8].getComponent(f.ComponentRigidbody), new f.Vector3(0, 1, 0), bodies[7].mtxLocal.translation);
+    cylindricalJoint = new f.ComponentJointCylindrical(bodies[7].getComponent(f.ComponentRigidbody), bodies[8].getComponent(f.ComponentRigidbody), new f.Vector3(0, 1, 0));
     bodies[7].addComponent(cylindricalJoint);
     cylindricalJoint.translationMotorLimitLower = -1.25;
     cylindricalJoint.translationMotorLimitUpper = 0;
-    cylindricalJoint.rotationalMotorLimitLower = 0;
-    cylindricalJoint.rotationalMotorLimitUpper = 360;
     cylindricalJoint.rotationalMotorSpeed = 1;
     cylindricalJoint.rotationalMotorTorque = 10;
 
@@ -117,7 +133,7 @@ namespace FudgePhysics_Communication {
     hierarchy.appendChild(bodies[10]);
     bodies[10].mtxLocal.translate(new f.Vector3(-1.5, 2, 2.5));
     bodies[10].mtxLocal.scale(new f.Vector3(0.3, 2, 0.3));
-    sphericalJoint = new f.ComponentJointSpherical(bodies[9].getComponent(f.ComponentRigidbody), bodies[10].getComponent(f.ComponentRigidbody), new f.Vector3(-1.5, 3, 2.5));
+    sphericalJoint = new f.ComponentJointSpherical(bodies[9].getComponent(f.ComponentRigidbody), bodies[10].getComponent(f.ComponentRigidbody));
     bodies[9].addComponent(sphericalJoint);
 
     //Universal Joint
@@ -130,23 +146,17 @@ namespace FudgePhysics_Communication {
     hierarchy.appendChild(bodies[12]);
     bodies[12].mtxLocal.translate(new f.Vector3(-5.5, 3.75, 2.5));
     bodies[12].mtxLocal.scale(new f.Vector3(0.3, 2, 0.3));
-    universalJoint = new f.ComponentJointUniversal(bodies[11].getComponent(f.ComponentRigidbody), bodies[12].getComponent(f.ComponentRigidbody), new f.Vector3(0, 1, 0), new f.Vector3(1, 0, 0), new f.Vector3(-5.5, 5, 2.5));
+    universalJoint = new f.ComponentJointUniversal(bodies[11].getComponent(f.ComponentRigidbody), bodies[12].getComponent(f.ComponentRigidbody), new f.Vector3(0, 1, 0), new f.Vector3(1, 0, 0));
     bodies[11].addComponent(universalJoint);
-    universalJoint.motorLimitLowerFirstAxis = 0;
-    universalJoint.motorLimitUpperFirstAxis = 360;
-    universalJoint.motorLimitLowerSecondAxis = 0;
-    universalJoint.motorLimitUpperSecondAxis = 360;
+
 
     bodies[13] = createCompleteMeshNode("Universal2", new f.Material("Cube", f.ShaderFlat, new f.CoatColored(new f.Color(1, 1, 0, 1))), new f.MeshCube(), 1, f.PHYSICS_TYPE.DYNAMIC, f.PHYSICS_GROUP.GROUP_1);
     hierarchy.appendChild(bodies[13]);
     bodies[13].mtxLocal.translate(new f.Vector3(-5.5, 1.75, 2.5));
     bodies[13].mtxLocal.scale(new f.Vector3(0.3, 2, 0.3));
-    secondUniversalJoint = new f.ComponentJointUniversal(bodies[12].getComponent(f.ComponentRigidbody), bodies[13].getComponent(f.ComponentRigidbody), new f.Vector3(0, 0, 1), new f.Vector3(1, 0, 0), new f.Vector3(-5.5, 3, 2.5))
+    secondUniversalJoint = new f.ComponentJointUniversal(bodies[12].getComponent(f.ComponentRigidbody), bodies[13].getComponent(f.ComponentRigidbody), new f.Vector3(0, 0, 1), new f.Vector3(1, 0, 0), new f.Vector3(0, -1, 0));
     bodies[12].addComponent(secondUniversalJoint);
-    secondUniversalJoint.motorLimitLowerFirstAxis = 0;
-    secondUniversalJoint.motorLimitUpperFirstAxis = 360;
-    secondUniversalJoint.motorLimitLowerSecondAxis = 0;
-    secondUniversalJoint.motorLimitUpperSecondAxis = 360;
+
 
     //Miscellaneous
     bodies[1] = createCompleteMeshNode("Cube_2", new f.Material("Cube", f.ShaderFlat, new f.CoatColored(new f.Color(1, 1, 0, 1))), new f.MeshCube(), 1, f.PHYSICS_TYPE.DYNAMIC, f.PHYSICS_GROUP.GROUP_1);
@@ -163,7 +173,10 @@ namespace FudgePhysics_Communication {
     bodies[3] = createCompleteMeshNode("PlayerControlledCube", new f.Material("Cube", f.ShaderFlat, new f.CoatColored(new f.Color(0, 0, 1, 1))), new f.MeshCube(), 1, f.PHYSICS_TYPE.KINEMATIC);
     moveableTransform = bodies[3].getComponent(f.ComponentTransform);
     hierarchy.appendChild(bodies[3]);
-    moveableTransform.local.translate(new f.Vector3(-4, 1, 0));
+    moveableTransform.local.translate(new f.Vector3(5, 6, 5));
+
+    //Ragdoll
+    createRagdoll();
 
     let cmpLight: f.ComponentLight = new f.ComponentLight(new f.LightDirectional(f.Color.CSS("WHITE")));
     cmpLight.pivot.lookAt(new f.Vector3(0.5, -1, -0.8));
@@ -208,15 +221,14 @@ namespace FudgePhysics_Communication {
     });
   }
 
-  function createCompleteMeshNode(_name: string, _material: f.Material, _mesh: f.Mesh, _mass: number, _physicsType: f.PHYSICS_TYPE, _group: f.PHYSICS_GROUP = f.PHYSICS_GROUP.DEFAULT): f.Node {
+  function createCompleteMeshNode(_name: string, _material: f.Material, _mesh: f.Mesh, _mass: number, _physicsType: f.PHYSICS_TYPE, _group: f.PHYSICS_GROUP = f.PHYSICS_GROUP.DEFAULT, _colType: f.COLLIDER_TYPE = f.COLLIDER_TYPE.CUBE): f.Node {
     let node: f.Node = new f.Node(_name);
     let cmpMesh: f.ComponentMesh = new f.ComponentMesh(_mesh);
     let cmpMaterial: f.ComponentMaterial = new f.ComponentMaterial(_material);
 
     let cmpTransform: f.ComponentTransform = new f.ComponentTransform();
 
-
-    let cmpRigidbody: f.ComponentRigidbody = new f.ComponentRigidbody(_mass, _physicsType, f.COLLIDER_TYPE.CUBE, _group);
+    let cmpRigidbody: f.ComponentRigidbody = new f.ComponentRigidbody(_mass, _physicsType, _colType, _group);
     cmpRigidbody.setRestitution(0.2);
     cmpRigidbody.setFriction(0.8);
     node.addComponent(cmpMesh);
@@ -239,9 +251,6 @@ namespace FudgePhysics_Communication {
     }
     if (_event.code == f.KEYBOARD_CODE.W) {
       vertical -= 1 * stepWidth;
-    }
-    if (_event.code == f.KEYBOARD_CODE.S) {
-      vertical += 1 * stepWidth;
     }
     if (_event.code == f.KEYBOARD_CODE.S) {
       vertical += 1 * stepWidth;
@@ -322,6 +331,135 @@ namespace FudgePhysics_Communication {
   }
 
   function hndPointerUp(_event: f.EventPointer) {
+  }
+
+  function createRagdoll(): void {
+    let pos: f.Vector3 = new f.Vector3(5, 4, 5);
+    let scale: f.Vector3 = new f.Vector3(0.4, 0.5, 0.4);
+    head = createCompleteMeshNode("HeadRD", new f.Material("Cube", f.ShaderFlat, new f.CoatColored(new f.Color(0.7, 1, 0.3, 1))), new f.MeshCube(), 1, f.PHYSICS_TYPE.DYNAMIC, f.PHYSICS_GROUP.GROUP_1, f.COLLIDER_TYPE.CUBE);
+    hierarchy.appendChild(head);
+    pos.add(new f.Vector3(0, 0.4, 0));
+    head.mtxLocal.translate(pos);
+    head.mtxLocal.scale(scale);
+
+    body1 = createCompleteMeshNode("body1", new f.Material("Cube", f.ShaderFlat, new f.CoatColored(new f.Color(0.7, 1, 0.3, 1))), new f.MeshCube(), 1, f.PHYSICS_TYPE.DYNAMIC, f.PHYSICS_GROUP.GROUP_1, f.COLLIDER_TYPE.CUBE);
+    hierarchy.appendChild(body1);
+    pos.add(new f.Vector3(0, -0.55, 0));
+    scale = new f.Vector3(0.6, 0.6, 0.4);
+    body1.mtxLocal.translate(pos);
+    body1.mtxLocal.scale(scale);
+
+    body2 = createCompleteMeshNode("body2", new f.Material("Cube", f.ShaderFlat, new f.CoatColored(new f.Color(0.7, 1, 0.3, 1))), new f.MeshCube(), 1, f.PHYSICS_TYPE.DYNAMIC, f.PHYSICS_GROUP.GROUP_1, f.COLLIDER_TYPE.CUBE);
+    hierarchy.appendChild(body2);
+    pos.add(new f.Vector3(0, -0.35, 0));
+    scale = new f.Vector3(0.4, 0.4, 0.35);
+    body2.mtxLocal.translate(pos);
+    body2.mtxLocal.scale(scale);
+
+    legL = createCompleteMeshNode("legL", new f.Material("Cube", f.ShaderFlat, new f.CoatColored(new f.Color(0.7, 1, 0.3, 1))), new f.MeshCube(), 1, f.PHYSICS_TYPE.DYNAMIC, f.PHYSICS_GROUP.GROUP_1, f.COLLIDER_TYPE.CUBE);
+    hierarchy.appendChild(legL);
+    pos.add(new f.Vector3(-0.25, -0.8, 0));
+    scale = new f.Vector3(0.3, 1, 0.3);
+    legL.mtxLocal.translate(pos);
+    legL.mtxLocal.scale(scale);
+
+    legR = createCompleteMeshNode("legR", new f.Material("Cube", f.ShaderFlat, new f.CoatColored(new f.Color(0.7, 1, 0.3, 1))), new f.MeshCube(), 1, f.PHYSICS_TYPE.DYNAMIC, f.PHYSICS_GROUP.GROUP_1, f.COLLIDER_TYPE.CUBE);
+    hierarchy.appendChild(legR);
+    pos.add(new f.Vector3(0.5, 0, 0));
+    scale = new f.Vector3(0.3, 1, 0.3);
+    legR.mtxLocal.translate(pos);
+    legR.mtxLocal.scale(scale);
+
+    armR = createCompleteMeshNode("armR", new f.Material("Cube", f.ShaderFlat, new f.CoatColored(new f.Color(0.7, 1, 0.3, 1))), new f.MeshCube(), 1, f.PHYSICS_TYPE.DYNAMIC, f.PHYSICS_GROUP.GROUP_1, f.COLLIDER_TYPE.CUBE);
+    hierarchy.appendChild(armR);
+    pos.add(new f.Vector3(0.45, 1.5, 0));
+    scale = new f.Vector3(1, 0.2, 0.2);
+    armR.mtxLocal.translate(pos);
+    armR.mtxLocal.scale(scale);
+
+    armL = createCompleteMeshNode("armL", new f.Material("Cube", f.ShaderFlat, new f.CoatColored(new f.Color(0.7, 1, 0.3, 1))), new f.MeshCube(), 1, f.PHYSICS_TYPE.DYNAMIC, f.PHYSICS_GROUP.GROUP_1, f.COLLIDER_TYPE.CUBE);
+    hierarchy.appendChild(armL);
+    pos.add(new f.Vector3(-1.45, 0, 0));
+    scale = new f.Vector3(1, 0.2, 0.2);
+    armL.mtxLocal.translate(pos);
+    armL.mtxLocal.scale(scale);
+
+    let x: f.Vector3 = new f.Vector3(1, 0, 0);
+    let y: f.Vector3 = new f.Vector3(0, 1, 0);
+    let z: f.Vector3 = new f.Vector3(0, 0, 1);
+
+    jointHeadBody = new f.ComponentJointRagdoll(head.getComponent(f.ComponentRigidbody), body1.getComponent(f.ComponentRigidbody), y, x, new f.Vector3(0, -0.2, 0));
+    jointHeadBody.springFrequencySwing = 10;
+    jointHeadBody.springDampingSwing = 1;
+    jointHeadBody.maxAngleFirstAxis = 90;
+    jointHeadBody.maxAngleSecondAxis = 70;
+    jointHeadBody.twistMotorLimitLower = -90;
+    jointHeadBody.twistMotorLimitUpper = 90;
+    jointHeadBody.springFrequencyTwist = 10;
+    jointHeadBody.springDampingTwist = 1;
+    head.addComponent(jointHeadBody);
+
+    jointUpperLowerBody = new f.ComponentJointRagdoll(body1.getComponent(f.ComponentRigidbody), body2.getComponent(f.ComponentRigidbody), y, x, new f.Vector3(0, -0.4, 0));
+    jointUpperLowerBody.springFrequencySwing = 10;
+    jointUpperLowerBody.springDampingSwing = 1;
+    jointUpperLowerBody.maxAngleFirstAxis = 90;
+    jointUpperLowerBody.maxAngleSecondAxis = 90;
+    jointUpperLowerBody.twistMotorLimitLower = -90;
+    jointUpperLowerBody.twistMotorLimitUpper = 90;
+    jointUpperLowerBody.springFrequencyTwist = 10;
+    jointUpperLowerBody.springDampingTwist = 1;
+    body1.addComponent(jointUpperLowerBody);
+
+    jointBodyArmL = new f.ComponentJointRagdoll(armL.getComponent(f.ComponentRigidbody), body1.getComponent(f.ComponentRigidbody), x, z, new f.Vector3(0.5, 0, 0));
+    jointBodyArmL.springFrequencySwing = 10;
+    jointBodyArmL.springDampingSwing = 1;
+    jointBodyArmL.maxAngleFirstAxis = 90;
+    jointBodyArmL.maxAngleSecondAxis = 90;
+    jointBodyArmL.twistMotorLimitLower = -90;
+    jointBodyArmL.twistMotorLimitUpper = 90;
+    jointBodyArmL.springFrequencyTwist = 10;
+    jointBodyArmL.springDampingTwist = 1;
+    armL.addComponent(jointBodyArmL);
+
+    x.x = -1;
+    jointBodyArmR = new f.ComponentJointRagdoll(armR.getComponent(f.ComponentRigidbody), body1.getComponent(f.ComponentRigidbody), x, z, new f.Vector3(-0.5, 0, 0));
+    jointBodyArmR.springFrequencySwing = 10;
+    jointBodyArmR.springDampingSwing = 1;
+    jointBodyArmR.maxAngleFirstAxis = 90;
+    jointBodyArmR.maxAngleSecondAxis = 90;
+    jointBodyArmR.twistMotorLimitLower = -90;
+    jointBodyArmR.twistMotorLimitUpper = 90;
+    jointBodyArmR.springFrequencyTwist = 10;
+    jointBodyArmR.springDampingTwist = 1;
+    armR.addComponent(jointBodyArmR);
+
+    jointBodyLegL = new f.ComponentJointRagdoll(legL.getComponent(f.ComponentRigidbody), body1.getComponent(f.ComponentRigidbody), y, x, new f.Vector3(0, 0.5, 0));
+    jointBodyLegL.springFrequencySwing = 10;
+    jointBodyLegL.springDampingSwing = 1;
+    jointBodyLegL.maxAngleFirstAxis = 90;
+    jointBodyLegL.maxAngleSecondAxis = 90;
+    jointBodyLegL.twistMotorLimitLower = -90;
+    jointBodyLegL.twistMotorLimitUpper = 90;
+    jointBodyLegL.springFrequencyTwist = 10;
+    jointBodyLegL.springDampingTwist = 1;
+    legL.addComponent(jointBodyLegL);
+
+    jointBodyLegR = new f.ComponentJointRagdoll(legR.getComponent(f.ComponentRigidbody), body1.getComponent(f.ComponentRigidbody), y, x, new f.Vector3(0, 0.5, 0));
+    jointBodyLegR.springFrequencySwing = 10;
+    jointBodyLegR.springDampingSwing = 1;
+    jointBodyLegR.maxAngleFirstAxis = 90;
+    jointBodyLegR.maxAngleSecondAxis = 90;
+    jointBodyLegR.twistMotorLimitLower = -90;
+    jointBodyLegR.twistMotorLimitUpper = 90;
+    jointBodyLegR.springFrequencyTwist = 10;
+    jointBodyLegR.springDampingTwist = 1;
+    legR.addComponent(jointBodyLegR);
+
+    holder = new f.ComponentJointSpherical(moveableTransform.getContainer().getComponent(f.ComponentRigidbody), head.getComponent(f.ComponentRigidbody), new f.Vector3(0, 0, 0));
+    moveableTransform.getContainer().addComponent(holder);
+    holder.springDamping = 0.1;
+    holder.springFrequency = 1;
+
   }
 
 }

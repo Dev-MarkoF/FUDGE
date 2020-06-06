@@ -8,6 +8,7 @@ namespace FudgeCore {
      */
   export class ComponentRigidbody extends Component {
     public static readonly iSubclass: number = Component.registerSubclass(ComponentRigidbody);
+    public pivot: Matrix4x4 = Matrix4x4.IDENTITY();
 
     get physicsType(): PHYSICS_TYPE {
       return this.rbType;
@@ -53,11 +54,6 @@ namespace FudgeCore {
       if (this.rigidbody != null)
         this.rigidbody.getShapeList().setCollisionGroup(this.colGroup);
     }
-
-
-    public localPivotPosition: Vector3 = Vector3.ZERO();
-    public localPivotRotation: Vector3 = Vector3.ZERO();
-    public localPivotScaling: Vector3 = Vector3.ONE();
 
     /**
    * Returns the physical weight of the [[Node]]
@@ -222,8 +218,13 @@ namespace FudgeCore {
     public updateFromWorld(): void {
       let worldTransform: Matrix4x4 = super.getContainer() != null ? super.getContainer().mtxWorld : Matrix4x4.IDENTITY();
       let position: Vector3 = worldTransform.translation;
+      position.add(this.pivot.translation);
       let rotation: Vector3 = worldTransform.getEulerAngles();
+      rotation.add(this.pivot.rotation);
       let scaling: Vector3 = worldTransform.scaling;
+      scaling.x *= this.pivot.scaling.x;
+      scaling.y *= this.pivot.scaling.y;
+      scaling.z *= this.pivot.scaling.z;
       this.createCollider(new OIMO.Vec3(scaling.x / 2, scaling.y / 2, scaling.z / 2), this.colliderType);
       this.collider = new OIMO.Shape(this.colliderInfo);
       let oldCollider: OIMO.Shape = this.rigidbody.getShapeList();
@@ -436,9 +437,9 @@ namespace FudgeCore {
       }
       let tmpTransform: Matrix4x4 = _transform == null ? super.getContainer() != null ? super.getContainer().mtxWorld : Matrix4x4.IDENTITY() : _transform;
 
-      let scale: OIMO.Vec3 = new OIMO.Vec3((tmpTransform.scaling.x * this.localPivotScaling.x) / 2, (tmpTransform.scaling.y * this.localPivotScaling.y) / 2, (tmpTransform.scaling.z * this.localPivotScaling.z) / 2);
-      let position: OIMO.Vec3 = new OIMO.Vec3(tmpTransform.translation.x + this.localPivotPosition.x, tmpTransform.translation.y + this.localPivotPosition.y, tmpTransform.translation.z + this.localPivotPosition.z);
-      let rotation: OIMO.Vec3 = new OIMO.Vec3(tmpTransform.rotation.x + this.localPivotRotation.x, tmpTransform.rotation.y + this.localPivotRotation.y, tmpTransform.rotation.z + this.localPivotRotation.z);
+      let scale: OIMO.Vec3 = new OIMO.Vec3((tmpTransform.scaling.x * this.pivot.scaling.x) / 2, (tmpTransform.scaling.y * this.pivot.scaling.y) / 2, (tmpTransform.scaling.z * this.pivot.scaling.z) / 2);
+      let position: OIMO.Vec3 = new OIMO.Vec3(tmpTransform.translation.x + this.pivot.translation.x, tmpTransform.translation.y + this.pivot.translation.y, tmpTransform.translation.z + this.pivot.translation.z);
+      let rotation: OIMO.Vec3 = new OIMO.Vec3(tmpTransform.rotation.x + this.pivot.rotation.x, tmpTransform.rotation.y + this.pivot.rotation.y, tmpTransform.rotation.z + this.pivot.rotation.z);
       this.createCollider(scale, _colliderType);
 
       this.massData.mass = _type != PHYSICS_TYPE.STATIC ? _mass : 0;
@@ -480,7 +481,7 @@ namespace FudgeCore {
         case COLLIDER_TYPE.CYLINDER:
           geometry = new OIMO.CylinderGeometry(_scale.x, _scale.y);
           break;
-        case COLLIDER_TYPE.CYLINDER:
+        case COLLIDER_TYPE.CONE:
           geometry = new OIMO.ConeGeometry(_scale.x, _scale.y);
           break;
       }

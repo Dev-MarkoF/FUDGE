@@ -3223,7 +3223,7 @@ declare namespace FudgeCore {
         private jointAxis;
         private jointInternalCollision;
         private oimoJoint;
-        constructor(_attachedRigidbody?: ComponentRigidbody, _connectedRigidbody?: ComponentRigidbody, _axis?: Vector3, _anchor?: Vector3);
+        constructor(_attachedRigidbody?: ComponentRigidbody, _connectedRigidbody?: ComponentRigidbody, _axis?: Vector3, _localAnchor?: Vector3);
         /**
          * Initializing and connecting the two rigidbodies with the configured joint properties
          * is automatically called by the physics system. No user interaction needed.
@@ -3326,7 +3326,7 @@ declare namespace FudgeCore {
         private jointAxis;
         private jointInternalCollision;
         private oimoJoint;
-        constructor(_attachedRigidbody?: ComponentRigidbody, _connectedRigidbody?: ComponentRigidbody, _axis?: Vector3, _anchor?: Vector3);
+        constructor(_attachedRigidbody?: ComponentRigidbody, _connectedRigidbody?: ComponentRigidbody, _axis?: Vector3, _localAnchor?: Vector3);
         /**
          * Initializing and connecting the two rigidbodies with the configured joint properties
          * is automatically called by the physics system. No user interaction needed.
@@ -3350,10 +3350,10 @@ declare namespace FudgeCore {
 }
 declare namespace FudgeCore {
     /**
-       * A physical connection between two bodies, designed to simulate behaviour within a real body. It has two axis, a swing and twist axis, similar to a universal joint,
-       * but more restrictive in it's angles. Two RigidBodies need to be defined to use it. For actual rotating a upper/lower limit need to be set otherwise it's just a holding connection.
-       * @authors Marko Fehrenbach, HFU, 2020
-       */
+        * A physical connection between two bodies, designed to simulate behaviour within a real body. It has two axis, a swing and twist axis, similar to a Ragdoll joint,
+        * but more restrictive in it's angles. Two RigidBodies need to be defined to use it. For actual rotating a upper/lower limit need to be set otherwise it's just a holding connection.
+        * @authors Marko Fehrenbach, HFU, 2020
+        */
     class ComponentJointRagdoll extends ComponentJoint {
         static readonly iSubclass: number;
         /**
@@ -3374,25 +3374,35 @@ declare namespace FudgeCore {
         get anchor(): Vector3;
         set anchor(_value: Vector3);
         /**
+         * The maximum angle of rotation along the first axis. Value needs to be positive. Changes do rebuild the joint
+         */
+        get maxAngleFirstAxis(): number;
+        set maxAngleFirstAxis(_value: number);
+        /**
+         * The maximum angle of rotation along the second axis. Value needs to be positive. Changes do rebuild the joint
+         */
+        get maxAngleSecondAxis(): number;
+        set maxAngleSecondAxis(_value: number);
+        /**
          * The damping of the spring. 1 equals completly damped.
          */
-        get springDampingFirstAxis(): number;
-        set springDampingFirstAxis(_value: number);
+        get springDampingTwist(): number;
+        set springDampingTwist(_value: number);
         /**
          * The frequency of the spring in Hz. At 0 the spring is rigid, equals no spring. The smaller the value the less restrictive is the spring.
         */
-        get springFrequencyFirstAxis(): number;
-        set springFrequencyFirstAxis(_value: number);
+        get springFrequencyTwist(): number;
+        set springFrequencyTwist(_value: number);
         /**
          * The damping of the spring. 1 equals completly damped.
          */
-        get springDampingSecondAxis(): number;
-        set springDampingSecondAxis(_value: number);
+        get springDampingSwing(): number;
+        set springDampingSwing(_value: number);
         /**
          * The frequency of the spring in Hz. At 0 the spring is rigid, equals no spring. The smaller the value the less restrictive is the spring.
         */
-        get springFrequencySecondAxis(): number;
-        set springFrequencySecondAxis(_value: number);
+        get springFrequencySwing(): number;
+        set springFrequencySwing(_value: number);
         /**
          * The amount of force needed to break the JOINT, in Newton. 0 equals unbreakable (default)
         */
@@ -3406,73 +3416,50 @@ declare namespace FudgeCore {
         /**
           * The Upper Limit of movement along the axis of this joint. The limiter is disable if lowerLimit > upperLimit. Axis-Angle measured in Degree.
          */
-        get motorLimitUpperFirstAxis(): number;
-        set motorLimitUpperFirstAxis(_value: number);
+        get twistMotorLimitUpper(): number;
+        set twistMotorLimitUpper(_value: number);
         /**
           * The Lower Limit of movement along the axis of this joint. The limiter is disable if lowerLimit > upperLimit. Axis Angle measured in Degree.
          */
-        get motorLimitLowerFirstAxis(): number;
-        set motorLimitLowerFirstAxis(_value: number);
+        get twistMotorLimitLower(): number;
+        set twistMotorLimitLower(_value: number);
         /**
           * The target rotational speed of the motor in m/s.
          */
-        get motorSpeedFirstAxis(): number;
-        set motorSpeedFirstAxis(_value: number);
+        get twistMotorSpeed(): number;
+        set twistMotorSpeed(_value: number);
         /**
           * The maximum motor torque in Newton. force <= 0 equals disabled.
          */
-        get motorTorqueFirstAxis(): number;
-        set motorTorqueFirstAxis(_value: number);
-        /**
-        * The Upper Limit of movement along the axis of this joint. The limiter is disable if lowerLimit > upperLimit. Axis-Angle measured in Degree.
-       */
-        get motorLimitUpperSecondAxis(): number;
-        set motorLimitUpperSecondAxis(_value: number);
-        /**
-          * The Lower Limit of movement along the axis of this joint. The limiter is disable if lowerLimit > upperLimit. Axis Angle measured in Degree.
-         */
-        get motorLimitLowerSecondAxis(): number;
-        set motorLimitLowerSecondAxis(_value: number);
-        /**
-          * The target rotational speed of the motor in m/s.
-         */
-        get motorSpeedSecondAxis(): number;
-        set motorSpeedSecondAxis(_value: number);
-        /**
-          * The maximum motor torque in Newton. force <= 0 equals disabled.
-         */
-        get motorTorqueSecondAxis(): number;
-        set motorTorqueSecondAxis(_value: number);
+        get twistMotorTorque(): number;
+        set twistMotorTorque(_value: number);
         /**
           * If the two connected RigidBodies collide with eath other. (Default = false)
          */
         get internalCollision(): boolean;
         set internalCollision(_value: boolean);
-        private jointFirstSpringDampingRatio;
-        private jointFirstSpringFrequency;
-        private jointSecondSpringDampingRatio;
-        private jointSecondSpringFrequency;
-        private jointFirstMotorLimitUpper;
-        private jointFirstMotorLimitLower;
-        private jointFirstMotorTorque;
-        private jointFirstMotorSpeed;
-        private jointSecondMotorLimitUpper;
-        private jointSecondMotorLimitLower;
-        private jointSecondMotorTorque;
-        private jointSecondMotorSpeed;
+        private jointTwistSpringDampingRatio;
+        private jointTwistSpringFrequency;
+        private jointSwingSpringDampingRatio;
+        private jointSwingSpringFrequency;
+        private jointTwistMotorLimitUpper;
+        private jointTwistMotorLimitLower;
+        private jointTwistMotorTorque;
+        private jointTwistMotorSpeed;
         private jointBreakForce;
         private jointBreakTorque;
         private config;
-        private firstAxisMotor;
-        private secondAxisMotor;
-        private firstAxisSpringDamper;
-        private secondAxisSpringDamper;
+        private jointTwistMotor;
+        private jointTwistSpringDamper;
+        private jointSwingSpringDamper;
         private jointAnchor;
         private jointFirstAxis;
         private jointSecondAxis;
         private jointInternalCollision;
+        private jointMaxAngle1;
+        private jointMaxAngle2;
         private oimoJoint;
-        constructor(_attachedRigidbody?: ComponentRigidbody, _connectedRigidbody?: ComponentRigidbody, _firstAxis?: Vector3, _secondAxis?: Vector3, _anchor?: Vector3);
+        constructor(_attachedRigidbody?: ComponentRigidbody, _connectedRigidbody?: ComponentRigidbody, _firstAxis?: Vector3, _secondAxis?: Vector3, _localAnchor?: Vector3);
         /**
          * Initializing and connecting the two rigidbodies with the configured joint properties
          * is automatically called by the physics system. No user interaction needed.
@@ -3574,7 +3561,7 @@ declare namespace FudgeCore {
         private jointAxis;
         private jointInternalCollision;
         private oimoJoint;
-        constructor(_attachedRigidbody?: ComponentRigidbody, _connectedRigidbody?: ComponentRigidbody, _axis?: Vector3, _anchor?: Vector3);
+        constructor(_attachedRigidbody?: ComponentRigidbody, _connectedRigidbody?: ComponentRigidbody, _axis?: Vector3, _localAnchor?: Vector3);
         /**
          * Initializing and connecting the two rigidbodies with the configured joint properties
          * is automatically called by the physics system. No user interaction needed.
@@ -3646,7 +3633,7 @@ declare namespace FudgeCore {
         private jointAnchor;
         private jointInternalCollision;
         private oimoJoint;
-        constructor(_attachedRigidbody?: ComponentRigidbody, _connectedRigidbody?: ComponentRigidbody, _anchor?: Vector3);
+        constructor(_attachedRigidbody?: ComponentRigidbody, _connectedRigidbody?: ComponentRigidbody, _localAnchor?: Vector3);
         /**
          * Initializing and connecting the two rigidbodies with the configured joint properties
          * is automatically called by the physics system. No user interaction needed.
@@ -3794,7 +3781,7 @@ declare namespace FudgeCore {
         private jointSecondAxis;
         private jointInternalCollision;
         private oimoJoint;
-        constructor(_attachedRigidbody?: ComponentRigidbody, _connectedRigidbody?: ComponentRigidbody, _firstAxis?: Vector3, _secondAxis?: Vector3, _anchor?: Vector3);
+        constructor(_attachedRigidbody?: ComponentRigidbody, _connectedRigidbody?: ComponentRigidbody, _firstAxis?: Vector3, _secondAxis?: Vector3, _localAnchor?: Vector3);
         /**
          * Initializing and connecting the two rigidbodies with the configured joint properties
          * is automatically called by the physics system. No user interaction needed.
@@ -3826,15 +3813,13 @@ declare namespace FudgeCore {
        */
     class ComponentRigidbody extends Component {
         static readonly iSubclass: number;
+        pivot: Matrix4x4;
         get physicsType(): PHYSICS_TYPE;
         set physicsType(_value: PHYSICS_TYPE);
         get colliderType(): COLLIDER_TYPE;
         set colliderType(_value: COLLIDER_TYPE);
         get collisionGroup(): PHYSICS_GROUP;
         set collisionGroup(_value: PHYSICS_GROUP);
-        localPivotPosition: Vector3;
-        localPivotRotation: Vector3;
-        localPivotScaling: Vector3;
         /**
        * Returns the physical weight of the [[Node]]
        */

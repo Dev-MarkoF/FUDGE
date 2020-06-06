@@ -94,9 +94,9 @@ namespace FudgeCore {
     private oimoJoint: OIMO.SphericalJoint;
 
 
-    constructor(_attachedRigidbody: ComponentRigidbody = null, _connectedRigidbody: ComponentRigidbody = null, _anchor: Vector3 = new Vector3(0, 0, 0)) {
+    constructor(_attachedRigidbody: ComponentRigidbody = null, _connectedRigidbody: ComponentRigidbody = null, _localAnchor: Vector3 = new Vector3(0, 0, 0)) {
       super(_attachedRigidbody, _connectedRigidbody);
-      this.jointAnchor = new OIMO.Vec3(_anchor.x, _anchor.y, _anchor.z);
+      this.jointAnchor = new OIMO.Vec3(_localAnchor.x, _localAnchor.y, _localAnchor.z);
 
       /*Tell the physics that there is a new joint? and on the physics start the actual joint is first created? Values can be set but the
         actual constraint ain't existent until the game starts?
@@ -140,7 +140,9 @@ namespace FudgeCore {
       this.springDamper = new OIMO.SpringDamper().setSpring(this.jointSpringFrequency, this.jointSpringDampingRatio);
 
       this.config = new OIMO.SphericalJointConfig();
-      this.config.init(this.attachedRB.getOimoRigidbody(), this.connectedRB.getOimoRigidbody(), this.jointAnchor);
+      let attachedRBPos: Vector3 = this.attachedRigidbody.getContainer().mtxWorld.translation;
+      let worldAnchor: OIMO.Vec3 = new OIMO.Vec3(attachedRBPos.x + this.jointAnchor.x, attachedRBPos.y + this.jointAnchor.y, attachedRBPos.z + this.jointAnchor.z);
+      this.config.init(this.attachedRB.getOimoRigidbody(), this.connectedRB.getOimoRigidbody(), worldAnchor);
       this.config.springDamper = this.springDamper;
 
       var j: OIMO.SphericalJoint = new OIMO.SphericalJoint(this.config);
