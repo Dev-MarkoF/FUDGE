@@ -29,7 +29,7 @@ namespace FudgePhysics_Communication {
     f.Physics.initializePhysics();
     hierarchy = new f.Node("Scene");
 
-    let ground: f.Node = createCompleteMeshNode("Ground", new f.Material("Ground", f.ShaderFlat, new f.CoatColored(new f.Color(0.2, 0.2, 0.2, 1))), new f.MeshCube(), 0, f.PHYSICS_TYPE.STATIC, f.PHYSICS_GROUP.GROUP_1);
+    let ground: f.Node = createCompleteMeshNode("GroundCollider", new f.Material("Ground", f.ShaderFlat, new f.CoatColored(new f.Color(0.2, 0.2, 0.2, 1))), new f.MeshCube(), 0, f.PHYSICS_TYPE.STATIC, f.PHYSICS_GROUP.GROUP_1);
     let cmpGroundMesh: f.ComponentTransform = ground.getComponent(f.ComponentTransform);
     cmpGroundMesh.local.scale(new f.Vector3(10, 0.3, 10));
 
@@ -49,9 +49,9 @@ namespace FudgePhysics_Communication {
     cubes[2] = createCompleteMeshNode("Cube", new f.Material("Cube", f.ShaderFlat, new f.CoatColored(new f.Color(1, 0, 0, 1))), new f.MeshCube(), 1, f.PHYSICS_TYPE.DYNAMIC);
     let cmpCubeTransform3: f.ComponentTransform = cubes[2].getComponent(f.ComponentTransform);
     hierarchy.appendChild(cubes[2]);
-    cmpCubeTransform3.local.translate(new f.Vector3(0.5, 7, 0.5));
+    cmpCubeTransform3.local.translate(new f.Vector3(0.6, 7, 0.5));
 
-    cubes[3] = createCompleteMeshNode("Cube_3", new f.Material("Cube", f.ShaderFlat, new f.CoatColored(new f.Color(0, 1, 0, 1))), new f.MeshCube(), 1, f.PHYSICS_TYPE.STATIC, f.PHYSICS_GROUP.TRIGGER);
+    cubes[3] = createCompleteMeshNode("Trigger", new f.Material("Cube", f.ShaderFlat, new f.CoatColored(new f.Color(0, 1, 0, 1))), new f.MeshCube(), 1, f.PHYSICS_TYPE.STATIC, f.PHYSICS_GROUP.TRIGGER);
     let cmpCubeTransform4: f.ComponentTransform = cubes[3].getComponent(f.ComponentTransform);
     hierarchy.appendChild(cubes[3]);
     cmpCubeTransform4.local.translate(new f.Vector3(0, 2.1, 0));
@@ -65,10 +65,11 @@ namespace FudgePhysics_Communication {
     cmpCamera.pivot.translate(new f.Vector3(2, 2, 10));
     cmpCamera.pivot.lookAt(f.Vector3.ZERO());
 
-    ground.getComponent(f.ComponentRigidbody).addEventListener(f.EVENT_PHYSICS.COLLISION_ENTER, onCollisionEnter as EventListener);
-    cubes[3].getComponent(f.ComponentRigidbody).addEventListener(f.EVENT_PHYSICS.TRIGGER_ENTER, onTriggerEnter as EventListener);
-    ground.getComponent(f.ComponentRigidbody).addEventListener(f.EVENT_PHYSICS.COLLISION_EXIT, onCollisionExit as EventListener);
-    cubes[3].getComponent(f.ComponentRigidbody).addEventListener(f.EVENT_PHYSICS.TRIGGER_EXIT, onTriggerExit as EventListener);
+    ground.getComponent(f.ComponentRigidbody).addEventListener(f.EVENT_PHYSICS.COLLISION_ENTER, onCollisionEnter);
+    cubes[3].getComponent(f.ComponentRigidbody).addEventListener(f.EVENT_PHYSICS.TRIGGER_ENTER, onTriggerEnter);
+    ground.getComponent(f.ComponentRigidbody).addEventListener(f.EVENT_PHYSICS.COLLISION_EXIT, onCollisionExit);
+    cubes[3].getComponent(f.ComponentRigidbody).addEventListener(f.EVENT_PHYSICS.TRIGGER_EXIT, onTriggerExit);
+
 
     viewPort = new f.Viewport();
     viewPort.initialize("Viewport", hierarchy, cmpCamera, app);
@@ -80,34 +81,37 @@ namespace FudgePhysics_Communication {
     f.Loop.start();
   }
 
-  function onCollisionEnter(_event: CustomEvent): void {
-    f.Debug.log("ColEnter: " + _event.detail.getContainer().name);
-    if (_event.detail.getContainer().name == "Cube") {
-      let cmpMaterial: f.ComponentMaterial = _event.detail.getContainer().getComponent(f.ComponentMaterial);
+  function onCollisionEnter(_event: f.EventPhysics): void {
+    f.Debug.log("ColEnter: " + _event.cmpRigidbody.getContainer().name);
+    f.Debug.log("ColEnterIMPULSE: " + _event.normalImpulse);
+    f.Debug.log("ColEnterPoint: " + _event.collisionPoint);
+    if (_event.cmpRigidbody.getContainer().name == "Cube") {
+      let cmpMaterial: f.ComponentMaterial = _event.cmpRigidbody.getContainer().getComponent(f.ComponentMaterial);
       cmpMaterial.material = hitMaterial;
     }
   }
 
-  function onCollisionExit(_event: CustomEvent): void {
-    f.Debug.log("ColExit: " + _event.detail.getContainer().name);
-    if (_event.detail.getContainer().name == "Cube") {
-      let cmpMaterial: f.ComponentMaterial = _event.detail.getContainer().getComponent(f.ComponentMaterial);
+  function onCollisionExit(_event: f.EventPhysics): void {
+    f.Debug.log("ColExit: " + _event.cmpRigidbody.getContainer().name);
+    if (_event.cmpRigidbody.getContainer().name == "Cube") {
+      let cmpMaterial: f.ComponentMaterial = _event.cmpRigidbody.getContainer().getComponent(f.ComponentMaterial);
       cmpMaterial.material = normalMaterial;
     }
   }
 
-  function onTriggerEnter(_event: CustomEvent): void {
-    f.Debug.log("TriggerEnter: " + _event.detail.getContainer().name);
-    if (_event.detail.getContainer().name == "Cube") {
-      let cmpMaterial: f.ComponentMaterial = _event.detail.getContainer().getComponent(f.ComponentMaterial);
+  function onTriggerEnter(_event: f.EventPhysics): void {
+    f.Debug.log("TriggerEnter: " + _event.cmpRigidbody.getContainer().name);
+    f.Debug.log("TriggerEnterPoint: " + _event.collisionPoint);
+    if (_event.cmpRigidbody.getContainer().name == "Cube") {
+      let cmpMaterial: f.ComponentMaterial = _event.cmpRigidbody.getContainer().getComponent(f.ComponentMaterial);
       cmpMaterial.material = triggeredMaterial;
     }
   }
 
-  function onTriggerExit(_event: CustomEvent): void {
-    f.Debug.log("TriggerExit: " + _event.detail.getContainer().name);
-    if (_event.detail.getContainer().name == "Cube") {
-      let cmpMaterial: f.ComponentMaterial = _event.detail.getContainer().getComponent(f.ComponentMaterial);
+  function onTriggerExit(_event: f.EventPhysics): void {
+    f.Debug.log("TriggerExit: " + _event.cmpRigidbody.getContainer().name);
+    if (_event.cmpRigidbody.getContainer().name == "Cube") {
+      let cmpMaterial: f.ComponentMaterial = _event.cmpRigidbody.getContainer().getComponent(f.ComponentMaterial);
       cmpMaterial.material = normalMaterial;
     }
   }

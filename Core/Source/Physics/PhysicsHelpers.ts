@@ -10,6 +10,32 @@ namespace FudgeCore {
     COLLISION_EXIT = "ColliderLeftCollision"
   }
 
+  export class EventPhysics extends Event {
+    /**
+     * ComponentRigidbody that collided with this ComponentRigidbody
+     */
+    public cmpRigidbody: ComponentRigidbody;
+    /**
+     * The normal impulse between the two colliding objects. Normal represents the default impulse.
+     * Impulse is only happening on COLLISION_ENTER, so there is no impulse on exit nor on triggers.
+     * Use the velocity of the cmpRigidbody to determine the intensity of the EVENT instead.
+     */
+    public normalImpulse: number;
+    public tangentImpulse: number;
+    public binomalImpulse: number;
+    /** The point where the collision/triggering initially happened. The collision point exists only on COLLISION_ENTER / TRIGGER_ENTER. */
+    public collisionPoint: Vector3;
+
+    constructor(_type: EVENT_PHYSICS, _hitRigidbody: ComponentRigidbody, _normalImpulse: number, _tangentImpulse: number, _binormalImpulse: number, _collisionPoint: Vector3 = null) {
+      super(_type);
+      this.cmpRigidbody = _hitRigidbody;
+      this.normalImpulse = _normalImpulse;
+      this.tangentImpulse = _tangentImpulse;
+      this.binomalImpulse = _binormalImpulse;
+      this.collisionPoint = _collisionPoint;
+    }
+  }
+
   /**
 * Groups to place a node in, not every group should collide with every group. Use a Mask in to exclude collisions
 */

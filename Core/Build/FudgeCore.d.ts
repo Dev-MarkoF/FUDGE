@@ -149,8 +149,8 @@ declare namespace FudgeCore {
         /** dispatched to [[FileIo]] when a list of files has been saved */
         FILE_SAVED = "fileSaved"
     }
-    type Eventƒ = EventPointer | EventDragDrop | EventWheel | EventKeyboard | Event;
-    type EventListenerƒ = ((_event: EventPointer) => void) | ((_event: EventDragDrop) => void) | ((_event: EventWheel) => void) | ((_event: EventKeyboard) => void) | ((_event: Eventƒ) => void) | EventListenerObject;
+    type Eventƒ = EventPointer | EventDragDrop | EventWheel | EventKeyboard | Event | EventPhysics;
+    type EventListenerƒ = ((_event: EventPointer) => void) | ((_event: EventDragDrop) => void) | ((_event: EventWheel) => void) | ((_event: EventKeyboard) => void) | ((_event: Eventƒ) => void) | ((_event: EventPhysics) => void) | EventListenerObject;
     class EventTargetƒ extends EventTarget {
         addEventListener(_type: string, _handler: EventListenerƒ, _options?: boolean | AddEventListenerOptions): void;
         removeEventListener(_type: string, _handler: EventListenerƒ, _options?: boolean | AddEventListenerOptions): void;
@@ -3956,6 +3956,10 @@ declare namespace FudgeCore {
         private addRigidbodyToWorld;
         private removeRigidbodyFromWorld;
         private collidesWith;
+        private getTriggerEnterPoint;
+        /**
+         * Events in case a body is in a trigger, so not only the body registers a triggerEvent but also the trigger itself.
+         */
         private checkBodiesInTrigger;
     }
 }
@@ -4046,6 +4050,23 @@ declare namespace FudgeCore {
         COLLISION_ENTER = "ColliderEnteredCollision",
         /** broadcast to a [[Node]] and all [[Nodes]] in the branch it's the root of */
         COLLISION_EXIT = "ColliderLeftCollision"
+    }
+    class EventPhysics extends Event {
+        /**
+         * ComponentRigidbody that collided with this ComponentRigidbody
+         */
+        cmpRigidbody: ComponentRigidbody;
+        /**
+         * The normal impulse between the two colliding objects. Normal represents the default impulse.
+         * Impulse is only happening on COLLISION_ENTER, so there is no impulse on exit nor on triggers.
+         * Use the velocity of the cmpRigidbody to determine the intensity of the EVENT instead.
+         */
+        normalImpulse: number;
+        tangentImpulse: number;
+        binomalImpulse: number;
+        /** The point where the collision/triggering initially happened. The collision point exists only on COLLISION_ENTER / TRIGGER_ENTER. */
+        collisionPoint: Vector3;
+        constructor(_type: EVENT_PHYSICS, _hitRigidbody: ComponentRigidbody, _normalImpulse: number, _tangentImpulse: number, _binormalImpulse: number, _collisionPoint?: Vector3);
     }
     /**
   * Groups to place a node in, not every group should collide with every group. Use a Mask in to exclude collisions

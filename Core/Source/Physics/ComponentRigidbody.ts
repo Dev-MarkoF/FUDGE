@@ -139,23 +139,49 @@ namespace FudgeCore {
       let list: OIMO.ContactLink = this.rigidbody.getContactLinkList();
       let objHit: ComponentRigidbody;
       let objHit2: ComponentRigidbody;
-      let event: Event;
+      let event: EventPhysics;
+      let normalImpulse: number = 0;
+      let binormalImpulse: number = 0;
+      let tangentImpulse: number = 0;
+      let colPoint: Vector3;
       //ADD
       for (let i: number = 0; i < this.rigidbody.getNumContectLinks(); i++) {
+        let collisionManifold: OIMO.Manifold = list.getContact().getManifold();
         objHit = list.getContact().getShape1().userData;
-        if (objHit == null)
+        //Only register the collision on the actual touch, not on "shadowCollide", to register in the moment of impulse calculation
+        if (objHit == null || list.getContact().isTouching() == false)
           return;
         objHit2 = list.getContact().getShape2().userData;
-        if (objHit2 == null)
+        if (objHit2 == null || list.getContact().isTouching() == false)
           return;
+        let points: OIMO.ManifoldPoint[] = collisionManifold.getPoints();
+        normalImpulse = 0;
+        binormalImpulse = 0;
+        tangentImpulse = 0;
         if (objHit.getOimoRigidbody() != this.getOimoRigidbody() && this.collisions.indexOf(objHit) == -1) {
+          let colPos: OIMO.Vec3 = points[0].getPosition2();
+          colPoint = new Vector3(colPos.x, colPos.y, colPos.z);
+          points.forEach((value: OIMO.ManifoldPoint): void => {
+            normalImpulse += value.getNormalImpulse();
+            binormalImpulse += value.getBinormalImpulse();
+            tangentImpulse += value.getTangentImpulse();
+          });
+
           this.collisions.push(objHit);
-          event = new CustomEvent(EVENT_PHYSICS.COLLISION_ENTER, { detail: objHit });
+          event = new EventPhysics(EVENT_PHYSICS.COLLISION_ENTER, objHit, normalImpulse, tangentImpulse, binormalImpulse, colPoint);
           this.dispatchEvent(event);
         }
         if (objHit2 != this && this.collisions.indexOf(objHit2) == -1) {
+          let colPos: OIMO.Vec3 = points[0].getPosition2();
+          colPoint = new Vector3(colPos.x, colPos.y, colPos.z);
+          points.forEach((value: OIMO.ManifoldPoint): void => {
+            normalImpulse += value.getNormalImpulse();
+            binormalImpulse += value.getBinormalImpulse();
+            tangentImpulse += value.getTangentImpulse();
+          });
+
           this.collisions.push(objHit2);
-          event = new CustomEvent(EVENT_PHYSICS.COLLISION_ENTER, { detail: objHit2 });
+          event = new EventPhysics(EVENT_PHYSICS.COLLISION_ENTER, objHit2, normalImpulse, tangentImpulse, binormalImpulse, colPoint);
           this.dispatchEvent(event);
         }
         list = list.getNext();
@@ -175,7 +201,7 @@ namespace FudgeCore {
         if (isColliding == false) {
           let index: number = this.collisions.indexOf(value);
           this.collisions.splice(index);
-          event = new CustomEvent(EVENT_PHYSICS.COLLISION_EXIT, { detail: value });
+          event = new EventPhysics(EVENT_PHYSICS.COLLISION_EXIT, value, 0, 0, 0);
           this.dispatchEvent(event);
         }
       });
@@ -187,13 +213,14 @@ namespace FudgeCore {
       */
     public checkTriggerEvents(): void {
       let possibleTriggers: ComponentRigidbody[] = Physics.world.getTriggerList();
-      let event: Event;
+      let event: EventPhysics;
       //ADD
       possibleTriggers.forEach((value: ComponentRigidbody) => {
         let overlapping: boolean = this.collidesWith(this.getOimoRigidbody(), value.getOimoRigidbody());
         if (overlapping && this.triggers.indexOf(value) == -1) {
           this.triggers.push(value);
-          event = new CustomEvent(EVENT_PHYSICS.TRIGGER_ENTER, { detail: value });
+          let enterPoint: Vector3 = this.getTriggerEnterPoint(this.getOimoRigidbody(), value.getOimoRigidbody());
+          event = new EventPhysics(EVENT_PHYSICS.TRIGGER_ENTER, value, 0, 0, 0, enterPoint);
           this.dispatchEvent(event);
         }
       });
@@ -203,7 +230,7 @@ namespace FudgeCore {
         if (isTriggering == false) {
           let index: number = this.collisions.indexOf(value);
           this.triggers.splice(index);
-          event = new CustomEvent(EVENT_PHYSICS.TRIGGER_EXIT, { detail: value });
+          event = new EventPhysics(EVENT_PHYSICS.TRIGGER_EXIT, value, 0, 0, 0);
           this.dispatchEvent(event);
         }
       });
@@ -502,19 +529,31 @@ namespace FudgeCore {
     private collidesWith(triggerRigidbody: OIMO.RigidBody, secondRigidbody: OIMO.RigidBody): boolean {
       let shape1: OIMO.Aabb = triggerRigidbody.getShapeList().getAabb();
       let shape2: OIMO.Aabb = secondRigidbody.getShapeList().getAabb();
+
       let colliding: boolean = shape1.overlap(shape2);
       return colliding;
     }
+    private getTriggerEnterPoint(triggerRigidbody: OIMO.RigidBody, secondRigidbody: OIMO.RigidBody): Vector3 {
+      let shape1: OIMO.Aabb = triggerRigidbody.getShapeList().getAabb();
+      let shape2: OIMO.Aabb = secondRigidbody.getShapeList().getAabb();
+      //Center of a intersection should be the origion of the collision
+      let intersect: OIMO.Vec3 = shape1.getIntersection(shape2).getCenter();
+      return new Vector3(intersect.x, intersect.y, intersect.z);
+    }
 
+    /**
+     * Events in case a body is in a trigger, so not only the body registers a triggerEvent but also the trigger itself.
+     */
     private checkBodiesInTrigger(): void {
       let possibleBodies: ComponentRigidbody[] = Physics.world.getBodyList();
-      let event: Event;
+      let event: EventPhysics;
       //ADD
       possibleBodies.forEach((value: ComponentRigidbody) => {
         let overlapping: boolean = this.collidesWith(this.getOimoRigidbody(), value.getOimoRigidbody());
         if (overlapping && this.bodiesInTrigger.indexOf(value) == -1) {
           this.bodiesInTrigger.push(value);
-          event = new CustomEvent(EVENT_PHYSICS.TRIGGER_ENTER, { detail: value });
+          let enterPoint: Vector3 = this.getTriggerEnterPoint(this.getOimoRigidbody(), value.getOimoRigidbody());
+          event = new EventPhysics(EVENT_PHYSICS.TRIGGER_ENTER, value, 0, 0, 0, enterPoint);
           this.dispatchEvent(event);
         }
       });
@@ -524,7 +563,7 @@ namespace FudgeCore {
         if (isTriggering == false) {
           let index: number = this.collisions.indexOf(value);
           this.bodiesInTrigger.splice(index);
-          event = new CustomEvent(EVENT_PHYSICS.TRIGGER_EXIT, { detail: value });
+          event = new EventPhysics(EVENT_PHYSICS.TRIGGER_ENTER, value, 0, 0, 0);
           this.dispatchEvent(event);
         }
       });

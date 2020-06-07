@@ -65,7 +65,7 @@ namespace FudgePhysics_Communication {
     hierarchy.appendChild(bodies[3]);
     bodies[3].mtxLocal.translate(new f.Vector3(0, -3, 0));
     bodies[3].mtxLocal.scale(new f.Vector3(40, 0.3, 40));
-    bodies[3].getComponent(f.ComponentRigidbody).addEventListener(f.EVENT_PHYSICS.TRIGGER_ENTER, resetBall as EventListener);
+    bodies[3].getComponent(f.ComponentRigidbody).addEventListener(f.EVENT_PHYSICS.TRIGGER_ENTER, resetBall);
 
     let cmpLight: f.ComponentLight = new f.ComponentLight(new f.LightDirectional(f.Color.CSS("WHITE")));
     cmpLight.pivot.lookAt(new f.Vector3(0.5, -1, -0.8));
@@ -93,8 +93,8 @@ namespace FudgePhysics_Communication {
   }
 
 
-  function resetBall(_event: CustomEvent): void {
-    if (_event.detail.getContainer().name == "Ball") {
+  function resetBall(_event: f.EventPhysics): void {
+    if (_event.cmpRigidbody.getContainer().name == "Ball") {
       ballRB.setPosition(new f.Vector3(0, 5, 0));
     }
   }
