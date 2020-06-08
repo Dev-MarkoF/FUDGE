@@ -3814,6 +3814,7 @@ declare namespace FudgeCore {
     class ComponentRigidbody extends Component {
         static readonly iSubclass: number;
         pivot: Matrix4x4;
+        convexMesh: Mesh;
         get physicsType(): PHYSICS_TYPE;
         set physicsType(_value: PHYSICS_TYPE);
         get colliderType(): COLLIDER_TYPE;
@@ -3953,6 +3954,8 @@ declare namespace FudgeCore {
         raycastThisBody(_origin: Vector3, _direction: Vector3, _length: number): RayHitInfo;
         private createRigidbody;
         private createCollider;
+        private createConvexGeometryCollider;
+        private createPyramidVertices;
         private addRigidbodyToWorld;
         private removeRigidbodyFromWorld;
         private collidesWith;
@@ -4091,14 +4094,19 @@ declare namespace FudgeCore {
     /**
     * Different types of collider shapes, with different options in scaling BOX = Vector3(length, height, depth),
     * SPHERE = Vector3(diameter, x, x), CAPSULE = Vector3(diameter, height, x), CYLINDER = Vector3(diameter, height, x),
-    * CONE = Vector(diameter, height, x); x == unused.
+    * CONE = Vector(diameter, height, x), PYRAMID = Vector3(length, height, depth); x == unused.
+    * CONVEX = ComponentMesh needs to be available in the RB Property convexMesh, the points of that component are used to create a collider that matches,
+    * the closest possible representation of that form, in form of a hull. Convex is experimental and can produce errors if vertices
+    * exist multiple times within a mesh.
     */
     enum COLLIDER_TYPE {
         CUBE = 0,
         SPHERE = 1,
         CAPSULE = 2,
         CYLINDER = 3,
-        CONE = 4
+        CONE = 4,
+        PYRAMID = 5,
+        CONVEX = 6
     }
     class RayHitInfo {
         hit: boolean;

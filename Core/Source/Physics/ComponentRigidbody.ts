@@ -10,6 +10,8 @@ namespace FudgeCore {
     public static readonly iSubclass: number = Component.registerSubclass(ComponentRigidbody);
     public pivot: Matrix4x4 = Matrix4x4.IDENTITY();
 
+    public convexMesh: Mesh;
+
     get physicsType(): PHYSICS_TYPE {
       return this.rbType;
     }
@@ -511,9 +513,33 @@ namespace FudgeCore {
         case COLLIDER_TYPE.CONE:
           geometry = new OIMO.ConeGeometry(_scale.x, _scale.y);
           break;
+        case COLLIDER_TYPE.PYRAMID:
+          geometry = this.createConvexGeometryCollider(this.createPyramidVertices(), _scale);
+          break;
+        case COLLIDER_TYPE.CONVEX:
+          geometry = this.createConvexGeometryCollider(this.convexMesh.vertices, _scale);
+          break;
       }
       shapeConf.geometry = geometry;
       this.colliderInfo = shapeConf;
+    }
+
+    private createConvexGeometryCollider(_vertices: Float32Array, _scale: OIMO.Vec3): OIMO.ConvexHullGeometry {
+      let verticesAsVec3: OIMO.Vec3[] = new Array();
+      let vertCount: number = 0;
+      for (let i: number = 0; i < _vertices.length; i += 3) {
+        verticesAsVec3.push(new OIMO.Vec3(_vertices[i] * _scale.x, _vertices[i + 1] * _scale.y, _vertices[i + 2] * _scale.z));
+        vertCount++;
+      }
+      return new OIMO.ConvexHullGeometry(verticesAsVec3);
+    }
+
+    private createPyramidVertices(): Float32Array {
+      let vertices: Float32Array = new Float32Array([
+        /*0*/-1, 0, 1, /*1*/ 1, 0, 1,  /*2*/ 1, 0, -1, /*3*/ -1, 0, -1,
+        /*4*/ 0, 2, 0
+      ]);
+      return vertices;
     }
 
     private addRigidbodyToWorld(): void {

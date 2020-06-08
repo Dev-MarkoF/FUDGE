@@ -61,15 +61,19 @@ namespace FudgeCore {
   /**
   * Different types of collider shapes, with different options in scaling BOX = Vector3(length, height, depth),
   * SPHERE = Vector3(diameter, x, x), CAPSULE = Vector3(diameter, height, x), CYLINDER = Vector3(diameter, height, x),
-  * CONE = Vector(diameter, height, x); x == unused.
+  * CONE = Vector(diameter, height, x), PYRAMID = Vector3(length, height, depth); x == unused.
+  * CONVEX = ComponentMesh needs to be available in the RB Property convexMesh, the points of that component are used to create a collider that matches,
+  * the closest possible representation of that form, in form of a hull. Convex is experimental and can produce errors if vertices
+  * exist multiple times within a mesh.
   */
   export enum COLLIDER_TYPE {
     CUBE,
     SPHERE,
     CAPSULE,
     CYLINDER,
-    CONE
-    //Note: Convex Hull could be added but that would need to have the vertices of a object and created differently. But Oimo supports it
+    CONE,
+    PYRAMID,
+    CONVEX
   }
 
   export class RayHitInfo {
