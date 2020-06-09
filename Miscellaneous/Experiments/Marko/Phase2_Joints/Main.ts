@@ -184,7 +184,7 @@ namespace FudgePhysics_Communication {
 
     cmpCamera = new f.ComponentCamera();
     cmpCamera.backgroundColor = f.Color.CSS("GREY");
-    cmpCamera.pivot.translate(new f.Vector3(2, 2, 17));
+    cmpCamera.pivot.translate(new f.Vector3(0, 2, 17));
     cmpCamera.pivot.lookAt(f.Vector3.ZERO());
 
 
@@ -298,36 +298,34 @@ namespace FudgePhysics_Communication {
 
   function hndPointerDown(_event: f.EventPointer): void {
     let mouse: f.Vector2 = new f.Vector2(_event.pointerX, _event.pointerY);
-
-
     let posProjection: f.Vector2 = viewPort.pointClientToProjection(mouse);
-    let rectProjection: f.Rectangle = cmpCamera.getProjectionRectangle();
 
-    let projection: f.Vector3 = cmpCamera.project(cmpCamera.pivot.translation);
-    let posClient: f.Vector2 = viewPort.pointClipToClient(projection.toVector2());
-    let posScreen: f.Vector2 = viewPort.pointClientToScreen(posClient);
+    let ray: f.Ray = new f.Ray(new f.Vector3(-posProjection.x, posProjection.y, 1));
+    console.group("original");
+    f.Debug.log("origin", ray.origin.toString());
+    f.Debug.log("direction", ray.direction.toString());
+    console.groupEnd();
 
-    f.Debug.log("posProj: " + posProjection);
-    f.Debug.log("camProj: " + projection);
-    f.Debug.log("posClient: " + posClient);
-    f.Debug.log("posScreen: " + posScreen);
-
+    ray.origin.transform(cmpCamera.pivot);
+    ray.direction.transform(cmpCamera.pivot, false);
+    //ray.direction.scale(10);
+    let rayEnd: f.Vector3 = f.Vector3.SUM(ray.origin, ray.direction);
+    console.group("transformed");
+    f.Debug.log("origin", ray.origin.toString());
+    f.Debug.log("direction", ray.direction.toString());
+    f.Debug.log("end", rayEnd.toString());
+    console.groupEnd();
 
     //Ray
-    let origin: f.Vector3 = new f.Vector3(rectProjection.x, rectProjection.y, 1);
-    let direction: f.Vector3 = new f.Vector3(-posProjection.x, posProjection.y, 1);
-    origin.transform(cmpCamera.pivot);
-    direction.transform(cmpCamera.pivot, false);
-
-    let hitInfo: f.RayHitInfo = f.Physics.raycast(origin, direction, 15);
+    let hitInfo: f.RayHitInfo = f.Physics.raycast(ray.origin, ray.direction, 20);
     if (hitInfo.hit)
       f.Debug.log(hitInfo.rigidbodyComponent.getContainer().name);
     else
       f.Debug.log("miss");
-    let pos: f.Vector3 = moveableTransform.local.translation;
-    pos = hitInfo.hitPoint;
-
+    let pos: f.Vector3 = hitInfo.hitPoint;
     moveableTransform.local.translation = pos;
+    f.Debug.log("OriginActualRay: ", hitInfo.rayOrigin.toString());
+    f.Debug.log("EndActualRay:", hitInfo.rayEnd.toString());
   }
 
   function hndPointerUp(_event: f.EventPointer) {

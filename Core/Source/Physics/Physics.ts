@@ -38,6 +38,7 @@ namespace FudgeCore {
       let ray: OIMO.RayCastClosest = new OIMO.RayCastClosest();
       let begin: OIMO.Vec3 = new OIMO.Vec3(_origin.x, _origin.y, _origin.y);
       let end: OIMO.Vec3 = this.getRayEndPoint(begin, new Vector3(_direction.x, _direction.y, _direction.z), _length);
+      Debug.log("EndCalc: " + end);
       ray.clear();
       if (_group == PHYSICS_GROUP.DEFAULT) { //Case 1: Raycasting the whole world, normal mode
         Physics.world.oimoWorld.rayCast(begin, end, ray);
@@ -63,6 +64,8 @@ namespace FudgeCore {
         hitInfo.hitNormal = new Vector3(ray.normal.x, ray.normal.y, ray.normal.z);
         hitInfo.hitDistance = this.getRayDistance(_origin, hitInfo.hitPoint);
         hitInfo.rigidbodyComponent = ray.shape.userData;
+        hitInfo.rayEnd = new Vector3(end.x, end.y, end.z);
+        hitInfo.rayOrigin = _origin;
       } else {
         hitInfo.hitPoint = new Vector3(end.x, end.y, end.z);
       }

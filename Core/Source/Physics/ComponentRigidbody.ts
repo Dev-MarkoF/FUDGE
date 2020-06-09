@@ -12,6 +12,9 @@ namespace FudgeCore {
 
     public convexMesh: Mesh;
 
+    /** The type of interaction between the physical world and the transform hierarchy world. DYNAMIC means the body ignores hierarchy and moves by physics. KINEMATIC it's
+     * reacting to a [[Node]] that is using physics but can be controlled by animation or transform. And STATIC means its immovable.
+     */
     get physicsType(): PHYSICS_TYPE {
       return this.rbType;
     }
@@ -32,20 +35,20 @@ namespace FudgeCore {
       this.rigidbody.setType(oimoType);
     }
 
+    /** The shape that represents the [[Node]] in the physical world. Default is a Cube. */
     get colliderType(): COLLIDER_TYPE {
       return this.colType;
     }
-
     set colliderType(_value: COLLIDER_TYPE) {
       if (_value != this.colType && this.rigidbody != null)
         this.updateFromWorld();
       this.colType = _value;
     }
 
+    /** The physics group this [[Node]] belongs to it's the default group normally which means it physically collides with every group besides trigger. */
     get collisionGroup(): PHYSICS_GROUP {
       return this.colGroup;
     }
-
     set collisionGroup(_value: PHYSICS_GROUP) {
       if (_value != PHYSICS_GROUP.TRIGGER && this.colGroup == PHYSICS_GROUP.TRIGGER)
         Physics.world.unregisterTrigger(this);
@@ -55,6 +58,15 @@ namespace FudgeCore {
       this.colGroup = _value;
       if (this.rigidbody != null)
         this.rigidbody.getShapeList().setCollisionGroup(this.colGroup);
+    }
+
+    /** The groups this object collides with. Groups must be writen in form of
+     *  e.g. collisionMask = PHYSICS_GROUP.DEFAULT | PHYSICS_GROUP.GROUP_1 and so on to collide with multiple groups. */
+    get collisionMask(): number {
+      return this.colMask;
+    }
+    set collisionMask(_value: number) {
+      this.colMask = _value;
     }
 
     /**
@@ -108,6 +120,7 @@ namespace FudgeCore {
     private rbType: PHYSICS_TYPE = PHYSICS_TYPE.DYNAMIC;
     private colType: COLLIDER_TYPE = COLLIDER_TYPE.CUBE;
     private colGroup: PHYSICS_GROUP = PHYSICS_GROUP.DEFAULT;
+    private colMask: number = PHYSICS_GROUP.DEFAULT | PHYSICS_GROUP.GROUP_1 | PHYSICS_GROUP.GROUP_2 | PHYSICS_GROUP.GROUP_3 | PHYSICS_GROUP.GROUP_4;
     private restitution: number = 0.2;
     private friction: number = 0.5;
     private linDamping: number = 0.1;
@@ -264,7 +277,7 @@ namespace FudgeCore {
       if (this.collisionGroup == PHYSICS_GROUP.TRIGGER)
         this.collider.setCollisionMask(PHYSICS_GROUP.TRIGGER);
       else
-        this.collider.setCollisionMask(PHYSICS_GROUP.DEFAULT | PHYSICS_GROUP.GROUP_1 | PHYSICS_GROUP.GROUP_2 | PHYSICS_GROUP.GROUP_3 | PHYSICS_GROUP.GROUP_4);
+        this.collider.setCollisionMask(this.colMask);
       if (this.rigidbody.getShapeList() != null) {
         this.rigidbody.getShapeList().setRestitution(this.restitution);
         this.rigidbody.getShapeList().setFriction(this.friction);
@@ -447,6 +460,8 @@ namespace FudgeCore {
         let dz: number = _origin.z - hitInfo.hitPoint.z;
         hitInfo.hitDistance = Math.sqrt(dx * dx + dy * dy + dz * dz);
         hitInfo.rigidbodyComponent = this;
+        hitInfo.rayOrigin = _origin;
+        hitInfo.rayEnd = endpoint;
       }
       return hitInfo;
     }
@@ -482,7 +497,7 @@ namespace FudgeCore {
       if (_collisionGroup == PHYSICS_GROUP.TRIGGER)
         this.collider.setCollisionMask(PHYSICS_GROUP.TRIGGER);
       else
-        this.collider.setCollisionMask(PHYSICS_GROUP.DEFAULT | PHYSICS_GROUP.GROUP_1 | PHYSICS_GROUP.GROUP_2 | PHYSICS_GROUP.GROUP_3 | PHYSICS_GROUP.GROUP_4);
+        this.collider.setCollisionMask(this.colMask);
       this.rigidbody.addShape(this.collider);
       this.rigidbody.setMassData(this.massData);
       this.rigidbody.getShapeList().setRestitution(this.restitution);
@@ -526,10 +541,8 @@ namespace FudgeCore {
 
     private createConvexGeometryCollider(_vertices: Float32Array, _scale: OIMO.Vec3): OIMO.ConvexHullGeometry {
       let verticesAsVec3: OIMO.Vec3[] = new Array();
-      let vertCount: number = 0;
       for (let i: number = 0; i < _vertices.length; i += 3) {
         verticesAsVec3.push(new OIMO.Vec3(_vertices[i] * _scale.x, _vertices[i + 1] * _scale.y, _vertices[i + 2] * _scale.z));
-        vertCount++;
       }
       return new OIMO.ConvexHullGeometry(verticesAsVec3);
     }

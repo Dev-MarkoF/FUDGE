@@ -3815,12 +3815,21 @@ declare namespace FudgeCore {
         static readonly iSubclass: number;
         pivot: Matrix4x4;
         convexMesh: Mesh;
+        /** The type of interaction between the physical world and the transform hierarchy world. DYNAMIC means the body ignores hierarchy and moves by physics. KINEMATIC it's
+         * reacting to a [[Node]] that is using physics but can be controlled by animation or transform. And STATIC means its immovable.
+         */
         get physicsType(): PHYSICS_TYPE;
         set physicsType(_value: PHYSICS_TYPE);
+        /** The shape that represents the [[Node]] in the physical world. Default is a Cube. */
         get colliderType(): COLLIDER_TYPE;
         set colliderType(_value: COLLIDER_TYPE);
+        /** The physics group this [[Node]] belongs to it's the default group normally which means it physically collides with every group besides trigger. */
         get collisionGroup(): PHYSICS_GROUP;
         set collisionGroup(_value: PHYSICS_GROUP);
+        /** The groups this object collides with. Groups must be writen in form of
+         *  e.g. collisionMask = PHYSICS_GROUP.DEFAULT | PHYSICS_GROUP.GROUP_1 and so on to collide with multiple groups. */
+        get collisionMask(): number;
+        set collisionMask(_value: number);
         /**
        * Returns the physical weight of the [[Node]]
        */
@@ -3846,6 +3855,7 @@ declare namespace FudgeCore {
         private rbType;
         private colType;
         private colGroup;
+        private colMask;
         private restitution;
         private friction;
         private linDamping;
@@ -4114,6 +4124,8 @@ declare namespace FudgeCore {
         hitPoint: Vector3;
         rigidbodyComponent: ComponentRigidbody;
         hitNormal: Vector3;
+        rayOrigin: Vector3;
+        rayEnd: Vector3;
         constructor();
     }
 }

@@ -82,6 +82,8 @@ namespace FudgeCore {
     public hitPoint: Vector3;
     public rigidbodyComponent: ComponentRigidbody;
     public hitNormal: Vector3;
+    public rayOrigin: Vector3 = Vector3.ZERO();
+    public rayEnd: Vector3 = Vector3.ZERO();
 
     constructor() {
       this.hit = false;
