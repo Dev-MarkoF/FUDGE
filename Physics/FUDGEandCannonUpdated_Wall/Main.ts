@@ -1,5 +1,5 @@
 ///<reference types="../../Core/Build/FudgeCore.js"/>
-///<reference types="../Physics_Library/cannon.min.js"/>
+///<reference types="../Physics_Library/cannon-es.d.ts"/>
 
 namespace FudgePhysics_Communication {
   import f = FudgeCore;
@@ -34,8 +34,6 @@ namespace FudgePhysics_Communication {
     //CANNON Physics Ground/Settings
     world.gravity = new CANNON.Vec3(0, -9.81, 0);
     world.allowSleep = true;
-    world.quatNormalizeFast = false;
-    world.quatNormalizeSkip = 0;
     world.solver.iterations = 10;
     initializePhysicsBody(ground.getComponent(f.ComponentTransform), 0, 0);
 
@@ -80,8 +78,7 @@ namespace FudgePhysics_Communication {
   function update(): void {
     if (starttimer <= 0) {
       //Physics CANNON
-      // world.step(f.Loop.timeFrameGame / 1000);
-      world.step(1 / 60);
+      world.step(f.Loop.timeFrameGame / 1000);
       for (let i: number = 1; i < bodies.length; i++) {
         applyPhysicsBody(cubes[i - 1].getComponent(f.ComponentTransform), i);
       }
@@ -127,8 +124,8 @@ namespace FudgePhysics_Communication {
     rotation.setFromEuler(node.mtxWorld.rotation.x, node.mtxWorld.rotation.y, node.mtxWorld.rotation.z);
 
     let mat: CANNON.Material = new CANNON.Material();
-    //mat.friction = 1;
-    //mat.restitution = 0;
+    mat.friction = 1;
+    mat.restitution = 0;
 
     bodies[no] = new CANNON.Body({
       mass: massVal, // kg
@@ -139,7 +136,7 @@ namespace FudgePhysics_Communication {
       allowSleep: true,
       sleepSpeedLimit: 0.25, // Body will feel sleepy if speed<1 (speed == norm of velocity)
       sleepTimeLimit: 1, // Body falls asleep after 1s of sleepiness
-      //linearDamping: 0.3
+      linearDamping: 0.3
     });
     world.addBody(bodies[no]);
   }
@@ -150,13 +147,40 @@ namespace FudgePhysics_Communication {
     let tmpPosition: f.Vector3 = new f.Vector3(bodies[no].position.x, bodies[no].position.y, bodies[no].position.z);
 
     let mutator: f.Mutator = {};
-    let quat: f.Quaternion = new f.Quaternion(bodies[no].quaternion.x, bodies[no].quaternion.y, bodies[no].quaternion.z, bodies[no].quaternion.w);
-    let tmpRotation: f.Vector3 = quat.toDegrees();
+    let tmpRotation: f.Vector3 = makeRotationFromQuaternion(bodies[no].quaternion);
 
     mutator["rotation"] = tmpRotation;
     mutator["translation"] = tmpPosition;
     node.mtxLocal.mutate(mutator);
 
+  }
+
+
+  function makeRotationFromQuaternion(q: any): f.Vector3 {
+    let angles: f.Vector3 = new f.Vector3();
+
+    // roll (x-axis rotation)
+    let sinr_cosp: number = 2 * (q.w * q.x + q.y * q.z);
+    let cosr_cosp: number = 1 - 2 * (q.x * q.x + q.y * q.y);
+    angles.x = Math.atan2(sinr_cosp, cosr_cosp) * 60; //f.Loop.getFpsRealAverage(); //*Framerate?
+
+    // pitch (y-axis rotation)
+    let sinp: number = 2 * (q.w * q.y - q.z * q.x);
+    if (Math.abs(sinp) >= 1)
+      angles.y = copysign(Math.PI / 2, sinp) * 60; //f.Loop.getFpsRealAverage(); // use 90 degrees if out of range
+    else
+      angles.y = Math.asin(sinp) * 60; //f.Loop.getFpsRealAverage();
+
+    // yaw (z-axis rotation)
+    let siny_cosp: number = 2 * (q.w * q.z + q.x * q.y);
+    let cosy_cosp: number = 1 - 2 * (q.y * q.y + q.z * q.z);
+    angles.z = Math.atan2(siny_cosp, cosy_cosp) * 60; //f.Loop.getFpsRealAverage();
+    //f.Debug.log(angles);
+    return angles;
+  }
+
+  function copysign(a: number, b: number): number {
+    return b < 0 ? -Math.abs(a) : Math.abs(a);
   }
 
 }

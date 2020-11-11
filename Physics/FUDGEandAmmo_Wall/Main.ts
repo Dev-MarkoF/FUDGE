@@ -86,7 +86,8 @@ namespace FudgePhysics_Communication {
   function update(): void {
 
     //Physics Ammo
-    world.stepSimulation(f.Loop.timeFrameGame / 1000);
+    //world.stepSimulation(f.Loop.timeFrameGame / 1000);
+    world.stepSimulation(1 / 60);
     for (let i: number = 1; i < bodies.length; i++) { //Alle außer dem Grund
       applyPhysicsBody(cubes[i - 1].getComponent(f.ComponentTransform), i);
     }

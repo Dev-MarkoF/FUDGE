@@ -73,7 +73,8 @@ namespace FudgePhysics_Communication {
   function update(): void {
     if (starttimer <= 0) {
       //Physics OIMO
-      world.step(f.Loop.timeFrameGame / 1000);
+      //world.step(f.Loop.timeFrameGame / 1000);
+      world.step(1 / 60)
       for (let i: number = 1; i < bodies.length; i++) { //Alle außer dem Grund
         applyPhysicsBody(cubes[i - 1].getComponent(f.ComponentTransform), i);
       }
