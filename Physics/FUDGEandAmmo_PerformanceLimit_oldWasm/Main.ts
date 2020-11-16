@@ -1,10 +1,9 @@
 ///<reference types="../../Core/Build/FudgeCore.js"/>
+///<reference types="../Physics_Library/Ammo/ammo.d.ts"/>
 
+namespace FudgePhysics_Communication {
+  import f = FudgeCore;
 
-import Ammo from "../physics_library/ammo";
-import f = FudgeCore;
-
-namespace Fudge_PysicsCommunication {
 
   const app: HTMLCanvasElement = document.querySelector("canvas");
   let viewPort: f.Viewport;
@@ -13,76 +12,42 @@ namespace Fudge_PysicsCommunication {
   const times: number[] = [];
   let cubes: f.Node[] = new Array();
   let fpsDisplay: HTMLElement = document.querySelector("h2#FPS");
-
-  //Physics Variables -> Can't be initialized until Ammo is loaded
-  let world: Ammo.btDiscreteDynamicsWorld;
   let bodies = new Array();
+
+  let ground: f.Node;
+  let cubeNo: number = 0;
+  let time: number = 0;
+
+  let world: Ammo.btDiscreteDynamicsWorld;
   let transform: Ammo.btTransform;
 
+  Ammo().then(initializeAmmo);
 
-  //Raycast Variables
-  let tempVRayOrigin: Ammo.btVector3;
-  let tempVRayDest: Ammo.btVector3;
-  let closestRayResultCallback: Ammo.ClosestRayResultCallback;
-
-  //Materials
-  let matHit: f.Material = new f.Material("Ground", f.ShaderFlat, new f.CoatColored(new f.Color(0, 1, 0, 1)));
-  let matHitOther: f.Material = new f.Material("Ground", f.ShaderFlat, new f.CoatColored(new f.Color(0, 1, 0.7, 1)));
-  let matNormal: f.Material = new f.Material("Ground", f.ShaderFlat, new f.CoatColored(new f.Color(1, 0, 0, 1)));
-
-  console.log("ran");
-  initPhysics();
-
-
-  let collisionConfiguration,
-    dispatcher,
-    overlappingPairCache,
-    solver;
-
-
-  function initPhysics(): void {
-
-    transform = new Ammo.btTransform();
-    tempVRayOrigin = new Ammo.btVector3(-5, 1.2, 0);
-    tempVRayDest = new Ammo.btVector3(5, 1.2, 0);
-    closestRayResultCallback = new Ammo.ClosestRayResultCallback(tempVRayOrigin, tempVRayDest);
-
-    collisionConfiguration = new Ammo.btDefaultCollisionConfiguration();
-    dispatcher = new Ammo.btCollisionDispatcher(collisionConfiguration);
-    overlappingPairCache = new Ammo.btDbvtBroadphase();
-    solver = new Ammo.btSequentialImpulseConstraintSolver();
+  function initializeAmmo(): void {
+    let collisionConfiguration = new Ammo.btDefaultCollisionConfiguration(),
+      dispatcher = new Ammo.btCollisionDispatcher(collisionConfiguration),
+      overlappingPairCache = new Ammo.btDbvtBroadphase(),
+      solver = new Ammo.btSequentialImpulseConstraintSolver();
 
     world = new Ammo.btDiscreteDynamicsWorld(dispatcher, overlappingPairCache, solver, collisionConfiguration);
     world.setGravity(new Ammo.btVector3(0, -10, 0));
-
+    transform = new Ammo.btTransform();
     init();
-
-
   }
-
-
 
   function init(): void {
     f.Debug.log(app);
     f.RenderManager.initialize();
     hierarchy = new f.Node("Scene");
 
-    let ground: f.Node = createCompleteMeshNode("Ground", new f.Material("Ground", f.ShaderFlat, new f.CoatColored(new f.Color(0.2, 0.2, 0.2, 1))), new f.MeshCube());
+    ground = createCompleteMeshNode("Ground", new f.Material("Ground", f.ShaderFlat, new f.CoatColored(new f.Color(0.2, 0.2, 0.2, 1))), new f.MeshCube());
     let cmpGroundMesh: f.ComponentTransform = ground.getComponent(f.ComponentTransform);
 
-    cmpGroundMesh.local.scale(new f.Vector3(20, 0.3, 20));
+    cmpGroundMesh.local.scale(new f.Vector3(50, 0.3, 50));
     hierarchy.appendChild(ground);
+    initializePhysicsBody(ground.getComponent(f.ComponentTransform), 0, 0);
 
-    cubes[0] = createCompleteMeshNode("Cube_1", new f.Material("Cube", f.ShaderFlat, new f.CoatColored(new f.Color(1, 0, 0, 1))), new f.MeshCube());
-    let cmpCubeTransform: f.ComponentTransform = cubes[0].getComponent(f.ComponentTransform);
-    cmpCubeTransform.local.translate(new f.Vector3(0, 2, 0));
-    cubes[0].mtxWorld.rotateX(45);
-    hierarchy.appendChild(cubes[0]);
-
-    cubes[1] = createCompleteMeshNode("Cube_2", new f.Material("Cube", f.ShaderFlat, new f.CoatColored(new f.Color(1, 0, 0, 1))), new f.MeshCube());
-    let cmpCubeTransform2: f.ComponentTransform = cubes[1].getComponent(f.ComponentTransform);
-    cmpCubeTransform2.local.translate(new f.Vector3(0, 6.5, 0.4));
-    hierarchy.appendChild(cubes[1]);
+    createRandomObject();
 
     let cmpLight: f.ComponentLight = new f.ComponentLight(new f.LightDirectional(f.Color.CSS("WHITE")));
     cmpLight.pivot.lookAt(new f.Vector3(0.5, -1, -0.8));
@@ -90,14 +55,12 @@ namespace Fudge_PysicsCommunication {
 
     let cmpCamera: f.ComponentCamera = new f.ComponentCamera();
     cmpCamera.backgroundColor = f.Color.CSS("GREY");
-    cmpCamera.pivot.translate(new f.Vector3(2, 2, 10));
+    cmpCamera.pivot.translate(new f.Vector3(2, 5, 25));
     cmpCamera.pivot.lookAt(f.Vector3.ZERO());
 
     //Physics Ammo
     world.setGravity(new Ammo.btVector3(0, -10, 0));
-    initializePhysicsBody(ground.getComponent(f.ComponentTransform), 0, 0);
-    initializePhysicsBody(cmpCubeTransform, 1, 1);
-    initializePhysicsBody(cmpCubeTransform2, 1, 2);
+
     //EndPhysics
 
     viewPort = new f.Viewport();
@@ -114,10 +77,13 @@ namespace Fudge_PysicsCommunication {
 
     //Physics Ammo
     world.stepSimulation(f.Loop.timeFrameGame / 1000);
-    applyPhysicsBody(cubes[0].getComponent(f.ComponentTransform), 1);
-    applyPhysicsBody(cubes[1].getComponent(f.ComponentTransform), 2);
+    applyPhysicsBody(ground.getComponent(f.ComponentTransform), 0);
+    for (let i: number = 1; i < bodies.length; i++) { //Alle außer dem Grund
+      applyPhysicsBody(cubes[i - 1].getComponent(f.ComponentTransform), i);
+    }
     //EndPhysics
-    raycast();
+    time += f.Loop.timeFrameReal / 1000;
+
     viewPort.draw();
     measureFPS();
   }
@@ -130,32 +96,8 @@ namespace Fudge_PysicsCommunication {
       }
       times.push(now);
       fps = times.length;
-      fpsDisplay.textContent = "FPS: " + fps.toString();
+      fpsDisplay.textContent = "FPS: " + fps.toString() + " / Rigidbodies: " + bodies.length + " / Time: " + time.toFixed(2);
     });
-  }
-
-  function raycast() {
-    // Reset closestRayResultCallback to reuse it
-    let rayCallBack = Ammo.castObject(closestRayResultCallback, Ammo.RayResultCallback);
-    rayCallBack.set_m_closestHitFraction(1);
-    rayCallBack.set_m_collisionObject(null);
-
-    // Perform ray test
-    world.rayTest(tempVRayOrigin, tempVRayDest, closestRayResultCallback);
-
-    if (closestRayResultCallback.hasHit()) {
-      let callbackBody = Ammo.castObject(closestRayResultCallback.get_m_collisionObject(), Ammo.btRigidBody);
-      if (callbackBody == bodies[1]) {
-        cubes[0].getComponent(f.ComponentMaterial).material = matHit;
-      } else if (callbackBody == bodies[2]) {
-        cubes[1].getComponent(f.ComponentMaterial).material = matHitOther;
-      }
-    }
-    else {
-      cubes[0].getComponent(f.ComponentMaterial).material = matNormal;
-      cubes[1].getComponent(f.ComponentMaterial).material = matNormal;
-    }
-
   }
 
   function createCompleteMeshNode(_name: string, _material: f.Material, _mesh: f.Mesh): f.Node {
@@ -164,7 +106,6 @@ namespace Fudge_PysicsCommunication {
     let cmpMaterial: f.ComponentMaterial = new f.ComponentMaterial(_material);
 
     let cmpTransform: f.ComponentTransform = new f.ComponentTransform();
-
     node.addComponent(cmpMesh);
     node.addComponent(cmpMaterial);
     node.addComponent(cmpTransform);
@@ -172,7 +113,21 @@ namespace Fudge_PysicsCommunication {
     return node;
   }
 
-  function initializePhysicsBody(_cmpTransform: f.ComponentTransform, massVal: number, no: number) {
+
+  function createRandomObject(): void {
+    let type: number = f.random.getRangeFloored(0, 2);
+    let mesh: f.Mesh = type == 0 ? new f.MeshCube() : new f.MeshSphere();
+    cubes[cubeNo] = createCompleteMeshNode("Cube_" + cubeNo.toString(), new f.Material("Cube", f.ShaderFlat, new f.CoatColored(new f.Color(1, 0, 0, 1))), mesh);
+    let cmpCubeTransform: f.ComponentTransform = cubes[cubeNo].getComponent(f.ComponentTransform);
+    cmpCubeTransform.local.translate(new f.Vector3(0, 10, 0));
+    hierarchy.appendChild(cubes[cubeNo]);
+    initializePhysicsBody(cmpCubeTransform, 1, 1 + cubeNo, type);
+    cubeNo++;
+
+    setTimeout(createRandomObject, 100);
+  }
+
+  function initializePhysicsBody(_cmpTransform: f.ComponentTransform, massVal: number, no: number, type: number = 0) {
     let node: f.Node = _cmpTransform.getContainer();
     let scale: Ammo.btVector3 = new Ammo.btVector3(_cmpTransform.local.scaling.x / 2, _cmpTransform.local.scaling.y / 2, _cmpTransform.local.scaling.z / 2);
     let pos: Ammo.btVector3 = new Ammo.btVector3(_cmpTransform.local.translation.x, _cmpTransform.local.translation.y, _cmpTransform.local.translation.z);
@@ -182,18 +137,24 @@ namespace Fudge_PysicsCommunication {
     transform.setIdentity();
     transform.setOrigin(pos);
     transform.setRotation(rotation);
-    let shape: Ammo.btBoxShape = new Ammo.btBoxShape(scale);
+    let shape: Ammo.Shape;
+    if (type == 0)
+      shape = new Ammo.btBoxShape(scale);
+    else
+      shape = new Ammo.btSphereShape(0.5);
+
+
     shape.setMargin(0.05);
     let mass: number = massVal;
     let localInertia: Ammo.btVector3 = new Ammo.btVector3(0, 0, 0);
     shape.calculateLocalInertia(mass, localInertia);
     let myMotionState: Ammo.btDefaultMotionState = new Ammo.btDefaultMotionState(transform);
     let rbInfo: Ammo.btRigidBodyConstructionInfo = new Ammo.btRigidBodyConstructionInfo(mass, myMotionState, shape, localInertia);
-    rbInfo.m_restitution = 0.5;
     let body: Ammo.btRigidBody = new Ammo.btRigidBody(rbInfo);
     bodies[no] = body;
     world.addRigidBody(body);
   }
+
 
   function applyPhysicsBody(_cmpTransform: f.ComponentTransform, no: number): void {
     let node: f.Node = _cmpTransform.getContainer();
@@ -205,11 +166,11 @@ namespace Fudge_PysicsCommunication {
     let origin = transform.getOrigin();
     let tmpPosition: f.Vector3 = new f.Vector3(origin.x(), origin.y(), origin.z());
     let rotation = transform.getRotation();
-
     let rotQuat: f.Quaternion = new f.Quaternion(rotation.x(), rotation.y(), rotation.z(), rotation.w());
 
     let mutator: f.Mutator = {};
     let tmpRotation: f.Vector3 = rotQuat.toDegrees();
+
 
     mutator["rotation"] = tmpRotation;
     node.mtxLocal.mutate(mutator);

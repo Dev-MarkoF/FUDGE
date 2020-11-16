@@ -1,24 +1,11 @@
 ///<reference types="../../Core/Build/FudgeCore.js"/>
 ///<reference types="../Physics_Library/ammo.js"/>
 
-let world: Ammo.btDiscreteDynamicsWorld;
 
-Ammo().then(initializeAmmo);
-
-function initializeAmmo(): void {
-  let collisionConfiguration = new Ammo.btDefaultCollisionConfiguration(),
-    dispatcher = new Ammo.btCollisionDispatcher(collisionConfiguration),
-    overlappingPairCache = new Ammo.btDbvtBroadphase(),
-    solver = new Ammo.btSequentialImpulseConstraintSolver();
-
-  world = new Ammo.btDiscreteDynamicsWorld(dispatcher, overlappingPairCache, solver, collisionConfiguration);
-  world.setGravity(new Ammo.btVector3(0, -10, 0));
-}
 
 namespace FudgePhysics_Communication {
   import f = FudgeCore;
 
-  window.addEventListener("load", init);
   const app: HTMLCanvasElement = document.querySelector("canvas");
   let viewPort: f.Viewport;
   let hierarchy: f.Node;
@@ -28,8 +15,23 @@ namespace FudgePhysics_Communication {
   let fpsDisplay: HTMLElement = document.querySelector("h2#FPS");
   let bodies = new Array();
 
+  let world: Ammo.btDiscreteDynamicsWorld;
+  let transform: Ammo.btTransform
 
-  function init(_event: Event): void {
+  Ammo().then(initializeAmmo);
+
+  function initializeAmmo(): void {
+    let collisionConfiguration = new Ammo.btDefaultCollisionConfiguration(),
+      dispatcher = new Ammo.btCollisionDispatcher(collisionConfiguration),
+      overlappingPairCache = new Ammo.btDbvtBroadphase(),
+      solver = new Ammo.btSequentialImpulseConstraintSolver();
+
+    world = new Ammo.btDiscreteDynamicsWorld(dispatcher, overlappingPairCache, solver, collisionConfiguration);
+    world.setGravity(new Ammo.btVector3(0, -10, 0));
+    transform = new Ammo.btTransform();
+    init();
+  }
+  function init(): void {
     f.Debug.log(app);
     f.RenderManager.initialize();
     hierarchy = new f.Node("Scene");
@@ -136,7 +138,7 @@ namespace FudgePhysics_Communication {
     world.addRigidBody(body);
   }
 
-  let transform: Ammo.btTransform = new Ammo.btTransform();
+
   function applyPhysicsBody(_cmpTransform: f.ComponentTransform, no: number): void {
     let node: f.Node = _cmpTransform.getContainer();
 

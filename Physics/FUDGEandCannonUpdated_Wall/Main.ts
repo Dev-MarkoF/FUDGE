@@ -1,9 +1,8 @@
 ///<reference types="../../Core/Build/FudgeCore.js"/>
-///<reference types="../Physics_Library/cannon-es.d.ts"/>
+///<reference path="cannon-es.js"/>
 
 namespace FudgePhysics_Communication {
   import f = FudgeCore;
-  import c = CANNON;
 
 
   window.addEventListener("load", init);
@@ -16,7 +15,7 @@ namespace FudgePhysics_Communication {
   let fpsDisplay: HTMLElement = document.querySelector("h2#FPS");
   let bodies = new Array();
   let bodiesNo: number = 0;
-  let world = new c.World();
+  let world: any;
 
   let starttimer = 2;
 
@@ -32,7 +31,8 @@ namespace FudgePhysics_Communication {
     hierarchy.appendChild(ground);
 
     //CANNON Physics Ground/Settings
-    world.gravity = new CANNON.Vec3(0, -9.81, 0);
+    world = new World()
+    world.gravity = new Vec3(0, -9.81, 0);
     world.allowSleep = true;
     world.solver.iterations = 10;
     initializePhysicsBody(ground.getComponent(f.ComponentTransform), 0, 0);
@@ -118,20 +118,20 @@ namespace FudgePhysics_Communication {
 
   function initializePhysicsBody(_cmpTransform: f.ComponentTransform, massVal: number, no: number) {
     let node: f.Node = _cmpTransform.getContainer();
-    let scale: CANNON.Vec3 = new CANNON.Vec3(_cmpTransform.local.scaling.x / 2, _cmpTransform.local.scaling.y / 2, _cmpTransform.local.scaling.z / 2);
-    let pos: CANNON.Vec3 = new CANNON.Vec3(_cmpTransform.local.translation.x, _cmpTransform.local.translation.y, _cmpTransform.local.translation.z);
-    let rotation: CANNON.Quaternion = new CANNON.Quaternion();
+    let scale: Vec3 = new Vec3(_cmpTransform.local.scaling.x / 2, _cmpTransform.local.scaling.y / 2, _cmpTransform.local.scaling.z / 2);
+    let pos: Vec3 = new Vec3(_cmpTransform.local.translation.x, _cmpTransform.local.translation.y, _cmpTransform.local.translation.z);
+    let rotation: Quaternion = new Quaternion();
     rotation.setFromEuler(node.mtxWorld.rotation.x, node.mtxWorld.rotation.y, node.mtxWorld.rotation.z);
 
-    let mat: CANNON.Material = new CANNON.Material();
+    let mat: Material = new Material();
     mat.friction = 1;
     mat.restitution = 0;
 
-    bodies[no] = new CANNON.Body({
+    bodies[no] = new Body({
       mass: massVal, // kg
       position: pos, // m
       quaternion: rotation,
-      shape: new CANNON.Box(scale),
+      shape: new Box(scale),
       material: mat,
       allowSleep: true,
       sleepSpeedLimit: 0.25, // Body will feel sleepy if speed<1 (speed == norm of velocity)
