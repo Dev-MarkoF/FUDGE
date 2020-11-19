@@ -1,0 +1,11 @@
+{
+  "name": "typescript",
+  "version": "0.0.0",
+  "private": true,
+  "dependencies": {
+    "@gglib/graphics": "^0.6.0",
+    "@gglib/math": "^0.6.0",
+    "@gglib/utils": "^0.6.0",
+    "ammojs-typed": "^1.0.2"
+  }
+}
