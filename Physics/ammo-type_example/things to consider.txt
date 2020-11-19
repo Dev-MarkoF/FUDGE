@@ -1,0 +1,2 @@
+- fudge needs to be packed into a scene, or a class that i can instantiate once ammo is running,
+- or at least the program of user needs to be packed like this
